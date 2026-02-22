@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase";
+import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { parsePrivateSellerDescription } from "@/lib/privateSeller";
 import { parseListingExperienceDescription } from "@/lib/listingExperience";
 import ListingGallery from "./ListingGallery";
@@ -45,6 +45,8 @@ type PredictivePricing = {
   total: number;
   recommendation: string;
 };
+
+type SupabaseClient = NonNullable<ReturnType<typeof supabaseServerOptional>>;
 
 const formatPrice = (value: number | null) => {
   if (!value) return "Price on request";
@@ -140,7 +142,7 @@ const median = (values: number[]) => {
 };
 
 const getPredictivePricing = async (
-  sb: ReturnType<typeof supabaseServer>,
+  sb: SupabaseClient,
   listing: Listing
 ): Promise<PredictivePricing | null> => {
   if (!listing.make || !listing.model) return null;
@@ -185,7 +187,37 @@ export default async function ListingPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const sb = supabaseServer();
+  if (!hasSupabaseConfig()) {
+    return (
+      <main className="simple-page simple-detail-page">
+        <section className="simple-shell">
+          <div className="simple-header">
+            <h2>Listings unavailable</h2>
+            <p>Supabase is not configured for this deployment.</p>
+          </div>
+          <Link className="simple-button" href="/listings">
+            Back to listings
+          </Link>
+        </section>
+      </main>
+    );
+  }
+  const sb = supabaseServerOptional();
+  if (!sb) {
+    return (
+      <main className="simple-page simple-detail-page">
+        <section className="simple-shell">
+          <div className="simple-header">
+            <h2>Listings unavailable</h2>
+            <p>Supabase is not configured for this deployment.</p>
+          </div>
+          <Link className="simple-button" href="/listings">
+            Back to listings
+          </Link>
+        </section>
+      </main>
+    );
+  }
   const { data, error } = await sb
     .from("listings")
     .select(

@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import SortForm from "@/app/components/SortForm";
 import PriceRangeSlider from "@/app/components/PriceRangeSlider";
-import { supabaseServer } from "@/lib/supabase";
+import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { getBrandArModel } from "@/lib/arModels";
 
 type SearchParams = {
@@ -166,7 +166,9 @@ const getCityFromLocation = (value?: string | null) => {
 };
 
 const getCityOptions = async () => {
-  const sb = supabaseServer();
+  if (!hasSupabaseConfig()) return [] as string[];
+  const sb = supabaseServerOptional();
+  if (!sb) return [] as string[];
   const { data, error } = await sb
     .from("listings")
     .select("location")
@@ -186,7 +188,13 @@ const getCityOptions = async () => {
 };
 
 const getPriceBounds = async () => {
-  const sb = supabaseServer();
+  if (!hasSupabaseConfig()) {
+    return { min: DEFAULT_PRICE_MIN, max: DEFAULT_PRICE_MAX };
+  }
+  const sb = supabaseServerOptional();
+  if (!sb) {
+    return { min: DEFAULT_PRICE_MIN, max: DEFAULT_PRICE_MAX };
+  }
   const [minRes, maxRes] = await Promise.all([
     sb
       .from("listings")
@@ -217,7 +225,15 @@ const getPriceBounds = async () => {
 };
 
 const getListings = async (searchParams: SearchParams) => {
-  const sb = supabaseServer();
+  const pageRaw = getParam(searchParams.page);
+  const page = Math.max(1, Number(pageRaw ?? 1) || 1);
+  if (!hasSupabaseConfig()) {
+    return { listings: [] as Listing[], count: 0, error: "supabase_not_configured", page };
+  }
+  const sb = supabaseServerOptional();
+  if (!sb) {
+    return { listings: [] as Listing[], count: 0, error: "supabase_not_configured", page };
+  }
   let query = sb
     .from("listings")
     .select(
@@ -280,8 +296,6 @@ const getListings = async (searchParams: SearchParams) => {
       break;
   }
 
-  const pageRaw = getParam(searchParams.page);
-  const page = Math.max(1, Number(pageRaw ?? 1) || 1);
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 

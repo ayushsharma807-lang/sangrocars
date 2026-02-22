@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase";
+import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 
 type Listing = {
   id: string;
@@ -66,7 +66,41 @@ export default async function ComparePage({
     );
   }
 
-  const sb = supabaseServer();
+  if (!hasSupabaseConfig()) {
+    return (
+      <main className="simple-page">
+        <section className="simple-shell">
+          <div className="simple-header">
+            <div>
+              <h1>Compare cars</h1>
+              <p>Comparison is unavailable without Supabase configuration.</p>
+            </div>
+            <Link className="simple-link" href="/listings">
+              Back to listings
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
+  const sb = supabaseServerOptional();
+  if (!sb) {
+    return (
+      <main className="simple-page">
+        <section className="simple-shell">
+          <div className="simple-header">
+            <div>
+              <h1>Compare cars</h1>
+              <p>Comparison is unavailable without Supabase configuration.</p>
+            </div>
+            <Link className="simple-link" href="/listings">
+              Back to listings
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
   const { data } = await sb
     .from("listings")
     .select(

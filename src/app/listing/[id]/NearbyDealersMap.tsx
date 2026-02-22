@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase";
+import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { cityFromText, distanceKm } from "@/lib/geo";
 
 type Props = {
@@ -29,7 +29,23 @@ export default async function NearbyDealersMap({
     );
   }
 
-  const sb = supabaseServer();
+  if (!hasSupabaseConfig()) {
+    return (
+      <div className="nearby-card">
+        <h3>Nearby dealers map</h3>
+        <p>Nearby dealers are unavailable without Supabase configuration.</p>
+      </div>
+    );
+  }
+  const sb = supabaseServerOptional();
+  if (!sb) {
+    return (
+      <div className="nearby-card">
+        <h3>Nearby dealers map</h3>
+        <p>Nearby dealers are unavailable without Supabase configuration.</p>
+      </div>
+    );
+  }
   const [{ data: dealersData }, { data: listingsData }] = await Promise.all([
     sb.from("dealers").select("id, name, address, phone, whatsapp").limit(3000),
     sb.from("listings").select("dealer_id").eq("status", "available").limit(10000),

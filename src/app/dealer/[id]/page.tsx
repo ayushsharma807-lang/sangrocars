@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase";
+import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 
 type Listing = {
   id: string;
@@ -35,7 +35,37 @@ export default async function DealerPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const sb = supabaseServer();
+  if (!hasSupabaseConfig()) {
+    return (
+      <main className="home">
+        <section className="section">
+          <div className="section__header">
+            <h2>Dealer info unavailable</h2>
+            <p>Supabase is not configured for this deployment.</p>
+          </div>
+          <Link className="btn btn--solid" href="/listings">
+            Back to search
+          </Link>
+        </section>
+      </main>
+    );
+  }
+  const sb = supabaseServerOptional();
+  if (!sb) {
+    return (
+      <main className="home">
+        <section className="section">
+          <div className="section__header">
+            <h2>Dealer info unavailable</h2>
+            <p>Supabase is not configured for this deployment.</p>
+          </div>
+          <Link className="btn btn--solid" href="/listings">
+            Back to search
+          </Link>
+        </section>
+      </main>
+    );
+  }
   const { data: dealer, error } = await sb
     .from("dealers")
     .select("*")

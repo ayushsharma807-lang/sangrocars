@@ -1,6 +1,6 @@
 import Link from "next/link";
 import SocialEmbed from "@/app/components/SocialEmbed";
-import { supabaseServer } from "@/lib/supabase";
+import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 
 type ExclusiveDeal = {
   id: string;
@@ -99,7 +99,13 @@ const mapDeal = (row: DealRow): ExclusiveDeal => ({
 });
 
 const getDeal = async (id: string) => {
-  const sb = supabaseServer();
+  if (!hasSupabaseConfig()) {
+    return fallbackDeals.find((deal) => deal.id === id) ?? null;
+  }
+  const sb = supabaseServerOptional();
+  if (!sb) {
+    return fallbackDeals.find((deal) => deal.id === id) ?? null;
+  }
   const { data, error } = await sb
     .from("exclusive_deals")
     .select("*")
@@ -226,4 +232,3 @@ export default async function ExclusiveDealDetailPage({
     </main>
   );
 }
-

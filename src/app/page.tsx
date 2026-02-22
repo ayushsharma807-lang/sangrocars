@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase";
+import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import SocialEmbed from "@/app/components/SocialEmbed";
 
 type ExclusiveDeal = {
@@ -301,7 +301,21 @@ const mapDeal = (row: DealRow): ExclusiveDeal => {
 };
 
 const getExclusiveDeals = async () => {
-  const sb = supabaseServer();
+  if (!hasSupabaseConfig()) {
+    return {
+      deals: fallbackDeals,
+      usedFallback: true,
+      error: "supabase_not_configured",
+    };
+  }
+  const sb = supabaseServerOptional();
+  if (!sb) {
+    return {
+      deals: fallbackDeals,
+      usedFallback: true,
+      error: "supabase_not_configured",
+    };
+  }
   const { data, error } = await sb
     .from("exclusive_deals")
     .select("*")
@@ -338,7 +352,13 @@ const makeMatchesBrand = (make: string, aliases: string[]) => {
 };
 
 const getBrandStats = async (): Promise<BrandStat[]> => {
-  const sb = supabaseServer();
+  if (!hasSupabaseConfig()) {
+    return popularBrands.map((brand) => ({ ...brand, count: 0 }));
+  }
+  const sb = supabaseServerOptional();
+  if (!sb) {
+    return popularBrands.map((brand) => ({ ...brand, count: 0 }));
+  }
   const counts = new Map(popularBrands.map((brand) => [brand.key, 0]));
   const pageSize = 1000;
   const maxPages = 20;
