@@ -6,9 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check:db": "node scripts/db-check.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.95.3",
+    "cheerio": "^1.0.0-rc.12",
+    "csv-parse": "^6.1.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3"
