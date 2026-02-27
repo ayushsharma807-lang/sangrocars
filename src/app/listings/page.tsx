@@ -3,7 +3,6 @@ import Link from "next/link";
 import SortForm from "@/app/components/SortForm";
 import PriceRangeSlider from "@/app/components/PriceRangeSlider";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
-import { getBrandArModel } from "@/lib/arModels";
 
 type SearchParams = {
   q?: string | string[];
@@ -119,12 +118,6 @@ const formatPrice = (value: number | null) => {
   if (!value) return "Price on request";
   return `₹${value.toLocaleString("en-IN")}`;
 };
-
-const hasArModel = (make?: string | null, description?: string | null) =>
-  Boolean(
-    (description && description.includes("[AR_MODEL_URL]:")) ||
-      getBrandArModel(make)
-  );
 
 const isLuxuryListing = (price?: number | null) => (price ?? 0) >= 4_500_000;
 
@@ -468,25 +461,29 @@ export default async function Home({
           <span className="cw-filter-backdrop__sr">Close filters</span>
         </label>
         <div className="simple-header cw-header">
-          <div>
-            <h1>Used cars in India</h1>
-            <p>
-              Explore verified listings by budget, city, fuel, and transmission.
-            </p>
-          </div>
-          <div className="simple-detail__top-actions cw-header__actions">
-            <Link
-              className="cw-header__btn cw-header__btn--luxury"
-              href="/listings?price_mode=custom&min_price=4500000&sort=price_desc&page=1"
-            >
-              Luxury collection
-            </Link>
-            <Link className="cw-header__btn cw-header__btn--ghost" href="/">
-              Back to home
-            </Link>
-            <Link className="cw-header__btn cw-header__btn--primary" href="/sell">
-              Post your car
-            </Link>
+          <div className="cw-header__row">
+            <div className="cw-header__branding">
+              <div>
+                <h1>Used cars in India</h1>
+                <p>
+                  Explore verified listings by budget, city, fuel, and transmission.
+                </p>
+              </div>
+            </div>
+            <div className="cw-header__actions">
+              <Link
+                className="cw-header__btn cw-header__btn--luxury"
+                href="/listings?price_mode=custom&min_price=4500000&sort=price_desc&page=1"
+              >
+                Luxury collection
+              </Link>
+              <Link className="cw-header__btn cw-header__btn--ghost" href="/">
+                Back to home
+              </Link>
+              <Link className="cw-header__btn cw-header__btn--primary" href="/sell">
+                Post your car
+              </Link>
+            </div>
           </div>
         </div>
         <div className="cw-top-bar">
@@ -713,10 +710,6 @@ export default async function Home({
                     toTitle(listing.variant),
                   ].filter(Boolean);
                   const isLuxury = isLuxuryListing(listing.price);
-                  const hasArPreview = hasArModel(
-                    listing.make,
-                    listing.description
-                  );
                   const isCompared = compareIds.includes(listing.id);
                   const nextCompareIds = isCompared
                     ? compareIds.filter((id) => id !== listing.id)
@@ -750,11 +743,6 @@ export default async function Home({
                           {isLuxury && (
                             <span className="simple-listing__tag simple-listing__tag--luxury">
                               Luxury
-                            </span>
-                          )}
-                          {hasArPreview && (
-                            <span className="simple-listing__tag simple-listing__tag--ar">
-                              3D + AR
                             </span>
                           )}
                         </div>

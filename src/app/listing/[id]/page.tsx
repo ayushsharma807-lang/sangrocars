@@ -6,13 +6,9 @@ import ListingGallery from "./ListingGallery";
 import LeadForm from "./LeadForm";
 import EmiCalculator from "./EmiCalculator";
 import NearbyDealersMap from "./NearbyDealersMap";
-import CarConfigurator from "@/app/components/CarConfigurator";
-import TradeInValuator from "@/app/components/TradeInValuator";
-import WebArViewer from "@/app/components/WebArViewer";
 import SaveToGarageButton from "@/app/components/SaveToGarageButton";
 import RecentViewTracker from "@/app/components/RecentViewTracker";
 import PersonalizedPriceSignal from "@/app/components/PersonalizedPriceSignal";
-import { getBrandArModel } from "@/lib/arModels";
 
 type Listing = {
   id: string;
@@ -104,33 +100,6 @@ const buildListingMessage = (
   ].filter(Boolean) as string[];
 
   return parts.join(" ");
-};
-
-const normalizeVideoUrl = (value?: string | null) => {
-  if (!value) return null;
-  const url = value.trim();
-  if (!url) return null;
-  if (url.includes("/embed/")) return url;
-  if (url.includes("youtube.com/watch")) {
-    try {
-      const parsed = new URL(url);
-      const id = parsed.searchParams.get("v");
-      if (id) return `https://www.youtube.com/embed/${id}`;
-    } catch {
-      return url;
-    }
-  }
-  if (url.includes("youtu.be/")) {
-    const id = url.split("youtu.be/")[1]?.split("?")[0];
-    if (id) return `https://www.youtube.com/embed/${id}`;
-  }
-  return url;
-};
-
-const isVideoFile = (value?: string | null) => {
-  if (!value) return false;
-  const lowered = value.toLowerCase();
-  return lowered.endsWith(".mp4") || lowered.endsWith(".webm") || lowered.endsWith(".ogg");
 };
 
 const median = (values: number[]) => {
@@ -256,14 +225,6 @@ export default async function ListingPage({
   ].filter(Boolean);
   const photos = listing.photo_urls ?? [];
   const listingTitle = titleParts.join(" ") || "Car listing";
-  const walkthroughUrl = normalizeVideoUrl(
-    experienceInfo.meta.walkthroughVideoUrl ?? experienceInfo.meta.tour360Url
-  );
-  const interiorVrUrl = normalizeVideoUrl(experienceInfo.meta.interiorVrUrl);
-  const fallbackArModel = getBrandArModel(listing.make);
-  const arModelUrl = experienceInfo.meta.arModelUrl ?? fallbackArModel?.modelUrl ?? null;
-  const arIosModelUrl =
-    experienceInfo.meta.arIosModelUrl ?? fallbackArModel?.iosModelUrl ?? null;
   const predictivePricing = await getPredictivePricing(sb, listing);
 
   let dealer: Dealer | null = null;
@@ -368,24 +329,6 @@ export default async function ListingPage({
                 marketMedian={predictivePricing?.median ?? null}
               />
             </div>
-            <div className="simple-detail__section">
-              <h3>Interactive tools</h3>
-              <p>Tap a button to jump to details at the bottom.</p>
-              <div className="simple-mini-btn-row">
-                <a className="simple-mini-btn" href="#walkthrough-360">
-                  360 walkthrough
-                </a>
-                <a className="simple-mini-btn" href="#ar-view">
-                  AR placement
-                </a>
-                <a className="simple-mini-btn" href="#build-config">
-                  Build config
-                </a>
-                <a className="simple-mini-btn" href="#trade-in-instant">
-                  Trade-in value
-                </a>
-              </div>
-            </div>
             <div className="simple-dealer-card">
               <div>
                 <p className="simple-dealer-card__label">
@@ -456,57 +399,6 @@ export default async function ListingPage({
               listingDealerId={listing.dealer_id}
               listingLocation={listing.location}
             />
-            <div className="simple-detail__section simple-detail__section--feature" id="walkthrough-360">
-              <h3>360 walkthrough</h3>
-              {walkthroughUrl ? (
-                <div className="experience-embed">
-                  {isVideoFile(walkthroughUrl) ? (
-                    <video controls src={walkthroughUrl} />
-                  ) : (
-                    <iframe
-                      src={walkthroughUrl}
-                      title={`${listingTitle} walkthrough`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  )}
-                </div>
-              ) : (
-                <div className="experience-empty">
-                  Walkthrough video will appear here after dealer upload.
-                </div>
-              )}
-              {interiorVrUrl && (
-                <a className="simple-link-btn" href={interiorVrUrl} target="_blank" rel="noreferrer">
-                  Open interior VR tour
-                </a>
-              )}
-            </div>
-            <div className="simple-detail__section simple-detail__section--feature" id="ar-view">
-              <h3>AR virtual placement</h3>
-              <WebArViewer
-                modelUrl={arModelUrl}
-                iosModelUrl={arIosModelUrl}
-                title={listingTitle}
-                posterUrl={photos[0] ?? undefined}
-              />
-            </div>
-            <div className="simple-detail__section simple-detail__section--feature" id="build-config">
-              <h3>Build your configuration</h3>
-              <CarConfigurator
-                basePrice={listing.price}
-                title={listingTitle}
-                listingId={listing.id}
-              />
-            </div>
-            <div className="simple-detail__section simple-detail__section--feature" id="trade-in-instant">
-              <h3>Instant trade-in value</h3>
-              <TradeInValuator
-                make={listing.make}
-                model={listing.model}
-                currentPrice={listing.price}
-              />
-            </div>
           </div>
         </div>
       </section>
