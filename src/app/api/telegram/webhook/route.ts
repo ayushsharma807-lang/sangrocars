@@ -206,6 +206,11 @@ export async function POST(req: Request) {
   const user = message.from;
   const userId = user?.id as number | undefined;
   const username = user?.username ?? null;
+  const displayName =
+    username
+      ? `@${username}`
+      : [user?.first_name, user?.last_name].filter(Boolean).join(" ") ||
+        `User ${userId}`;
   if (!userId) return NextResponse.json({ ok: true });
 
   const text = message.text || message.caption || "";
@@ -231,7 +236,7 @@ export async function POST(req: Request) {
   if (command === "/cancel") {
     await sb.from("telegram_sessions").delete().eq("user_id", userId);
     await sendTelegramMessage(chatId, "Cancelled. Send /post to start again.");
-    await broadcast(`@${username ?? userId} cancelled a listing flow.`);
+    await broadcast(`${displayName} cancelled a listing flow.`);
     return NextResponse.json({ ok: true });
   }
 
@@ -248,7 +253,7 @@ export async function POST(req: Request) {
       .from("telegram_sessions")
       .upsert(payload, { onConflict: "user_id" });
     await sendTelegramMessage(chatId, nextPrompt("make"));
-    await broadcast(`@${username ?? userId} started a new listing.`);
+    await broadcast(`${displayName} started a new listing.`);
     return NextResponse.json({ ok: true });
   }
 
@@ -339,7 +344,7 @@ export async function POST(req: Request) {
 
     if (error) {
       await sendTelegramMessage(chatId, "Failed to post listing. Try again.");
-      await broadcast(`@${username ?? userId} listing failed: ${error.message}`);
+      await broadcast(`${displayName} listing failed: ${error.message}`);
       return;
     }
 
@@ -347,7 +352,7 @@ export async function POST(req: Request) {
     const listingUrl = `${SITE_URL}/listing/${created.id}`;
     await sendTelegramMessage(chatId, `Listing posted ✅\n${listingUrl}`);
     await broadcast(
-      `New listing by @${username ?? userId}: ${data.make} ${data.model} (${data.year}) - ${data.price}\n${listingUrl}`
+      `New listing by ${displayName}: ${data.make} ${data.model} (${data.year}) - ${data.price}\n${listingUrl}`
     );
   };
 
@@ -382,21 +387,21 @@ export async function POST(req: Request) {
       const nextData = { ...data, make: titleCase(trimmedText) };
       await updateSession("model", nextData);
       await sendTelegramMessage(chatId, nextPrompt("model"));
-      await broadcast(`@${username ?? userId} make: ${nextData.make}`);
+      await broadcast(`${displayName} make: ${nextData.make}`);
       break;
     }
     case "model": {
       const nextData = { ...data, model: titleCase(trimmedText) };
       await updateSession("variant", nextData);
       await sendTelegramMessage(chatId, nextPrompt("variant"));
-      await broadcast(`@${username ?? userId} model: ${nextData.model}`);
+      await broadcast(`${displayName} model: ${nextData.model}`);
       break;
     }
     case "variant": {
       const nextData = { ...data, variant: titleCase(trimmedText) };
       await updateSession("year", nextData);
       await sendTelegramMessage(chatId, nextPrompt("year"));
-      await broadcast(`@${username ?? userId} variant: ${nextData.variant}`);
+      await broadcast(`${displayName} variant: ${nextData.variant}`);
       break;
     }
     case "year": {
@@ -408,7 +413,7 @@ export async function POST(req: Request) {
       const nextData = { ...data, year };
       await updateSession("price", nextData);
       await sendTelegramMessage(chatId, nextPrompt("price"));
-      await broadcast(`@${username ?? userId} year: ${year}`);
+      await broadcast(`${displayName} year: ${year}`);
       break;
     }
     case "price": {
@@ -420,7 +425,7 @@ export async function POST(req: Request) {
       const nextData = { ...data, price };
       await updateSession("km", nextData);
       await sendTelegramMessage(chatId, nextPrompt("km"));
-      await broadcast(`@${username ?? userId} price: ${price}`);
+      await broadcast(`${displayName} price: ${price}`);
       break;
     }
     case "km": {
@@ -432,7 +437,7 @@ export async function POST(req: Request) {
       const nextData = { ...data, km: Math.round(km) };
       await updateSession("transmission", nextData);
       await sendTelegramMessage(chatId, nextPrompt("transmission"));
-      await broadcast(`@${username ?? userId} km: ${km}`);
+      await broadcast(`${displayName} km: ${km}`);
       break;
     }
     case "transmission": {
@@ -444,7 +449,7 @@ export async function POST(req: Request) {
       const nextData = { ...data, transmission };
       await updateSession("fuel", nextData);
       await sendTelegramMessage(chatId, nextPrompt("fuel"));
-      await broadcast(`@${username ?? userId} transmission: ${transmission}`);
+      await broadcast(`${displayName} transmission: ${transmission}`);
       break;
     }
     case "fuel": {
@@ -456,14 +461,14 @@ export async function POST(req: Request) {
       const nextData = { ...data, fuel };
       await updateSession("location", nextData);
       await sendTelegramMessage(chatId, nextPrompt("location"));
-      await broadcast(`@${username ?? userId} fuel: ${fuel}`);
+      await broadcast(`${displayName} fuel: ${fuel}`);
       break;
     }
     case "location": {
       const nextData = { ...data, location: titleCase(trimmedText) };
       await updateSession("phone", nextData);
       await sendTelegramMessage(chatId, nextPrompt("phone"));
-      await broadcast(`@${username ?? userId} location: ${nextData.location}`);
+      await broadcast(`${displayName} location: ${nextData.location}`);
       break;
     }
     case "phone": {
@@ -475,7 +480,7 @@ export async function POST(req: Request) {
       const nextData = { ...data, phone: digits };
       await updateSession("condition", nextData);
       await sendTelegramMessage(chatId, nextPrompt("condition"));
-      await broadcast(`@${username ?? userId} phone added`);
+      await broadcast(`${displayName} phone added`);
       break;
     }
     case "condition": {
@@ -487,7 +492,7 @@ export async function POST(req: Request) {
       const nextData = { ...data, condition };
       await updateSession("photos", nextData);
       await sendTelegramMessage(chatId, nextPrompt("photos"));
-      await broadcast(`@${username ?? userId} condition: ${condition}`);
+      await broadcast(`${displayName} condition: ${condition}`);
       break;
     }
     default: {
