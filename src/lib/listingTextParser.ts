@@ -1,5 +1,7 @@
 const KNOWN_MAKES = [
+  "Maruti",
   "Maruti Suzuki",
+  "Suzuki",
   "Hyundai",
   "Tata",
   "Mahindra",
@@ -175,6 +177,86 @@ const detectMakeModelVariant = (text: string) => {
   };
 };
 
+const isProbablyNameLine = (value: string) =>
+  /[a-z]/i.test(value) && value.replace(/[^a-z]/gi, "").length >= 2;
+
+const parseLineFormat = (rawText: string) => {
+  const lines = rawText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length < 4) return null;
+  if (!isProbablyNameLine(lines[0]) || !isProbablyNameLine(lines[1])) return null;
+
+  const make = titleCase(lines[0]);
+  const model = titleCase(lines[1]);
+  let variant: string | null = null;
+  let year: number | null = null;
+  let price: number | null = null;
+  let km: number | null = null;
+  let fuel: string | null = null;
+  let transmission: string | null = null;
+  let location: string | null = null;
+
+  for (const line of lines.slice(2)) {
+    if (!year) {
+      const detected = detectYear(line);
+      if (detected) {
+        year = detected;
+        continue;
+      }
+    }
+    if (!price) {
+      const detected = parseIndianMoney(line);
+      if (detected) {
+        price = detected;
+        continue;
+      }
+    }
+    if (!km) {
+      const detected = detectKm(line);
+      if (detected) {
+        km = detected;
+        continue;
+      }
+    }
+    if (!fuel) {
+      const detected = detectFuel(line);
+      if (detected) {
+        fuel = detected;
+        continue;
+      }
+    }
+    if (!transmission) {
+      const detected = detectTransmission(line);
+      if (detected) {
+        transmission = detected;
+        continue;
+      }
+    }
+    if (!variant && isProbablyNameLine(line)) {
+      variant = titleCase(line);
+      continue;
+    }
+    if (!location && isProbablyNameLine(line)) {
+      location = titleCase(line);
+    }
+  }
+
+  return {
+    make,
+    model,
+    variant,
+    year,
+    price,
+    km,
+    fuel,
+    transmission,
+    location,
+  };
+};
+
 const dedupeUrls = (urls: string[]) => {
   const seen = new Set<string>();
   const result: string[] = [];
@@ -197,21 +279,22 @@ export const parseListingText = (
   extraPhotoUrls: string[] = []
 ): ParsedListingDraft => {
   const text = normalizeText(rawText);
+  const lineParsed = parseLineFormat(rawText);
   const makeModel = detectMakeModelVariant(text);
   const parsedUrls = extractUrlsFromText(text);
 
   return {
     type: detectType(text),
     status: detectStatus(text),
-    make: makeModel.make,
-    model: makeModel.model,
-    variant: makeModel.variant,
-    year: detectYear(text),
-    price: detectPrice(text),
-    km: detectKm(text),
-    fuel: detectFuel(text),
-    transmission: detectTransmission(text),
-    location: detectLocation(text),
+    make: lineParsed?.make ?? makeModel.make,
+    model: lineParsed?.model ?? makeModel.model,
+    variant: lineParsed?.variant ?? makeModel.variant,
+    year: lineParsed?.year ?? detectYear(text),
+    price: lineParsed?.price ?? detectPrice(text),
+    km: lineParsed?.km ?? detectKm(text),
+    fuel: lineParsed?.fuel ?? detectFuel(text),
+    transmission: lineParsed?.transmission ?? detectTransmission(text),
+    location: lineParsed?.location ?? detectLocation(text),
     description: text || null,
     photo_urls: dedupeUrls([...extraPhotoUrls, ...parsedUrls]),
   };

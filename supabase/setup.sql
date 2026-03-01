@@ -120,6 +120,22 @@ create table if not exists public.customer_profiles (
 create index if not exists customer_profiles_email_idx
   on public.customer_profiles (lower(email));
 
+-- Telegram listing wizard sessions.
+create table if not exists public.telegram_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id bigint not null,
+  chat_id bigint not null,
+  username text,
+  step text not null,
+  data jsonb not null default '{}'::jsonb,
+  photo_file_ids text[] not null default '{}'::text[],
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create unique index if not exists telegram_sessions_user_id_uidx
+  on public.telegram_sessions (user_id);
+
 -- Shared updated_at trigger.
 create or replace function public.set_updated_at()
 returns trigger
@@ -158,6 +174,13 @@ begin
     drop trigger if exists trg_customer_profiles_updated_at on public.customer_profiles;
     create trigger trg_customer_profiles_updated_at
     before update on public.customer_profiles
+    for each row execute function public.set_updated_at();
+  end if;
+
+  if to_regclass('public.telegram_sessions') is not null then
+    drop trigger if exists trg_telegram_sessions_updated_at on public.telegram_sessions;
+    create trigger trg_telegram_sessions_updated_at
+    before update on public.telegram_sessions
     for each row execute function public.set_updated_at();
   end if;
 end $$;
