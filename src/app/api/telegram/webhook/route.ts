@@ -319,7 +319,7 @@ export async function POST(req: Request) {
     );
 
     const payload = {
-      source: "telegram",
+      source: "individual",
       dealer_id: null,
       type: "used",
       status: "available",
@@ -336,6 +336,8 @@ export async function POST(req: Request) {
       photo_urls: photoUrls,
     };
 
+    console.log("🚨 listings insert payload.source =", payload.source);
+    console.log("🚨 allowed sources are dealer_feed / individual");
     const { data: created, error } = await sb
       .from("listings")
       .insert(payload)
