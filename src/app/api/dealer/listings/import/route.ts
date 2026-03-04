@@ -104,13 +104,13 @@ export async function POST(req: Request) {
       continue;
     }
 
+    const typeValue = record.type ?? defaultType ?? "used";
+    const statusValue = record.status ?? defaultStatus ?? "available";
     const payload = {
       source: DEFAULT_LISTING_SOURCE,
       dealer_id: auth.dealer.id,
-      type: String(record.type ?? defaultType || "used").trim() || "used",
-      status:
-        String(record.status ?? defaultStatus || "available").trim() ||
-        "available",
+      type: String(typeValue).trim() || "used",
+      status: String(statusValue).trim() || "available",
       make,
       model,
       variant: String(record.variant ?? "").trim() || null,
