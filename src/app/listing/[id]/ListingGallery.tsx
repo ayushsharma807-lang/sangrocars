@@ -1,18 +1,14 @@
 "use client";
-
-import Image from "next/image";
 import { useMemo, useState } from "react";
+import { normalizePhotoUrls } from "@/lib/photoUrls";
 
 type Props = {
-  photos: string[];
+  photos: string[] | string | null | undefined;
   alt: string;
 };
 
-const normalizePhotos = (photos: string[]) =>
-  photos.map((photo) => photo.trim()).filter(Boolean);
-
 export default function ListingGallery({ photos, alt }: Props) {
-  const safePhotos = useMemo(() => normalizePhotos(photos), [photos]);
+  const safePhotos = useMemo(() => normalizePhotoUrls(photos), [photos]);
   const [active, setActive] = useState(0);
 
   if (safePhotos.length === 0) {
@@ -29,12 +25,12 @@ export default function ListingGallery({ photos, alt }: Props) {
   return (
     <div className="gallery">
       <div className="gallery__main">
-        <Image
+        <img
           src={current}
           alt={alt}
-          fill
-          sizes="(max-width: 980px) 100vw, 60vw"
-          className="gallery__image"
+          className="gallery__hero"
+          loading="eager"
+          decoding="async"
         />
         {total > 1 && (
           <>
@@ -71,12 +67,12 @@ export default function ListingGallery({ photos, alt }: Props) {
               onClick={() => setActive(index)}
               type="button"
             >
-              <Image
+              <img
                 src={photo}
                 alt={`${alt} ${index + 1}`}
-                width={160}
-                height={70}
                 className="gallery__thumb-image"
+                loading="lazy"
+                decoding="async"
               />
             </button>
           ))}

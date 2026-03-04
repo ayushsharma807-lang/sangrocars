@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   FUEL_OPTIONS,
   MAKE_OPTIONS,
@@ -9,13 +9,35 @@ import {
   getModelOptions,
   getVariantOptions,
 } from "@/lib/carOptions";
+import { buildPolishedDescription } from "@/lib/descriptionPolisher";
 
 export default function SellCarForm() {
+  const formRef = useRef<HTMLFormElement>(null);
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
   const [variant, setVariant] = useState("");
+  const [description, setDescription] = useState("");
   const modelOptions = useMemo(() => getModelOptions(make), [make]);
   const variantOptions = useMemo(() => getVariantOptions(model), [model]);
+
+  const polishDescription = () => {
+    const form = formRef.current;
+    if (!form) return;
+    const data = new FormData(form);
+    const polished = buildPolishedDescription({
+      make: String(data.get("make") ?? ""),
+      model: String(data.get("model") ?? ""),
+      variant: String(data.get("variant") ?? ""),
+      year: String(data.get("year") ?? ""),
+      price: String(data.get("price") ?? ""),
+      km: String(data.get("km") ?? ""),
+      fuel: String(data.get("fuel") ?? ""),
+      transmission: String(data.get("transmission") ?? ""),
+      location: String(data.get("location") ?? ""),
+      notes: String(data.get("description") ?? ""),
+    });
+    if (polished) setDescription(polished);
+  };
 
   return (
     <form
@@ -23,6 +45,7 @@ export default function SellCarForm() {
       method="post"
       action="/api/listings/public-post"
       encType="multipart/form-data"
+      ref={formRef}
     >
       <div className="dealer-form__grid">
         <label>
@@ -127,8 +150,19 @@ export default function SellCarForm() {
           name="description"
           rows={4}
           placeholder="Condition, service history, number of owners..."
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
         />
       </label>
+      <div className="dealer-form__actions">
+        <button
+          className="simple-button simple-button--secondary"
+          type="button"
+          onClick={polishDescription}
+        >
+          Polish description
+        </button>
+      </div>
       <label>
         Photo URLs (one per line)
         <textarea

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
+import { getPrimaryPhoto } from "@/lib/photoUrls";
 
 type Listing = {
   id: string;
@@ -210,7 +211,7 @@ export default async function ComparePage({
               ]
                 .filter((item) => item && item !== "—")
                 .join(" ");
-              const photo = listing.photo_urls?.[0];
+              const photo = getPrimaryPhoto(listing.photo_urls);
               return (
                 <article className="compare-card" key={listing.id}>
                   <div className="compare-card__media">

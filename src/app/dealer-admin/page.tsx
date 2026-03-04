@@ -47,6 +47,20 @@ const getLeadCount = async (dealerId: string) => {
   return byListing.count ?? 0;
 };
 
+const getRecentLeads = async (dealerId: string) => {
+  const sb = supabaseServer();
+  const { data, error } = await sb
+    .from("leads")
+    .select("id, name, phone, listing_title, status, created_at")
+    .eq("dealer_id", dealerId)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  if (!error) return data ?? [];
+  if (!isMissingSchema(error.message)) return [];
+  return [];
+};
+
 export default async function DealerDashboard() {
   const auth = await requireDealer();
   if (!auth.ok) {
@@ -63,7 +77,30 @@ export default async function DealerDashboard() {
     .order("created_at", { ascending: false })
     .limit(5);
 
-  const leadCount = await getLeadCount(dealer.id);
+  const [leadCount, recentLeads] = await Promise.all([
+    getLeadCount(dealer.id),
+    getRecentLeads(dealer.id),
+  ]);
+
+  const onboardingSteps = [
+    {
+      label: "Complete profile details",
+      done: Boolean(dealer.name && (dealer.phone || dealer.whatsapp) && dealer.address),
+      href: "/dealer-admin/profile",
+    },
+    {
+      label: "Add your first listing",
+      done: Boolean(listings.data?.length),
+      href: "/dealer-admin/listings/new",
+    },
+    {
+      label: "Connect inventory feed (optional)",
+      done: Boolean(dealer.inventory_url || dealer.sitemap_url || dealer.feed_url),
+      href: "/dealer-admin/profile",
+    },
+  ];
+
+  const completedSteps = onboardingSteps.filter((item) => item.done).length;
 
   return (
     <main className="home dealer-admin">
@@ -92,6 +129,25 @@ export default async function DealerDashboard() {
             <p className="notification-value">{leadCount}</p>
           </div>
         </div>
+        {completedSteps < onboardingSteps.length && (
+          <div className="dealer-panel dealer-panel--onboarding">
+            <h3>Dealer onboarding</h3>
+            <p>Complete these steps to unlock more leads.</p>
+            <ul className="dealer-checklist">
+              {onboardingSteps.map((item) => (
+                <li key={item.label} className={item.done ? "is-done" : ""}>
+                  <span>{item.label}</span>
+                  <Link className="link" href={item.href}>
+                    {item.done ? "Update" : "Start"}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <p className="dealer-checklist__progress">
+              {completedSteps}/{onboardingSteps.length} steps completed
+            </p>
+          </div>
+        )}
         <div className="dealer-panel">
           <h3>Recent listings</h3>
           {!listings.data?.length ? (
@@ -109,6 +165,31 @@ export default async function DealerDashboard() {
                     href={`/dealer-admin/listings/${listing.id}`}
                   >
                     Edit
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="dealer-panel">
+          <div className="dealer-panel__header">
+            <h3>Recent leads</h3>
+            <Link className="link" href="/dealer-admin/leads">
+              View all
+            </Link>
+          </div>
+          {!recentLeads?.length ? (
+            <p className="notification-empty">No leads yet.</p>
+          ) : (
+            <ul className="dealer-list">
+              {recentLeads.map((lead) => (
+                <li key={lead.id}>
+                  <span>
+                    {lead.name ?? "Lead"} {lead.listing_title ? `• ${lead.listing_title}` : ""}
+                  </span>
+                  <span>{lead.status ?? "new"}</span>
+                  <a className="link" href={`/dealer-admin/leads/${lead.id}`}>
+                    View
                   </a>
                 </li>
               ))}

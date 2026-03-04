@@ -39,6 +39,40 @@ body {
   min-height: 100vh;
 }
 
+.whatsapp-float {
+  position: fixed;
+  right: 22px;
+  bottom: 88px;
+  z-index: 50;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #25d366, #16a34a);
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 16px 40px rgba(16, 185, 129, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.whatsapp-float span {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.whatsapp-float:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 50px rgba(16, 185, 129, 0.45);
+}
+
+.whatsapp-context {
+  display: none;
+}
+
 .home {
   display: flex;
   flex-direction: column;
@@ -599,6 +633,7 @@ body {
 
 .gallery {
   display: grid;
+  grid-template-rows: 520px auto;
   gap: 12px;
 }
 
@@ -607,16 +642,25 @@ body {
   border-radius: var(--radius-lg);
   border: 1px solid var(--stroke);
   overflow: hidden;
-  background: rgba(9, 12, 20, 0.8);
+  background-color: #0f1117;
+  height: auto;
 }
 
 .gallery__main img,
 .gallery__image,
 .gallery__placeholder {
   width: 100%;
-  height: 320px;
+  height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.gallery__hero {
+  width: 100%;
+  height: 520px;
+  object-fit: cover;
+  display: block;
+  background: #0f1117;
 }
 
 .gallery__nav {
@@ -2319,6 +2363,66 @@ body {
   margin: 0;
 }
 
+.dealer-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dealer-panel--import {
+  margin-bottom: 18px;
+}
+
+.dealer-panel--onboarding {
+  border-color: rgba(37, 99, 235, 0.4);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(12, 16, 24, 0.85));
+}
+
+.dealer-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  gap: 8px;
+}
+
+.dealer-checklist li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(8, 12, 20, 0.65);
+}
+
+.dealer-checklist li.is-done {
+  border-color: rgba(34, 197, 94, 0.6);
+  background: rgba(16, 185, 129, 0.14);
+}
+
+.dealer-checklist__progress {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+
+.dealer-form--inline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.dealer-form--inline label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
 .dealer-list {
   list-style: none;
   padding: 0;
@@ -2490,6 +2594,13 @@ body {
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.dealer-form__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 6px 0 4px;
 }
 
 .sell-form__submit {
@@ -3052,6 +3163,15 @@ body {
 
 .cw-header__btn--luxury:hover {
   background: linear-gradient(120deg, #7c2d12, #92400e);
+}
+
+.cw-header__btn--whatsapp {
+  color: #ffffff;
+  background: linear-gradient(120deg, #16a34a, #22c55e);
+}
+
+.cw-header__btn--whatsapp:hover {
+  background: linear-gradient(120deg, #15803d, #16a34a);
 }
 
 .cw-footer {
@@ -3656,8 +3776,8 @@ body {
 }
 
 .cw-listings {
-  grid-template-columns: repeat(auto-fill, minmax(260px, 290px));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
   justify-content: start;
 }
 
@@ -3680,8 +3800,17 @@ body {
 .cw-listing {
   grid-template-columns: 1fr;
   align-content: start;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.cw-listing:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 55px rgba(15, 23, 42, 0.18);
+  border-color: rgba(178, 43, 60, 0.35);
 }
 
 .simple-listing__media {
@@ -3694,6 +3823,15 @@ body {
   min-height: 190px;
   height: 190px;
   display: block;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.cw-listing__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0) 60%, rgba(15, 23, 42, 0.18) 100%);
+  pointer-events: none;
 }
 
 .cw-listing__image-link {
@@ -3724,16 +3862,19 @@ body {
 }
 
 .simple-listing__tag {
-  padding: 5px 8px;
+  padding: 5px 10px;
   border-radius: 999px;
   font-size: 11px;
-  background: rgba(17, 24, 39, 0.8);
+  background: rgba(12, 16, 26, 0.78);
   color: #ffffff;
   font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .simple-listing__tag--luxury {
   background: linear-gradient(120deg, #7f1d1d, #b45309);
+  box-shadow: 0 6px 16px rgba(127, 29, 29, 0.35);
 }
 
 .simple-listing__tag--ar {
@@ -3755,8 +3896,9 @@ body {
   text-decoration: none;
   font-size: 16px;
   line-height: 1;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.92);
   color: #64748b;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
 }
 
 .cw-save-btn--active {
@@ -3779,9 +3921,14 @@ body {
 }
 
 .cw-listing__body {
-  padding: 12px;
+  padding: 14px 16px 16px;
   align-content: start;
-  gap: 7px;
+  gap: 8px;
+}
+
+.cw-listing__body h3 {
+  font-size: 18px;
+  color: #0f172a;
 }
 
 .simple-listing__body h3 {
@@ -3805,7 +3952,7 @@ body {
 
 .cw-listing__price-line {
   color: #0f172a;
-  font-size: 20px;
+  font-size: 21px;
   line-height: 1.1;
 }
 
@@ -3833,10 +3980,10 @@ body {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #334155;
+  color: #1f2937;
   border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  border-radius: 10px;
+  background: #f9fafb;
+  border-radius: 12px;
   padding: 7px 9px;
 }
 
@@ -3928,6 +4075,40 @@ body {
 .simple-detail__panel--stack {
   display: grid;
   gap: 14px;
+}
+
+.simple-debug {
+  border: 1px dashed #cfd6ea;
+  border-radius: 16px;
+  padding: 16px;
+  background: #f7f9ff;
+  color: #1e2a44;
+}
+
+.simple-debug__code {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #e3e9f7;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.simple-debug__images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.simple-debug__images img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #e3e9f7;
+  background: #fff;
 }
 
 .simple-detail__price {
@@ -4507,7 +4688,19 @@ button.simple-link-btn:disabled {
 
   .gallery__main img,
   .gallery__placeholder {
-    height: 240px;
+    height: 100%;
+  }
+
+  .gallery__main {
+    height: 100%;
+  }
+
+  .gallery {
+    grid-template-rows: 320px auto;
+  }
+
+  .gallery__hero {
+    height: 320px;
   }
 
   .simple-page {

@@ -5,7 +5,12 @@ import { requireDealer } from "@/lib/dealerAuth";
 import { supabaseServer } from "@/lib/supabase";
 import SyncButton from "./SyncButton";
 
-export default async function DealerListingsPage() {
+export default async function DealerListingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ imported?: string; skipped?: string; failed?: string }>;
+}) {
+  const params = await searchParams;
   const auth = await requireDealer();
   if (!auth.ok) {
     const error = auth.error === "dealer_not_found" ? "dealer_not_found" : "unauthorized";
@@ -20,6 +25,12 @@ export default async function DealerListingsPage() {
     )
     .eq("dealer_id", auth.dealer.id)
     .order("created_at", { ascending: false });
+
+  const imported = Number(params.imported ?? 0);
+  const skipped = Number(params.skipped ?? 0);
+  const failed = Number(params.failed ?? 0);
+  const hasImportMessage =
+    Number.isFinite(imported) || Number.isFinite(skipped) || Number.isFinite(failed);
 
   return (
     <main className="home dealer-admin">
@@ -46,6 +57,47 @@ export default async function DealerListingsPage() {
               Add listing
             </Link>
           </div>
+        </div>
+        {hasImportMessage && (imported || skipped || failed) ? (
+          <div className="simple-alert">
+            Imported {imported} listings. Skipped {skipped}. Failed {failed}.
+          </div>
+        ) : null}
+        <div className="dealer-panel dealer-panel--import">
+          <h3>Bulk upload listings (CSV)</h3>
+          <p>
+            Upload a CSV with columns like make, model, variant, year, price, km,
+            fuel, transmission, location, status, type, description, photo_urls.
+          </p>
+          <form
+            className="dealer-form dealer-form--inline"
+            method="post"
+            action="/api/dealer/listings/import"
+            encType="multipart/form-data"
+          >
+            <input type="hidden" name="return" value="/dealer-admin/listings" />
+            <label>
+              CSV file
+              <input name="file" type="file" accept=".csv,text/csv" required />
+            </label>
+            <label>
+              Default status
+              <select name="status" defaultValue="available">
+                <option value="available">Available</option>
+                <option value="sold">Sold</option>
+              </select>
+            </label>
+            <label>
+              Default type
+              <select name="type" defaultValue="used">
+                <option value="used">Used</option>
+                <option value="new">New</option>
+              </select>
+            </label>
+            <button className="btn btn--solid" type="submit">
+              Import CSV
+            </button>
+          </form>
         </div>
         <div className="table-wrapper">
           <table className="leads-table">

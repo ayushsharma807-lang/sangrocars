@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
+import { getPrimaryPhoto } from "@/lib/photoUrls";
 
 type Listing = {
   id: string;
@@ -186,7 +187,7 @@ export default async function DealerPage({
             <div className="empty">No active listings for this dealer.</div>
           ) : (
             listings?.map((listing: Listing) => {
-              const photo = listing.photo_urls?.[0];
+              const photo = getPrimaryPhoto(listing.photo_urls);
               const titleParts = [
                 listing.year ?? undefined,
                 toTitle(listing.make),

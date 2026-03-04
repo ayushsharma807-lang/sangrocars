@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
+import { ensureListingPhotoBucket, LISTING_PHOTO_BUCKET } from "@/lib/listingPhotoBucket";
 import { buildPrivateSellerDescription } from "@/lib/privateSeller";
 
-const LISTING_PHOTO_BUCKET = process.env.LISTING_PHOTO_BUCKET ?? "listing-photos";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
 const TELEGRAM_BROADCAST_CHAT_ID =
   process.env.TELEGRAM_BROADCAST_CHAT_ID ??
@@ -104,7 +104,9 @@ const downloadTelegramPhoto = async (fileId: string) => {
 
 const uploadTelegramPhotos = async (fileIds: string[], folder: string) => {
   const sb = supabaseServer();
+  await ensureListingPhotoBucket(sb);
   const urls: string[] = [];
+  const errors: string[] = [];
 
   for (let index = 0; index < fileIds.length; index += 1) {
     const fileId = fileIds[index];
@@ -117,12 +119,15 @@ const uploadTelegramPhotos = async (fileIds: string[], folder: string) => {
         upsert: true,
         contentType,
       });
-    if (error) continue;
+    if (error) {
+      errors.push(error.message);
+      continue;
+    }
     const { data } = sb.storage.from(LISTING_PHOTO_BUCKET).getPublicUrl(path);
     if (data?.publicUrl) urls.push(data.publicUrl);
   }
 
-  return urls;
+  return { urls, errors };
 };
 
 const sendTelegramMessage = async (chatId: number | string, text: string) => {
@@ -299,9 +304,9 @@ export async function POST(req: Request) {
       .toLowerCase()
       .replace(/\s+/g, "-");
 
-    const photoUrls = TELEGRAM_BOT_TOKEN
+    const { urls: photoUrls, errors: photoErrors } = TELEGRAM_BOT_TOKEN
       ? await uploadTelegramPhotos(photoFileIds.slice(0, 8), folder)
-      : [];
+      : { urls: [], errors: [] };
 
     const details = [
       data.condition ? `Condition: ${data.condition}` : null,
@@ -348,6 +353,16 @@ export async function POST(req: Request) {
       await sendTelegramMessage(chatId, "Failed to post listing. Try again.");
       await broadcast(`${displayName} listing failed: ${error.message}`);
       return;
+    }
+
+    if (photoUrls.length === 0 && photoFileIds.length > 0) {
+      await sendTelegramMessage(
+        chatId,
+        "Listing posted, but photos failed to upload. Please try sending the photos again."
+      );
+      if (photoErrors.length) {
+        console.log("Telegram photo upload errors:", photoErrors);
+      }
     }
 
     await sb.from("telegram_sessions").delete().eq("user_id", userId);

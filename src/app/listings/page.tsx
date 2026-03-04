@@ -3,6 +3,7 @@ import Link from "next/link";
 import SortForm from "@/app/components/SortForm";
 import PriceRangeSlider from "@/app/components/PriceRangeSlider";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
+import { getPrimaryPhoto } from "@/lib/photoUrls";
 
 type SearchParams = {
   q?: string | string[];
@@ -19,6 +20,17 @@ type SearchParams = {
   sort?: string | string[];
   page?: string | string[];
   compare?: string | string[];
+};
+
+const buildWhatsAppLink = () => {
+  const raw = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
+  if (!raw) return "";
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  const message =
+    process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE ??
+    "Hi, I'm interested in a car listing on SangroCars.";
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 };
 
 type Listing = {
@@ -309,6 +321,7 @@ export default async function Home({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  const whatsappHref = buildWhatsAppLink();
   const params = await searchParams;
   const [{ listings, count, error, page }, cities, priceBounds] =
     await Promise.all([
@@ -477,6 +490,16 @@ export default async function Home({
               >
                 Luxury collection
               </Link>
+              {whatsappHref && (
+                <a
+                  className="cw-header__btn cw-header__btn--whatsapp"
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  WhatsApp us
+                </a>
+              )}
               <Link className="cw-header__btn cw-header__btn--ghost" href="/">
                 Back to home
               </Link>
@@ -702,7 +725,7 @@ export default async function Home({
                 </div>
               ) : (
                 listings.map((listing) => {
-                  const photo = listing.photo_urls?.[0];
+                  const photo = getPrimaryPhoto(listing.photo_urls);
                   const titleParts = [
                     listing.year ?? undefined,
                     toTitle(listing.make),

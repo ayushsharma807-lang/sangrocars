@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import VoicePostHelper from "./VoicePostHelper";
+import { buildPolishedDescription } from "@/lib/descriptionPolisher";
 
 type Props = {
   action: string;
@@ -264,6 +265,31 @@ export default function ListingWizard({ action, submitLabel }: Props) {
               placeholder="Condition, service history, owner details..."
             />
           </label>
+          <div className="dealer-form__actions">
+            <button
+              className="btn btn--ghost"
+              type="button"
+              onClick={() => {
+                const polished = buildPolishedDescription({
+                  make: form.make,
+                  model: form.model,
+                  variant: form.variant,
+                  year: form.year,
+                  price: form.price,
+                  km: form.km,
+                  fuel: form.fuel,
+                  transmission: form.transmission,
+                  location: form.location,
+                  notes: form.description,
+                });
+                if (polished) {
+                  updateField("description", polished);
+                }
+              }}
+            >
+              Polish description
+            </button>
+          </div>
         </div>
       )}
 

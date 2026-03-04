@@ -1,6 +1,5 @@
 import { supabaseServer } from "@/lib/supabase";
-
-const LISTING_PHOTO_BUCKET = process.env.LISTING_PHOTO_BUCKET ?? "listing-photos";
+import { ensureListingPhotoBucket, LISTING_PHOTO_BUCKET } from "@/lib/listingPhotoBucket";
 
 const sanitizeExt = (value?: string | null) => {
   if (!value) return "jpg";
@@ -26,6 +25,7 @@ export const uploadListingPhotoFiles = async (
   folder: string
 ) => {
   const sb = supabaseServer();
+  await ensureListingPhotoBucket(sb);
   const urls: string[] = [];
   const errors: string[] = [];
   const imageFiles = validImageFiles(files);

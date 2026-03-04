@@ -9,6 +9,7 @@ import NearbyDealersMap from "./NearbyDealersMap";
 import SaveToGarageButton from "@/app/components/SaveToGarageButton";
 import RecentViewTracker from "@/app/components/RecentViewTracker";
 import PersonalizedPriceSignal from "@/app/components/PersonalizedPriceSignal";
+import { getPrimaryPhoto, normalizePhotoUrls } from "@/lib/photoUrls";
 
 type Listing = {
   id: string;
@@ -152,10 +153,18 @@ const getPredictivePricing = async (
 
 export default async function ListingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: { [key: string]: string | string[] | undefined };
 }) {
   const { id } = await params;
+  const debug =
+    typeof searchParams?.debug === "string"
+      ? searchParams.debug === "1"
+      : Array.isArray(searchParams?.debug)
+        ? searchParams?.debug[0] === "1"
+        : false;
   if (!hasSupabaseConfig()) {
     return (
       <main className="simple-page simple-detail-page">
@@ -223,8 +232,12 @@ export default async function ListingPage({
     toTitle(listing.model),
     toTitle(listing.variant),
   ].filter(Boolean);
-  const photos = listing.photo_urls ?? [];
+  const photos = normalizePhotoUrls(listing.photo_urls);
   const listingTitle = titleParts.join(" ") || "Car listing";
+  const listingUrlBase =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    "https://www.sangrocars.in";
+  const listingUrl = `${listingUrlBase}/listing/${listing.id}`;
   const predictivePricing = await getPredictivePricing(sb, listing);
 
   let dealer: Dealer | null = null;
@@ -256,6 +269,14 @@ export default async function ListingPage({
   return (
     <main className="simple-page simple-detail-page">
       <section className="simple-shell">
+        <div
+          className="whatsapp-context"
+          data-whatsapp-context="listing"
+          data-title={listingTitle}
+          data-price={formatPrice(listing.price)}
+          data-location={listing.location ?? ""}
+          data-url={listingUrl}
+        />
         <div className="simple-header">
           <div>
             <h1>{titleParts.join(" ")}</h1>
@@ -273,7 +294,7 @@ export default async function ListingPage({
               title={listingTitle}
               price={listing.price}
               location={listing.location}
-              photo={photos[0] ?? null}
+              photo={getPrimaryPhoto(photos)}
             />
           </div>
         </div>
@@ -304,6 +325,22 @@ export default async function ListingPage({
             <ListingGallery photos={photos} alt={listingTitle} />
           </div>
           <div className="simple-detail__panel simple-detail__panel--stack">
+            {debug && (
+              <div className="simple-debug">
+                <h3>Debug: Photo URLs</h3>
+                <pre className="simple-debug__code">
+                  Raw photo_urls: {JSON.stringify(listing.photo_urls, null, 2)}
+                </pre>
+                <pre className="simple-debug__code">
+                  Normalized: {JSON.stringify(photos, null, 2)}
+                </pre>
+                <div className="simple-debug__images">
+                  {photos.map((url) => (
+                    <img key={url} src={url} alt="Listing photo" />
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="simple-detail__price">{formatPrice(listing.price)}</div>
             <div className="simple-detail__section">
               <h3>Overview</h3>
