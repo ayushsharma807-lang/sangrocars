@@ -277,12 +277,17 @@ export default async function ListingPage({
           data-location={listing.location ?? ""}
           data-url={listingUrl}
         />
-        <div className="simple-header">
-          <div>
-            <h1>{titleParts.join(" ")}</h1>
-            <p>{listing.location || "Location on request"}</p>
+        <div className="listing-hero">
+          <div className="listing-hero__brand">
+            <div className="listing-hero__logo">
+              <img src="/images/sangrocars-logo.png" alt="SangroCars" />
+            </div>
+            <div>
+              <h1>{titleParts.join(" ")}</h1>
+              <p>{listing.location || "Location on request"}</p>
+            </div>
           </div>
-          <div className="simple-detail__top-actions">
+          <div className="simple-detail__top-actions listing-hero__actions">
             <Link className="simple-button simple-button--secondary" href="/listings">
               ← Back to listings
             </Link>
