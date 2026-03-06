@@ -906,11 +906,57 @@ export default async function Home({
               <h3 className="cw-footer__title">Experience CarHub App</h3>
               <p>Search, compare, and save cars from your phone.</p>
               <div className="cw-footer__apps">
-                <a className="cw-footer__app" href="#">
-                  Get it on Play Store
+                <a
+                  className="store-badge store-badge--play"
+                  href="#"
+                  aria-label="Get it on Google Play"
+                >
+                  <span className="store-badge__icon" aria-hidden="true">
+                    <svg viewBox="0 0 512 512" role="img" aria-hidden="true">
+                      <path
+                        fill="#34A853"
+                        d="M70 58c-6 6-10 16-10 30v336c0 14 4 24 10 30l194-194L70 58z"
+                      />
+                      <path
+                        fill="#FBBC04"
+                        d="M264 256l66-66 78 45c22 13 22 35 0 48l-78 45-66-66z"
+                      />
+                      <path
+                        fill="#4285F4"
+                        d="M264 256L70 454c9 9 24 10 40 1l220-126-66-73z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M264 256l66-66-220-126c-16-9-31-8-40 1l194 191z"
+                      />
+                    </svg>
+                  </span>
+                  <span className="store-badge__text">
+                    <span className="store-badge__kicker">GET IT ON</span>
+                    <span className="store-badge__label">Google Play</span>
+                  </span>
                 </a>
-                <a className="cw-footer__app" href="#">
-                  Download on App Store
+                <a
+                  className="store-badge store-badge--apple"
+                  href="#"
+                  aria-label="Download on the App Store"
+                >
+                  <span className="store-badge__icon" aria-hidden="true">
+                    <svg viewBox="0 0 384 512" role="img" aria-hidden="true">
+                      <path
+                        fill="currentColor"
+                        d="M318 268c-1-44 36-65 38-66-21-30-54-34-66-35-28-3-54 17-69 17-14 0-36-17-59-16-30 1-58 17-74 43-32 55-8 136 23 180 15 22 33 47 57 46 23-1 31-15 59-15s35 15 59 14c24-1 40-23 55-45 17-25 24-50 24-52-1 0-46-18-47-71z"
+                      />
+                      <path
+                        fill="currentColor"
+                        d="M260 77c13-16 22-38 19-60-19 1-41 12-54 28-12 14-23 36-20 57 21 2 42-10 55-25z"
+                      />
+                    </svg>
+                  </span>
+                  <span className="store-badge__text">
+                    <span className="store-badge__kicker">DOWNLOAD ON THE</span>
+                    <span className="store-badge__label">App Store</span>
+                  </span>
                 </a>
               </div>
             </div>
