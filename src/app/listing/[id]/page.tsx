@@ -283,10 +283,10 @@ export default async function ListingPage({
             <p>{listing.location || "Location on request"}</p>
           </div>
           <div className="simple-detail__top-actions">
-            <Link className="simple-link" href="/listings">
+            <Link className="simple-button simple-button--secondary" href="/listings">
               Back to listings
             </Link>
-            <Link className="simple-link" href={`/compare?ids=${listing.id}`}>
+            <Link className="simple-button simple-button--secondary" href={`/compare?ids=${listing.id}`}>
               Compare this car
             </Link>
             <SaveToGarageButton

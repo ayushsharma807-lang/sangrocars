@@ -4247,8 +4247,13 @@ button.simple-link-btn:disabled {
 .simple-detail__top-actions {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
   align-items: flex-end;
+}
+
+.simple-detail__top-actions .simple-button {
+  min-width: 180px;
+  justify-content: center;
 }
 
 .simple-compare-bar {
