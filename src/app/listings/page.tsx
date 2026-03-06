@@ -476,6 +476,9 @@ export default async function Home({
         <div className="simple-header cw-header">
           <div className="cw-header__row">
             <div className="cw-header__branding">
+              <div className="cw-header__logo">
+                <img src="/images/sangrocars-logo.png" alt="SangroCars" />
+              </div>
               <div>
                 <h1>Used cars in India</h1>
                 <p>
