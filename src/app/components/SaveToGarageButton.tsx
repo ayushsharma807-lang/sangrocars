@@ -47,8 +47,8 @@ export default function SaveToGarageButton({
   };
 
   return (
-    <button className="simple-link-btn" onClick={save} type="button">
-      {saved ? "Saved to My Garage" : "Save to My Garage"}
+    <button className="simple-button simple-button--secondary" onClick={save} type="button">
+      {saved ? "✅ Saved to My Garage" : "💾 Save to My Garage"}
     </button>
   );
 }
