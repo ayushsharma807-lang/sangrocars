@@ -4,6 +4,7 @@ import SellCarForm from "./SellCarForm";
 const errorText = {
   missing_fields: "Please fill required fields (make, model, and phone).",
   create_failed: "Could not create your ad right now. Please try again.",
+  phone_unverified: "Please verify your phone number before publishing.",
 } as const;
 
 export default async function SellCarPage({

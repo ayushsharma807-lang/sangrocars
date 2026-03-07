@@ -55,6 +55,11 @@ export default function SellCarForm() {
   const [sellerPhone, setSellerPhone] = useState("");
   const [sellerEmail, setSellerEmail] = useState("");
   const [phoneVerified, setPhoneVerified] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpMessage, setOtpMessage] = useState<string | null>(null);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
   const modelOptions = useMemo(() => getModelOptions(make), [make]);
@@ -70,6 +75,13 @@ export default function SellCarForm() {
       urls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [photoFiles]);
+
+  useEffect(() => {
+    setPhoneVerified(false);
+    setOtpCode("");
+    setOtpMessage(null);
+    setOtpError(null);
+  }, [sellerPhone]);
 
   const updateFiles = (files: File[]) => {
     setPhotoFiles(files);
@@ -182,6 +194,51 @@ export default function SellCarForm() {
   const goBack = () => {
     setFormError(null);
     setStep(Math.max(1, step - 1));
+  };
+
+  const requestOtp = async () => {
+    if (!sellerPhone) {
+      setOtpError("Enter a phone number first.");
+      return;
+    }
+    setOtpError(null);
+    setOtpMessage(null);
+    setOtpSending(true);
+    const response = await fetch("/api/listings/otp/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: sellerPhone }),
+    }).catch(() => null);
+    const payload = await response?.json().catch(() => null);
+    setOtpSending(false);
+    if (!response?.ok || !payload?.ok) {
+      setOtpError("Unable to send OTP. Please try again.");
+      return;
+    }
+    setOtpMessage("OTP sent. Please check your phone.");
+  };
+
+  const verifyOtp = async () => {
+    if (!sellerPhone || !otpCode) {
+      setOtpError("Enter the OTP code.");
+      return;
+    }
+    setOtpError(null);
+    setOtpMessage(null);
+    setOtpVerifying(true);
+    const response = await fetch("/api/listings/otp/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: sellerPhone, token: otpCode }),
+    }).catch(() => null);
+    const payload = await response?.json().catch(() => null);
+    setOtpVerifying(false);
+    if (!response?.ok || !payload?.ok) {
+      setOtpError("OTP verification failed. Try again.");
+      return;
+    }
+    setPhoneVerified(true);
+    setOtpMessage("Phone verified. You can publish now.");
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -336,7 +393,11 @@ export default function SellCarForm() {
             </label>
             <label>
               Owner type
-              <select value={ownerType} onChange={(event) => setOwnerType(event.target.value)}>
+              <select
+                name="owner_type"
+                value={ownerType}
+                onChange={(event) => setOwnerType(event.target.value)}
+              >
                 <option>1st owner</option>
                 <option>2nd owner</option>
                 <option>3rd owner</option>
@@ -346,6 +407,7 @@ export default function SellCarForm() {
             <label>
               Registration / RTO
               <input
+                name="registration"
                 value={registration}
                 onChange={(event) => setRegistration(event.target.value)}
                 placeholder="PB08 / DL01 / HR26"
@@ -353,7 +415,11 @@ export default function SellCarForm() {
             </label>
             <label>
               Service history
-              <select value={serviceHistory} onChange={(event) => setServiceHistory(event.target.value)}>
+              <select
+                name="service_history"
+                value={serviceHistory}
+                onChange={(event) => setServiceHistory(event.target.value)}
+              >
                 <option>Full service history</option>
                 <option>Partial</option>
                 <option>Not available</option>
@@ -361,7 +427,11 @@ export default function SellCarForm() {
             </label>
             <label>
               Accident history
-              <select value={accidentHistory} onChange={(event) => setAccidentHistory(event.target.value)}>
+              <select
+                name="accident_history"
+                value={accidentHistory}
+                onChange={(event) => setAccidentHistory(event.target.value)}
+              >
                 <option>No accidents</option>
                 <option>Minor</option>
                 <option>Major</option>
@@ -481,7 +551,11 @@ export default function SellCarForm() {
           <div className="dealer-form__grid">
             <label>
               Seller type
-              <select value={sellerType} onChange={(event) => setSellerType(event.target.value)}>
+              <select
+                name="seller_type"
+                value={sellerType}
+                onChange={(event) => setSellerType(event.target.value)}
+              >
                 <option value="private">Private seller</option>
                 <option value="dealer">Dealer</option>
               </select>
@@ -490,15 +564,27 @@ export default function SellCarForm() {
               <>
                 <label>
                   Dealership name
-                  <input value={dealerName} onChange={(event) => setDealerName(event.target.value)} />
+                  <input
+                    name="dealer_name"
+                    value={dealerName}
+                    onChange={(event) => setDealerName(event.target.value)}
+                  />
                 </label>
                 <label>
                   Dealer logo URL
-                  <input value={dealerLogo} onChange={(event) => setDealerLogo(event.target.value)} />
+                  <input
+                    name="dealer_logo"
+                    value={dealerLogo}
+                    onChange={(event) => setDealerLogo(event.target.value)}
+                  />
                 </label>
                 <label>
                   Dealer profile link
-                  <input value={dealerProfile} onChange={(event) => setDealerProfile(event.target.value)} />
+                  <input
+                    name="dealer_profile"
+                    value={dealerProfile}
+                    onChange={(event) => setDealerProfile(event.target.value)}
+                  />
                 </label>
               </>
             )}
@@ -532,15 +618,34 @@ export default function SellCarForm() {
               />
             </label>
           </div>
-          <label className="sell-check">
-            <input
-              type="checkbox"
-              checked={phoneVerified}
-              onChange={(event) => setPhoneVerified(event.target.checked)}
-              required
-            />
-            Verify phone number to publish listing (OTP required after submit).
-          </label>
+          <div className="sell-otp">
+            <div className="sell-otp__row">
+              <button
+                type="button"
+                className="simple-button simple-button--secondary"
+                onClick={requestOtp}
+                disabled={otpSending}
+              >
+                {otpSending ? "Sending OTP..." : "Send OTP"}
+              </button>
+              <input
+                type="text"
+                placeholder="Enter OTP"
+                value={otpCode}
+                onChange={(event) => setOtpCode(event.target.value)}
+              />
+              <button
+                type="button"
+                className="simple-button"
+                onClick={verifyOtp}
+                disabled={otpVerifying}
+              >
+                {otpVerifying ? "Verifying..." : "Verify OTP"}
+              </button>
+            </div>
+            {otpMessage && <p className="sell-otp__message">{otpMessage}</p>}
+            {otpError && <p className="sell-otp__error">{otpError}</p>}
+          </div>
           <div className="sell-hint">
             Your phone number is only shared with interested buyers. SangroCars does not charge listing fees.
           </div>

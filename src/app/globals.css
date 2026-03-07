@@ -2849,12 +2849,46 @@ body {
   font-size: 12px;
 }
 
+.sell-otp {
+  margin: 12px 0 6px;
+}
+
+.sell-otp__row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.sell-otp__row input {
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.sell-otp__message {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #16a34a;
+}
+
+.sell-otp__error {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #dc2626;
+}
+
 @media (max-width: 900px) {
   .sell-steps {
     grid-template-columns: 1fr;
   }
 
   .sell-preview__card {
+    grid-template-columns: 1fr;
+  }
+
+  .sell-otp__row {
     grid-template-columns: 1fr;
   }
 }
