@@ -951,19 +951,20 @@ body {
 }
 
 .exclusive .btn--outline {
-  border-color: rgba(201, 165, 95, 0.42);
-  color: #f2e2c1;
-  background: rgba(201, 165, 95, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .exclusive .btn--glass {
-  border-color: rgba(201, 165, 95, 0.35);
-  color: #f2e2c1;
-  background: rgba(7, 7, 7, 0.48);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: rgba(248, 250, 252, 0.9);
+  background: rgba(7, 9, 14, 0.55);
 }
 
 .exclusive .btn:hover {
-  box-shadow: 0 14px 30px rgba(201, 165, 95, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
 }
 
 .exclusive-hero {
@@ -990,9 +991,13 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 12% 14%, rgba(201, 165, 95, 0.25), transparent 56%),
-    radial-gradient(circle at 82% 16%, rgba(201, 165, 95, 0.16), transparent 48%),
-    linear-gradient(120deg, rgba(5, 5, 5, 0.74), rgba(7, 7, 7, 0.56));
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.65) 35%,
+    rgba(0, 0, 0, 0.25) 70%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
   z-index: 1;
 }
 
@@ -1009,6 +1014,7 @@ body {
   object-position: center;
   opacity: 0.76;
   filter: saturate(1.03) contrast(1.04);
+  animation: heroZoom 18s ease-in-out infinite;
 }
 
 .exclusive-hero__content {
@@ -1037,7 +1043,7 @@ body {
   letter-spacing: 2px;
   font-size: 11px;
   color: #f6e4c0;
-  margin: 0;
+  margin: 0 0 16px;
 }
 
 .exclusive-hero h1 {
@@ -1045,15 +1051,15 @@ body {
   font-size: clamp(38px, 4.7vw, 70px);
   line-height: 1.04;
   letter-spacing: -0.02em;
-  margin: 0;
+  margin: 0 0 4px;
   text-shadow: 0 18px 34px rgba(0, 0, 0, 0.45);
 }
 
 .exclusive-hero p {
-  color: var(--fg-muted);
+  color: rgba(255, 255, 255, 0.85);
   margin: 0;
   font-size: 17px;
-  max-width: 620px;
+  max-width: 520px;
 }
 
 .exclusive-hero__actions {
@@ -1063,6 +1069,51 @@ body {
   margin-top: 4px;
 }
 
+.exclusive-hero__trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 6px;
+}
+
+.exclusive-hero__search {
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr 0.7fr 0.7fr auto;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 14, 20, 0.6);
+  backdrop-filter: blur(10px);
+  margin-top: 6px;
+}
+
+.exclusive-hero__search input,
+.exclusive-hero__search select {
+  background: rgba(5, 8, 12, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.exclusive-hero__search input::placeholder {
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.exclusive-hero__search button {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(130deg, var(--lux-gold-bright), var(--lux-gold));
+  color: #13110c;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
 .exclusive-hero__stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1095,8 +1146,8 @@ body {
   gap: 16px;
   padding: 22px;
   border-radius: 20px;
-  border: 1px solid rgba(201, 165, 95, 0.34);
-  background: linear-gradient(150deg, rgba(201, 165, 95, 0.2), rgba(13, 11, 8, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(150deg, rgba(12, 14, 18, 0.92), rgba(8, 10, 14, 0.88));
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
   animation: spotlightFloat 7s ease-in-out infinite;
@@ -1107,9 +1158,19 @@ body {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  border: 1px solid rgba(240, 217, 166, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   mask: linear-gradient(130deg, transparent 0%, #000 30%, #000 70%, transparent 100%);
   pointer-events: none;
+}
+
+@keyframes heroZoom {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
 }
 
 .exclusive-hero__spotlight-eyebrow {
@@ -4699,6 +4760,19 @@ button.simple-link-btn:disabled {
   .exclusive-hero__content {
     grid-template-columns: 1fr;
     gap: 20px;
+  }
+
+  .exclusive-hero__content > div {
+    text-align: center;
+  }
+
+  .exclusive-hero__actions,
+  .exclusive-hero__trust {
+    justify-content: center;
+  }
+
+  .exclusive-hero__search {
+    grid-template-columns: 1fr;
   }
 
   .exclusive-hero__spotlight {

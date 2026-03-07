@@ -92,12 +92,6 @@ const premiumSignals = [
   },
 ];
 
-const spotlightChecklist = [
-  "Fresh walkaround videos",
-  "High-value inventory focus",
-  "Fast dealer response path",
-];
-
 const popularBrands: PopularBrand[] = [
   {
     key: "maruti-suzuki",
@@ -371,7 +365,7 @@ export default async function Home() {
           <div>
             <p className="exclusive-hero__eyebrow">Exclusive deals of the week</p>
             <h1>
-              Luxury picks for buyers who want the <span className="accent">best cars first</span>
+              The best luxury cars. <span className="accent">Before everyone else.</span>
             </h1>
             <p>
               A premium front page for premium inventory. Every week we shoot
@@ -379,28 +373,55 @@ export default async function Home() {
               a serious buyer&apos;s time.
             </p>
             <div className="exclusive-hero__actions">
-              <Link className="btn btn--solid" href="#exclusive-deals">
-                Watch weekly drops
+              <Link className="btn btn--solid" href="/listings">
+                Browse luxury cars
               </Link>
-              <Link className="btn btn--outline" href="/listings">
-                Browse all cars
-              </Link>
-              <Link className="btn btn--glass" href="/sell">
+              <Link className="btn btn--outline" href="/sell">
                 Post your car
               </Link>
+              <Link className="btn btn--glass" href="#exclusive-deals">
+                Watch weekly drops
+              </Link>
             </div>
+            <div className="exclusive-hero__trust">
+              <span>✓ Verified sellers</span>
+              <span>✓ No dealer spam</span>
+              <span>✓ Direct WhatsApp contact</span>
+            </div>
+            <form className="exclusive-hero__search" action="/listings" method="get">
+              <input name="q" placeholder="Search by car name" />
+              <input name="city" placeholder="City" />
+              <select name="budget" defaultValue="">
+                <option value="">Budget</option>
+                <option value="0-300000">Up to ₹3L</option>
+                <option value="300000-600000">₹3L - ₹6L</option>
+                <option value="600000-1000000">₹6L - ₹10L</option>
+                <option value="1000000-2000000">₹10L - ₹20L</option>
+                <option value="2000000-5000000">₹20L - ₹50L</option>
+                <option value="5000000-20000000">₹50L+</option>
+              </select>
+              <select name="fuel" defaultValue="">
+                <option value="">Fuel</option>
+                <option value="petrol">Petrol</option>
+                <option value="diesel">Diesel</option>
+                <option value="cng">CNG</option>
+                <option value="electric">EV</option>
+                <option value="hybrid">Hybrid</option>
+              </select>
+              <button type="submit">Search</button>
+            </form>
             <div className="exclusive-hero__stats">
               <div>
                 <strong>7 days</strong>
-                <span>Each feature stays live</span>
+                <span>Listings stay featured</span>
               </div>
               <div>
                 <strong>100%</strong>
-                <span>Video-verified deals</span>
+                <span>Video verified cars</span>
               </div>
               <div>
                 <strong>Direct</strong>
-                <span>Buyer-to-dealer contact</span>
+                <span>Buyer-to-seller contact</span>
               </div>
             </div>
           </div>
@@ -409,9 +430,9 @@ export default async function Home() {
             <p className="exclusive-hero__spotlight-eyebrow">Collector&apos;s spotlight</p>
             <h2>Curated inventory. Weekly release.</h2>
             <ul>
-              {spotlightChecklist.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
+              <li>Verified listings</li>
+              <li>Video walkarounds</li>
+              <li>Fast seller response</li>
             </ul>
             <Link className="btn btn--glass btn--full" href="/dealer-admin/login">
               Feature with us
