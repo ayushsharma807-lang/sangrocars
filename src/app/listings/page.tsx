@@ -17,6 +17,7 @@ type SearchParams = {
   year_max?: string | string[];
   city?: string | string[];
   location?: string | string[];
+  budget?: string | string[];
   sort?: string | string[];
   page?: string | string[];
   compare?: string | string[];
@@ -52,6 +53,16 @@ type Listing = {
 const PAGE_SIZE = 9;
 const DEFAULT_PRICE_MIN = 100_000;
 const DEFAULT_PRICE_MAX = 5_000_000;
+const BUDGET_OPTIONS = [
+  { value: "", label: "Budget" },
+  { value: "0-300000", label: "Up to ₹3L" },
+  { value: "300000-600000", label: "₹3L - ₹6L" },
+  { value: "600000-1000000", label: "₹6L - ₹10L" },
+  { value: "1000000-2000000", label: "₹10L - ₹20L" },
+  { value: "2000000-5000000", label: "₹20L - ₹50L" },
+  { value: "5000000-20000000", label: "₹50L+" },
+];
+const POPULAR_SEARCHES = ["Swift", "Thar", "Creta", "Fortuner"];
 
 const parseMoney = (value?: string) => {
   if (!value) return null;
@@ -75,6 +86,18 @@ const parseNumber = (value?: string) => {
   if (!cleaned) return null;
   const num = Number(cleaned);
   return Number.isFinite(num) ? num : null;
+};
+
+const parseBudgetRange = (value?: string | null) => {
+  if (!value) return null;
+  const [minRaw, maxRaw] = value.split("-").map((part) => Number(part));
+  if (!Number.isFinite(minRaw) || !Number.isFinite(maxRaw)) return null;
+  return { min: minRaw, max: maxRaw };
+};
+
+const getBudgetLabel = (value?: string | null) => {
+  if (!value) return null;
+  return BUDGET_OPTIONS.find((option) => option.value === value)?.label ?? null;
 };
 
 const getParam = (value?: string | string[]) =>
@@ -255,6 +278,13 @@ const getListings = async (searchParams: SearchParams) => {
   }
 
   const priceMode = getParam(searchParams.price_mode);
+  const budgetValue = getParam(searchParams.budget);
+  if (budgetValue && priceMode !== "custom") {
+    const range = parseBudgetRange(budgetValue);
+    if (range) {
+      query = query.gte("price", range.min).lte("price", range.max);
+    }
+  }
   if (priceMode === "custom") {
     const minPrice = parseMoney(getParam(searchParams.min_price));
     const maxPrice = parseMoney(getParam(searchParams.max_price));
@@ -337,6 +367,7 @@ export default async function Home({
   const yearMaxValue = getParam(params.year_max);
   const fuelValue = getParam(params.fuel);
   const cityValue = getParam(params.city);
+  const budgetValue = getParam(params.budget);
   const locationValue = getParam(params.location);
   const transmissionValue = getParam(params.transmission);
   const typeValue = getParam(params.type);
@@ -355,6 +386,7 @@ export default async function Home({
     year_max: yearMaxValue,
     city: cityValue,
     location: locationValue,
+    budget: budgetValue,
     compare: compareIds.length > 0 ? compareIds.join(",") : undefined,
   };
   const topSearchHiddenEntries = [
@@ -369,7 +401,6 @@ export default async function Home({
     { key: "type", value: typeValue },
     { key: "year_min", value: yearMinValue },
     { key: "year_max", value: yearMaxValue },
-    { key: "city", value: cityValue },
     { key: "location", value: locationValue },
     { key: "sort", value: sortValue },
     {
@@ -445,6 +476,13 @@ export default async function Home({
           overrides: { year_min: null, year_max: null },
         }
       : null,
+    budgetValue
+      ? {
+          key: "budget",
+          label: `Budget: ${getBudgetLabel(budgetValue) ?? budgetValue}`,
+          overrides: { budget: null },
+        }
+      : null,
     sortValue && sortValue !== "recent"
       ? {
           key: "sort",
@@ -473,13 +511,34 @@ export default async function Home({
         <label className="cw-filter-backdrop" htmlFor="cw-filter-toggle" aria-hidden="true">
           <span className="cw-filter-backdrop__sr">Close filters</span>
         </label>
+        <nav className="cw-nav">
+          <div className="cw-nav__brand">SangroCars</div>
+          <div className="cw-nav__links">
+            <Link href="/">Home</Link>
+            <Link href="/listings">Buy Car</Link>
+            <Link href="/sell">Sell Car</Link>
+            <Link href="/listings?price_mode=custom&min_price=4500000&sort=price_desc&page=1">
+              Luxury Cars
+            </Link>
+            <Link href="/#about">About</Link>
+            <Link href="/#contact">Contact</Link>
+          </div>
+        </nav>
         <div className="simple-header cw-header">
           <div className="cw-header__row">
-            <div className="cw-header__branding">
-              <div className="cw-header__logo">
-                <img src="/images/sangrocars-logo.png" alt="SangroCars" />
+            <div className="cw-header__copy">
+              <div className="cw-header__branding">
+                <div className="cw-header__logo">
+                  <img src="/images/sangrocars-logo.png" alt="SangroCars" />
+                </div>
+                <div className="cw-header__brand-text">
+                  <span className="cw-header__brand-name">SangroCars</span>
+                  <span className="cw-header__brand-tagline">
+                    India's Trusted Used Car Marketplace
+                  </span>
+                </div>
               </div>
-              <div>
+              <div className="cw-header__headline">
                 <h1>Used cars in India</h1>
                 <p>
                   Explore verified listings by budget, city, fuel, and transmission.
@@ -512,56 +571,199 @@ export default async function Home({
             </div>
           </div>
         </div>
-        <div className="cw-top-bar">
-          <label className="cw-filter-btn" htmlFor="cw-filter-toggle">
-            Filters
-          </label>
-          <form className="cw-top-search" method="get">
-            <div className="cw-top-search__field">
-              <span className="cw-top-search__scope" aria-hidden="true">
-                All
-              </span>
-              <input
-                className="cw-top-search__input"
-                name="q"
-                type="search"
-                aria-label="Search cars"
-                placeholder="Search make, model, variant"
-                defaultValue={qValue}
-              />
-              <button
-                className="cw-top-search__icon"
-                type="submit"
-                aria-label="Search cars"
-              >
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle
-                    cx="11"
-                    cy="11"
-                    r="6.5"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M16 16L21 21"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
+        <div className="cw-search">
+          <div className="cw-search__row">
+            <label className="cw-filter-btn" htmlFor="cw-filter-toggle">
+              Filters
+            </label>
+            <form className="cw-search-bar" method="get">
+              <div className="cw-search-bar__field">
+                <input
+                  className="cw-search-bar__input"
+                  name="q"
+                  type="search"
+                  aria-label="Search cars"
+                  placeholder="Search make or model"
+                  defaultValue={qValue}
+                />
+              </div>
+              <div className="cw-search-bar__select">
+                <select name="city" defaultValue={cityValue ?? ""} aria-label="City">
+                  <option value="">All cities</option>
+                  {cities.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="cw-search-bar__select">
+                <select
+                  name="budget"
+                  defaultValue={budgetValue ?? ""}
+                  aria-label="Budget"
+                >
+                  {BUDGET_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button className="cw-search-bar__submit" type="submit">
+                Search
               </button>
-            </div>
-            {topSearchHiddenEntries.map((entry) => (
-              <input
-                key={entry.key}
-                type="hidden"
-                name={entry.key}
-                value={String(entry.value)}
-              />
+              {topSearchHiddenEntries.map((entry) => (
+                <input
+                  key={entry.key}
+                  type="hidden"
+                  name={entry.key}
+                  value={String(entry.value)}
+                />
+              ))}
+              <input type="hidden" name="page" value="1" />
+            </form>
+          </div>
+          <div className="cw-search-popular">
+            <span>Popular:</span>
+            {POPULAR_SEARCHES.map((term) => (
+              <Link
+                key={term}
+                href={`/listings?${buildQuery(params, { q: term, page: "1" })}`}
+              >
+                {term}
+              </Link>
             ))}
-            <input type="hidden" name="page" value="1" />
-          </form>
+          </div>
         </div>
+
+        <div className="cw-trust">
+          {[
+            "100% Verified Listings",
+            "Direct Owner Cars",
+            "No Dealer Spam",
+            "Secure WhatsApp Contact",
+          ].map((item) => (
+            <div key={item} className="cw-trust__item">
+              {item}
+            </div>
+          ))}
+        </div>
+
+        <div className="cw-stats-row">
+          <div className="cw-stat">
+            <strong>10,000+</strong>
+            <span>Cars listed</span>
+          </div>
+          <div className="cw-stat">
+            <strong>500+</strong>
+            <span>Cities covered</span>
+          </div>
+          <div className="cw-stat">
+            <strong>50,000+</strong>
+            <span>Monthly visitors</span>
+          </div>
+        </div>
+
+        <section className="cw-featured">
+          <div className="cw-featured__header">
+            <div>
+              <h2>Featured cars</h2>
+              <p>Handpicked listings with great value and verified sellers.</p>
+            </div>
+          </div>
+          <div className="cw-featured__grid">
+            {(listings.length ? listings.slice(0, 4) : []).map((listing) => {
+              const photo = getPrimaryPhoto(listing.photo_urls);
+              const titleParts = [
+                listing.year ?? undefined,
+                toTitle(listing.make),
+                toTitle(listing.model),
+                toTitle(listing.variant),
+              ].filter(Boolean);
+              const kmText = listing.km
+                ? `${listing.km.toLocaleString("en-IN")} km`
+                : "Km on request";
+              return (
+                <article className="cw-featured__card" key={`featured-${listing.id}`}>
+                  <div className="cw-featured__media">
+                    {photo ? (
+                      <Image
+                        src={photo}
+                        alt={String(listing.model ?? "Car")}
+                        fill
+                        sizes="(max-width: 980px) 100vw, 320px"
+                        className="cw-featured__image"
+                      />
+                    ) : (
+                      <div className="cw-featured__placeholder" />
+                    )}
+                  </div>
+                  <div className="cw-featured__body">
+                    <h3>{titleParts.join(" ")}</h3>
+                    <strong>{formatPrice(listing.price)}</strong>
+                    <p>
+                      {listing.year ?? "Year"} • {kmText} •{" "}
+                      {toTitle(listing.fuel) ?? "Fuel"}
+                    </p>
+                    <span className="cw-featured__city">
+                      {getCityFromLocation(listing.location) ?? "City on request"}
+                    </span>
+                    <Link className="cw-featured__link" href={`/listing/${listing.id}`}>
+                      View details
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
+            {listings.length === 0 &&
+              [
+                {
+                  id: "fallback-1",
+                  title: "Hyundai Creta SX",
+                  price: "₹11,20,000",
+                  meta: "2019 • 45,000 km • Petrol",
+                  city: "Jalandhar",
+                },
+                {
+                  id: "fallback-2",
+                  title: "Mahindra Thar LX",
+                  price: "₹14,75,000",
+                  meta: "2021 • 18,000 km • Diesel",
+                  city: "Ludhiana",
+                },
+                {
+                  id: "fallback-3",
+                  title: "Toyota Fortuner",
+                  price: "₹32,50,000",
+                  meta: "2020 • 36,000 km • Diesel",
+                  city: "Delhi",
+                },
+                {
+                  id: "fallback-4",
+                  title: "Maruti Swift VXI",
+                  price: "₹6,20,000",
+                  meta: "2018 • 52,000 km • Petrol",
+                  city: "Jaipur",
+                },
+              ].map((item) => (
+                <article className="cw-featured__card" key={item.id}>
+                  <div className="cw-featured__media">
+                    <div className="cw-featured__placeholder" />
+                  </div>
+                  <div className="cw-featured__body">
+                    <h3>{item.title}</h3>
+                    <strong>{item.price}</strong>
+                    <p>{item.meta}</p>
+                    <span className="cw-featured__city">{item.city}</span>
+                    <span className="cw-featured__link cw-featured__link--muted">
+                      View details
+                    </span>
+                  </div>
+                </article>
+              ))}
+          </div>
+        </section>
 
         <div className="listings-layout listings-layout--carwale">
           <aside className="listings-layout__filters listings-layout__filters--left">
@@ -872,28 +1074,31 @@ export default async function Home({
         <footer className="cw-footer">
           <div className="cw-footer__grid">
             <div className="cw-footer__col">
-              <h3 className="cw-footer__title">About Us</h3>
+              <h3 className="cw-footer__title">SangroCars</h3>
               <p>
-                CarHub helps buyers discover verified cars faster. Compare prices,
-                explore dealer inventory, and sell your car with confidence.
+                India&apos;s trusted used car marketplace. Discover verified cars,
+                compare prices, and connect directly with sellers.
               </p>
-              <a className="cw-footer__link" href="/learn">
-                Learn more
+              <a className="cw-footer__link" href="/listings">
+                Buy cars
               </a>
-              <a className="cw-footer__link" href="/stories">
-                Success stories
+              <a className="cw-footer__link" href="/sell">
+                Sell your car
               </a>
-              <a className="cw-footer__link" href="/experience">
-                Our experience stack
+              <a
+                className="cw-footer__link"
+                href="/listings?price_mode=custom&min_price=4500000&sort=price_desc&page=1"
+              >
+                Luxury collection
+              </a>
+              <a className="cw-footer__link" href="/#contact">
+                Contact
               </a>
             </div>
             <div className="cw-footer__col">
               <h3 className="cw-footer__title">Connect With Us</h3>
-              <a className="cw-footer__link" href="/live">
-                Live events
-              </a>
-              <a className="cw-footer__link" href="/remote-docs">
-                Remote docs
+              <a className="cw-footer__link" href="/listings">
+                Buy cars
               </a>
               <a className="cw-footer__link" href="/sell">
                 Post your car
@@ -901,9 +1106,12 @@ export default async function Home({
               <a className="cw-footer__link" href="/dealer-admin">
                 Dealer login
               </a>
+              <a className="cw-footer__link" href="/#contact">
+                Support
+              </a>
             </div>
             <div className="cw-footer__col">
-              <h3 className="cw-footer__title">Experience CarHub App</h3>
+              <h3 className="cw-footer__title">Experience SangroCars App</h3>
               <p>Search, compare, and save cars from your phone.</p>
               <div className="cw-footer__apps">
                 <a
@@ -962,8 +1170,8 @@ export default async function Home({
             </div>
           </div>
           <div className="cw-footer__bottom">
-            <span>CarHub</span>
-            <span>Trusted used car marketplace for India.</span>
+            <span>SangroCars</span>
+            <span>© 2026 SangroCars</span>
           </div>
         </footer>
       </section>
