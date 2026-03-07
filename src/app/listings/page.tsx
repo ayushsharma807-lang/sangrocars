@@ -550,11 +550,11 @@ export default async function Home({
               </div>
             </div>
             <div className="cw-header__actions">
-              <Link
-                className="cw-header__btn cw-header__btn--luxury"
-                href="/listings?price_mode=custom&min_price=4500000&sort=price_desc&page=1"
-              >
-                Luxury collection
+              <Link className="cw-header__btn cw-header__btn--primary" href="/listings">
+                Browse cars
+              </Link>
+              <Link className="cw-header__btn cw-header__btn--ghost" href="/sell">
+                Post your car
               </Link>
               {whatsappHref && (
                 <a
@@ -566,8 +566,11 @@ export default async function Home({
                   WhatsApp us
                 </a>
               )}
-              <Link className="cw-header__btn cw-header__btn--primary" href="/sell">
-                Post your car
+              <Link
+                className="cw-header__btn cw-header__btn--luxury"
+                href="/listings?price_mode=custom&min_price=4500000&sort=price_desc&page=1"
+              >
+                Luxury collection
               </Link>
             </div>
           </div>
