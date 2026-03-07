@@ -77,57 +77,6 @@ const weeklySteps = [
   },
 ];
 
-const retailExperienceLinks = [
-  {
-    title: "AR / VR Test Drives",
-    description:
-      "Let buyers place 3D cars at home, run immersive tours, and inspect remotely.",
-    href: "/experience",
-  },
-  {
-    title: "AI Shopping Guide",
-    description:
-      "Concierge answers buyer questions and recommends listings using live inventory.",
-    href: "/ai-guide",
-  },
-  {
-    title: "My Garage Dashboard",
-    description:
-      "Save cars/configs, track values, and set reminders for service and renewals.",
-    href: "/garage",
-  },
-  {
-    title: "Unified Dealmaking",
-    description:
-      "Start finance + trade-in online and continue in showroom with one reference code.",
-    href: "/deal-builder",
-  },
-  {
-    title: "Live Stream Events",
-    description:
-      "Host weekly live walkthroughs with Q&A and live-only offers for urgent buyers.",
-    href: "/live",
-  },
-  {
-    title: "Remote Docs",
-    description:
-      "Collect paperwork remotely so customers only visit showroom for final delivery.",
-    href: "/remote-docs",
-  },
-  {
-    title: "Trust Stories",
-    description:
-      "Cinematic content, staff spotlights, and real buyer testimonials build trust.",
-    href: "/stories",
-  },
-  {
-    title: "How-To Hub",
-    description:
-      "Educational ownership and maintenance guides to build long-term authority.",
-    href: "/learn",
-  },
-];
-
 const premiumSignals = [
   {
     label: "Concierge-ready",
@@ -606,29 +555,6 @@ export default async function Home() {
               <h3>{step.title}</h3>
               <p>{step.description}</p>
             </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="section__header section__header--split">
-          <div>
-            <h2>Next-gen retail tools</h2>
-            <p>Everything needed for an all-India digital + showroom buying journey.</p>
-          </div>
-          <span className="section-pill">Digital showroom stack</span>
-        </div>
-        <div className="cards">
-          {retailExperienceLinks.map((item) => (
-            <article className="card" key={item.title}>
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-              <div>
-                <Link className="btn btn--outline" href={item.href}>
-                  Open
-                </Link>
-              </div>
-            </article>
           ))}
         </div>
       </section>
