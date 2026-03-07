@@ -12,6 +12,27 @@ export default async function DealerProfilePage() {
 
   const dealer = auth.dealer;
   const logoUrl = dealer.logo_url ?? "";
+  const bannerUrl = (dealer as { banner_url?: string | null }).banner_url ?? "";
+  const services = {
+    finance:
+      Boolean(
+        (dealer as { finance_available?: boolean | null }).finance_available
+      ) || false,
+    insurance:
+      Boolean(
+        (dealer as { insurance_assistance?: boolean | null })
+          .insurance_assistance
+      ) || false,
+    rcTransfer:
+      Boolean(
+        (dealer as { rc_transfer_help?: boolean | null }).rc_transfer_help
+      ) || false,
+    testDrive:
+      Boolean(
+        (dealer as { test_drive_available?: boolean | null })
+          .test_drive_available
+      ) || false,
+  };
 
   return (
     <main className="home dealer-admin">
@@ -24,7 +45,7 @@ export default async function DealerProfilePage() {
           </div>
         </div>
         <form
-          className="dealer-form"
+          className="dealer-form dealer-form--stacked"
           method="post"
           action="/api/dealer/profile"
           encType="multipart/form-data"
@@ -45,10 +66,31 @@ export default async function DealerProfilePage() {
               </div>
             </div>
           ) : null}
+          {bannerUrl ? (
+            <div className="dealer-logo-preview">
+              <Image
+                src={bannerUrl}
+                alt={`${dealer.name ?? "Dealer"} banner`}
+                width={260}
+                height={120}
+              />
+              <div>
+                <p className="dealer-form__hint">Current banner</p>
+                <p className="dealer-form__hint">Upload a new file to replace it.</p>
+              </div>
+            </div>
+          ) : null}
           <div className="dealer-form__grid">
             <label>
               Dealer name
               <input name="name" defaultValue={dealer.name ?? ""} required />
+            </label>
+            <label>
+              Owner name
+              <input
+                name="owner_name"
+                defaultValue={(dealer as { owner_name?: string | null }).owner_name ?? ""}
+              />
             </label>
             <label>
               Phone
@@ -63,8 +105,22 @@ export default async function DealerProfilePage() {
               <input name="email" defaultValue={dealer.email ?? ""} />
             </label>
             <label>
+              City
+              <input
+                name="city"
+                defaultValue={(dealer as { city?: string | null }).city ?? ""}
+              />
+            </label>
+            <label>
               Address
               <input name="address" defaultValue={dealer.address ?? ""} />
+            </label>
+            <label>
+              Website
+              <input
+                name="website"
+                defaultValue={(dealer as { website?: string | null }).website ?? ""}
+              />
             </label>
             <label>
               Upload logo
@@ -74,8 +130,22 @@ export default async function DealerProfilePage() {
               </span>
             </label>
             <label>
+              Upload banner
+              <input type="file" name="banner_file" accept="image/*" />
+              <span className="dealer-form__hint">
+                Wide banner recommended (1200x500).
+              </span>
+            </label>
+            <label>
               Logo URL
               <input name="logo_url" defaultValue={dealer.logo_url ?? ""} />
+            </label>
+            <label>
+              Banner URL
+              <input
+                name="banner_url"
+                defaultValue={(dealer as { banner_url?: string | null }).banner_url ?? ""}
+              />
             </label>
             <label>
               Inventory feed URL
@@ -104,6 +174,41 @@ export default async function DealerProfilePage() {
               <span className="dealer-form__hint">
                 Helps us find all cars faster if your site has a sitemap.
               </span>
+            </label>
+          </div>
+          <div className="dealer-form__services">
+            <h3>Services offered</h3>
+            <label>
+              <input
+                type="checkbox"
+                name="service_finance"
+                defaultChecked={services.finance}
+              />{" "}
+              Finance available
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="service_insurance"
+                defaultChecked={services.insurance}
+              />{" "}
+              Insurance assistance
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="service_rc"
+                defaultChecked={services.rcTransfer}
+              />{" "}
+              RC transfer help
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="service_test_drive"
+                defaultChecked={services.testDrive}
+              />{" "}
+              Test drive available
             </label>
           </div>
           <label>
