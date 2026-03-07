@@ -11,7 +11,7 @@ import {
 } from "@/lib/carOptions";
 import { buildPolishedDescription } from "@/lib/descriptionPolisher";
 
-const MIN_PHOTOS = 5;
+const MIN_PHOTOS = 1;
 
 const parsePhotoUrls = (value: string) =>
   value

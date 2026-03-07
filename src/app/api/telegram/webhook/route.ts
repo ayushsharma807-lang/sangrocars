@@ -183,9 +183,9 @@ const nextPrompt = (step: string) => {
     case "condition":
       return "Condition? (Excellent / Good)";
     case "photos":
-      return "Send 1 to 8 photos now. When done, type /done.";
+      return "Send 1 to 8 photos now. When done, type done.";
     default:
-      return "Send /post to start.";
+      return "Send hi to start.";
   }
 };
 
@@ -240,12 +240,12 @@ export async function POST(req: Request) {
 
   if (command === "/cancel") {
     await sb.from("telegram_sessions").delete().eq("user_id", userId);
-    await sendTelegramMessage(chatId, "Cancelled. Send /post to start again.");
+    await sendTelegramMessage(chatId, "Cancelled. Send hi to start again.");
     await broadcast(`${displayName} cancelled a listing flow.`);
     return NextResponse.json({ ok: true });
   }
 
-  if (command === "/post" || command === "hi" || command === "hello") {
+  if (command === "/post" || command === "hi" || command === "hello" || command === "start") {
     const payload = {
       user_id: userId,
       chat_id: chatId,
@@ -263,7 +263,7 @@ export async function POST(req: Request) {
   }
 
   if (!session) {
-    await sendTelegramMessage(chatId, "Send /post to start listing a car.");
+    await sendTelegramMessage(chatId, "Send hi to start listing a car.");
     return NextResponse.json({ ok: true });
   }
 
@@ -373,8 +373,13 @@ export async function POST(req: Request) {
     );
   };
 
+  if (command === "edit") {
+    await sendTelegramMessage(chatId, `Okay. ${nextPrompt(session.step)}`);
+    return NextResponse.json({ ok: true });
+  }
+
   if (session.step === "photos") {
-    if (command === "/done") {
+    if (command === "/done" || command === "done") {
       await finalizeListing(existingPhotos);
       return NextResponse.json({ ok: true });
     }
@@ -386,11 +391,14 @@ export async function POST(req: Request) {
         await finalizeListing(nextPhotos);
         return NextResponse.json({ ok: true });
       }
-      await sendTelegramMessage(chatId, `Photo received (${nextPhotos.length}/8). Send more or type /done.`);
+      await sendTelegramMessage(
+        chatId,
+        `Photo received (${nextPhotos.length}/8). Send more or type done.`
+      );
       return NextResponse.json({ ok: true });
     }
 
-    await sendTelegramMessage(chatId, "Send photos (1-8) or type /done.");
+    await sendTelegramMessage(chatId, "Send photos (1-8) or type done.");
     return NextResponse.json({ ok: true });
   }
 
@@ -513,7 +521,7 @@ export async function POST(req: Request) {
       break;
     }
     default: {
-      await sendTelegramMessage(chatId, "Send /post to start listing a car.");
+      await sendTelegramMessage(chatId, "Send hi to start listing a car.");
     }
   }
 
