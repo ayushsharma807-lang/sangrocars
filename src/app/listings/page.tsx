@@ -569,9 +569,6 @@ export default async function Home({
               <Link className="cw-header__btn cw-header__btn--primary" href="/sell">
                 Post your car
               </Link>
-              <Link className="cw-header__btn cw-header__btn--ghost" href="/">
-                Back to home
-              </Link>
             </div>
           </div>
         </div>
