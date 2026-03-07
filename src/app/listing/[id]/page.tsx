@@ -10,6 +10,7 @@ import SaveToGarageButton from "@/app/components/SaveToGarageButton";
 import RecentViewTracker from "@/app/components/RecentViewTracker";
 import PersonalizedPriceSignal from "@/app/components/PersonalizedPriceSignal";
 import { getPrimaryPhoto, normalizePhotoUrls } from "@/lib/photoUrls";
+import { dealerSlug } from "@/lib/dealerSlug";
 
 type Listing = {
   id: string;
@@ -399,7 +400,10 @@ export default async function ListingPage({
                   <p className="simple-dealer-card__meta">Email: {dealerEmail}</p>
                 )}
                 {dealer?.id && (
-                  <Link className="simple-link" href={`/dealer/${dealer.id}`}>
+                  <Link
+                    className="simple-link"
+                    href={`/dealers/${dealerSlug(dealerName, dealer.id)}`}
+                  >
                     View dealer profile
                   </Link>
                 )}
@@ -451,7 +455,7 @@ export default async function ListingPage({
                 {dealer?.id && (
                   <Link
                     className="simple-button simple-button--secondary"
-                    href={`/dealer/${dealer.id}`}
+                    href={`/dealers/${dealerSlug(dealerName, dealer.id)}`}
                   >
                     View dealer stock
                   </Link>

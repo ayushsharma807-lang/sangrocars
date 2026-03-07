@@ -4,6 +4,7 @@ import SortForm from "@/app/components/SortForm";
 import PriceRangeSlider from "@/app/components/PriceRangeSlider";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { getPrimaryPhoto } from "@/lib/photoUrls";
+import { dealerSlug } from "@/lib/dealerSlug";
 import BodyTypeSection from "@/app/components/BodyTypeSection";
 
 type SearchParams = {
@@ -1317,7 +1318,7 @@ export default async function Home({
                               {listing.dealer_id ? (
                                 <Link
                                   className="cw-dealer-name"
-                                  href={`/dealer/${listing.dealer_id}`}
+                                  href={`/dealers/${dealerSlug(dealerName, listing.dealer_id)}`}
                                 >
                                   {dealerName}
                                 </Link>
@@ -1343,7 +1344,7 @@ export default async function Home({
                           {listing.dealer_id && (
                             <Link
                               className="cw-dealer-link"
-                              href={`/dealer/${listing.dealer_id}`}
+                              href={`/dealers/${dealerSlug(dealerName, listing.dealer_id)}`}
                             >
                               View dealer profile
                             </Link>

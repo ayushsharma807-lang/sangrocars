@@ -6036,3 +6036,142 @@ button.simple-link-btn:disabled {
   gap: 8px;
   margin-top: 10px;
 }
+
+.dealer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.dealer-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dealer-card__logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--stroke);
+  background: rgba(12, 16, 24, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dealer-card__logo--fallback {
+  color: #f8fafc;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.dealer-profile__hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.dealer-profile__headline {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.dealer-profile__logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--stroke);
+  background: rgba(12, 16, 24, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dealer-profile__logo--fallback {
+  color: #f8fafc;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.dealer-profile__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.dealer-profile__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dealer-profile__stats {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dealer-profile__stats div {
+  border-radius: 16px;
+  padding: 14px;
+  border: 1px solid var(--stroke);
+  background: rgba(12, 16, 24, 0.7);
+  display: grid;
+  gap: 4px;
+}
+
+.dealer-profile__stats strong {
+  font-size: 20px;
+}
+
+.dealer-profile__stats span {
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+
+.dealer-profile__about {
+  margin-top: 18px;
+  border-radius: 20px;
+  border: 1px solid var(--stroke);
+  padding: 18px;
+  background: rgba(12, 16, 24, 0.7);
+}
+
+.dealer-profile__services {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+
+.dealer-profile__inventory {
+  margin-top: 24px;
+}
+
+.dealer-profile__footer {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 820px) {
+  .dealer-profile__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .dealer-profile__headline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
