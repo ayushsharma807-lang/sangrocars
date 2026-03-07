@@ -33,21 +33,6 @@ export default async function SellCarPage({
           <div className="simple-alert simple-alert--error">{errorText[errorKey]}</div>
         )}
 
-        <div className="sell-page__steps">
-          <article className="sell-page__step">
-            <h3>1. Add car basics</h3>
-            <p>Make, model, year, and expected price.</p>
-          </article>
-          <article className="sell-page__step">
-            <h3>2. Add photos/video</h3>
-            <p>Upload from phone or paste links.</p>
-          </article>
-          <article className="sell-page__step">
-            <h3>3. Publish</h3>
-            <p>Your ad goes live and buyers can contact you.</p>
-          </article>
-        </div>
-
         <SellCarForm />
       </section>
     </main>
