@@ -547,6 +547,11 @@ export default async function Home({
                 <p>
                   Explore verified listings by budget, city, fuel, and transmission.
                 </p>
+                <div className="cw-header__trust">
+                  <span>✓ 10,000+ cars listed</span>
+                  <span>✓ Direct owner listings</span>
+                  <span>✓ No dealer spam</span>
+                </div>
               </div>
             </div>
             <div className="cw-header__actions">
