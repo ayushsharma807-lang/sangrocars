@@ -39,6 +39,7 @@ export default function EmiCalculator({ price }: Props) {
   );
   const totalPayable = emi * tenureMonths;
   const totalInterest = Math.max(0, totalPayable - principal);
+  const daily = emi ? emi / 30 : 0;
 
   return (
     <div className="emi-card">
@@ -94,11 +95,19 @@ export default function EmiCalculator({ price }: Props) {
         <div>
           <p>Monthly EMI</p>
           <strong>{formatMoney(emi)}</strong>
+          <span className="emi-card__sub">
+            ≈ {formatMoney(daily)}/day
+          </span>
         </div>
         <div>
           <p>Total interest</p>
           <strong>{formatMoney(totalInterest)}</strong>
         </div>
+      </div>
+      <div className="emi-card__actions">
+        <a className="btn btn--solid" href="#finance-request">
+          Apply for loan
+        </a>
       </div>
     </div>
   );

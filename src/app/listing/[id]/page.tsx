@@ -104,6 +104,14 @@ const buildListingMessage = (
   return parts.join(" ");
 };
 
+const sanitizeSellerName = (value: string | null) => {
+  if (!value) return null;
+  const lowered = value.toLowerCase();
+  if (lowered.includes("telegram")) return null;
+  if (lowered.includes("whatsapp")) return null;
+  return value;
+};
+
 const median = (values: number[]) => {
   if (values.length === 0) return null;
   const sorted = [...values].sort((a, b) => a - b);
@@ -267,8 +275,26 @@ export default async function ListingPage({
     moreFromDealer = (moreRows ?? []) as Listing[];
   }
 
+  let similarListings: Listing[] = [];
+  if (listing.make || listing.model) {
+    const city = listing.location?.split(",")[0]?.trim();
+    let query = sb
+      .from("listings")
+      .select(
+        "id, make, model, variant, year, price, km, fuel, transmission, location, photo_urls"
+      )
+      .eq("status", "available")
+      .neq("id", listing.id);
+    if (listing.make) query = query.ilike("make", `%${listing.make}%`);
+    if (listing.model) query = query.ilike("model", `%${listing.model}%`);
+    if (city) query = query.ilike("location", `%${city}%`);
+    const { data: similarRows } = await query.limit(4);
+    similarListings = (similarRows ?? []) as Listing[];
+  }
+
+  const privateSellerName = sanitizeSellerName(privateSeller.seller.name);
   const dealerName =
-    dealer?.name ?? privateSeller.seller.name ?? "Private seller";
+    dealer?.name ?? privateSellerName ?? "Private seller";
   const dealerPhone =
     dealer?.phone ?? dealer?.whatsapp ?? privateSeller.seller.phone ?? null;
   const dealerEmail = dealer?.email ?? privateSeller.seller.email ?? null;
@@ -280,6 +306,28 @@ export default async function ListingPage({
   );
   const telLink = dealerPhoneDigits ? `tel:${dealerPhoneDigits}` : null;
   const mailLink = dealerEmail ? `mailto:${dealerEmail}` : null;
+  const quickMeta = [
+    listing.km ? `${listing.km.toLocaleString("en-IN")} km` : null,
+    listing.fuel ? toTitle(listing.fuel) : null,
+    listing.transmission ? toTitle(listing.transmission) : null,
+  ].filter(Boolean);
+  const highlights = [
+    listing.km && listing.km < 40000 ? "Low mileage" : null,
+    listing.year && listing.year >= 2022 ? "Recent model year" : null,
+    listing.fuel ? `${toTitle(listing.fuel)} powertrain` : null,
+    "Verified documents",
+  ].filter(Boolean) as string[];
+  const priceRange = predictivePricing
+    ? {
+        min: Math.round(predictivePricing.median * 0.9),
+        max: Math.round(predictivePricing.median * 1.1),
+      }
+    : null;
+  const priceLabel = predictivePricing?.median
+    ? listing.price && listing.price <= predictivePricing.median
+      ? "Good price"
+      : "Premium price"
+    : null;
 
   return (
     <main className="simple-page simple-detail-page">
@@ -300,6 +348,9 @@ export default async function ListingPage({
             <div>
               <h1>{titleParts.join(" ")}</h1>
               <p>{listing.location || "Location on request"}</p>
+              {quickMeta.length > 0 && (
+                <p className="listing-hero__meta">{quickMeta.join(" · ")}</p>
+              )}
             </div>
           </div>
           <div className="simple-detail__top-actions listing-hero__actions">
@@ -362,6 +413,31 @@ export default async function ListingPage({
               </div>
             )}
             <div className="simple-detail__price">{formatPrice(listing.price)}</div>
+            <div className="simple-detail__trust">
+              <span>✓ Verified listing</span>
+              <span>✓ {listing.dealer_id ? "Dealer" : "Owner"} verified</span>
+              <span>✓ No hidden fees</span>
+              <span>✓ Finance available</span>
+              <span>✓ Insurance support</span>
+            </div>
+            <div className="simple-detail__cta-row">
+              <a className="simple-button" href="#finance-request">
+                Finance this car
+              </a>
+              <a className="simple-button simple-button--secondary" href="#finance-request">
+                Get insurance
+              </a>
+              <button className="simple-button simple-button--secondary">
+                Book inspection
+              </button>
+              <SaveToGarageButton
+                listingId={listing.id}
+                title={listingTitle}
+                price={listing.price}
+                location={listing.location}
+                photo={getPrimaryPhoto(photos)}
+              />
+            </div>
             <div className="simple-detail__section">
               <h3>Overview</h3>
               <p>{overviewDescription}</p>
@@ -385,6 +461,23 @@ export default async function ListingPage({
                 currentPrice={listing.price}
                 marketMedian={predictivePricing?.median ?? null}
               />
+              {priceRange && (
+                <div className="price-insight">
+                  <div>
+                    <p>Market price range</p>
+                    <strong>
+                      {formatPrice(priceRange.min)} — {formatPrice(priceRange.max)}
+                    </strong>
+                  </div>
+                  <div>
+                    <p>Your price</p>
+                    <strong>{formatPrice(listing.price)}</strong>
+                    {priceLabel && (
+                      <span className="price-insight__badge">{priceLabel}</span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="simple-dealer-card">
               <div>
@@ -413,6 +506,7 @@ export default async function ListingPage({
                     <span className="simple-pill">Finance available</span>
                     <span className="simple-pill">Insurance support</span>
                     <span className="simple-pill">RC transfer help</span>
+                    <span className="simple-pill">Responds in ~10 min</span>
                   </div>
                 )}
               </div>
@@ -460,13 +554,44 @@ export default async function ListingPage({
                     View dealer stock
                   </Link>
                 )}
-                <a className="simple-button simple-button--secondary" href="#finance-request">
-                  Finance this car
-                </a>
-                <a className="simple-button simple-button--secondary" href="#finance-request">
-                  Get insurance
-                </a>
               </div>
+            </div>
+            <div className="simple-detail__section">
+              <h3>Key specifications</h3>
+              <div className="spec-grid">
+                <div>
+                  <span>Year</span>
+                  <strong>{listing.year ?? "—"}</strong>
+                </div>
+                <div>
+                  <span>Fuel</span>
+                  <strong>{toTitle(listing.fuel) ?? "—"}</strong>
+                </div>
+                <div>
+                  <span>Transmission</span>
+                  <strong>{toTitle(listing.transmission) ?? "—"}</strong>
+                </div>
+                <div>
+                  <span>Mileage</span>
+                  <strong>{listing.km ? `${listing.km.toLocaleString("en-IN")} km` : "—"}</strong>
+                </div>
+                <div>
+                  <span>Location</span>
+                  <strong>{listing.location ?? "—"}</strong>
+                </div>
+                <div>
+                  <span>Registration</span>
+                  <strong>{listing.location?.split(",")[0] ?? "—"}</strong>
+                </div>
+              </div>
+            </div>
+            <div className="simple-detail__section">
+              <h3>Vehicle highlights</h3>
+              <ul className="highlight-list">
+                {highlights.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
             </div>
             <EmiCalculator price={listing.price} />
             <div className="simple-detail__section" id="finance-request">
@@ -531,6 +656,69 @@ export default async function ListingPage({
                 </div>
               </div>
             )}
+            {similarListings.length > 0 && (
+              <div className="simple-detail__section">
+                <h3>Similar cars near {listing.location?.split(",")[0] ?? "you"}</h3>
+                <div className="listings">
+                  {similarListings.map((item) => {
+                    const photo = getPrimaryPhoto(item.photo_urls);
+                    const title = [
+                      item.year ?? undefined,
+                      toTitle(item.make),
+                      toTitle(item.model),
+                      toTitle(item.variant),
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+                    return (
+                      <article className="listing" key={item.id}>
+                        <div className="listing__media">
+                          {photo ? (
+                            <img src={photo} alt={title} />
+                          ) : (
+                            <div className="listing__placeholder" />
+                          )}
+                        </div>
+                        <div className="listing__body">
+                          <h3>{title}</h3>
+                          <p className="listing__location">
+                            {item.location || "Location on request"}
+                          </p>
+                          <div className="listing__meta">
+                            {item.fuel && (
+                              <span className="chip">{toTitle(item.fuel)}</span>
+                            )}
+                            {item.transmission && (
+                              <span className="chip">
+                                {toTitle(item.transmission)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="listing__footer">
+                            <strong>{formatPrice(item.price)}</strong>
+                            <Link
+                              className="btn btn--ghost btn--tight"
+                              href={`/listing/${item.id}`}
+                            >
+                              View details
+                            </Link>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <div className="simple-detail__section" id="report-listing">
+              <h3>Report this listing</h3>
+              <p>
+                Something not right? Tell us and we&apos;ll review this listing.
+              </p>
+              <Link className="simple-link-btn" href="/support">
+                Report a problem
+              </Link>
+            </div>
             <NearbyDealersMap
               listingDealerId={listing.dealer_id}
               listingLocation={listing.location}
