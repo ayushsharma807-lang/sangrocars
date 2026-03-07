@@ -5943,3 +5943,96 @@ button.simple-link-btn:disabled {
     padding: 22px;
   }
 }
+
+.simple-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.simple-checkbox input {
+  width: 16px;
+  height: 16px;
+}
+
+.cw-listing__dealer {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.cw-listing__dealer-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cw-dealer-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cw-dealer-logo--fallback {
+  font-size: 14px;
+}
+
+.cw-dealer-name {
+  font-weight: 700;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.cw-dealer-meta {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.cw-dealer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cw-dealer-badge {
+  background: #eef2ff;
+  color: #1d4ed8;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  border: 1px solid #dbeafe;
+}
+
+.cw-dealer-response {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.cw-dealer-link {
+  font-size: 12px;
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.simple-dealer-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}

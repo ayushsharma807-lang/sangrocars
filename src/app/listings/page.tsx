@@ -19,6 +19,8 @@ type SearchParams = {
   city?: string | string[];
   location?: string | string[];
   budget?: string | string[];
+  dealer_id?: string | string[];
+  verified?: string | string[];
   sort?: string | string[];
   page?: string | string[];
   compare?: string | string[];
@@ -37,6 +39,7 @@ const buildWhatsAppLink = () => {
 
 type Listing = {
   id: string;
+  dealer_id: string | null;
   make: string | null;
   model: string | null;
   variant: string | null;
@@ -49,6 +52,12 @@ type Listing = {
   description: string | null;
   photo_urls: string[] | null;
   stock_id: string | null;
+};
+
+type DealerOption = {
+  id: string;
+  name: string;
+  logo?: string | null;
 };
 
 const PAGE_SIZE = 9;
@@ -135,6 +144,8 @@ const buildQuery = (
     year_max: getParam(searchParams.year_max),
     city: getParam(searchParams.city),
     location: getParam(searchParams.location),
+    dealer_id: getParam(searchParams.dealer_id),
+    verified: getParam(searchParams.verified),
     sort: getParam(searchParams.sort),
     page: getParam(searchParams.page),
     compare: getParam(searchParams.compare),
@@ -216,6 +227,29 @@ const getCityOptions = async () => {
   return Array.from(set).sort((a, b) => a.localeCompare(b));
 };
 
+const getDealerOptions = async () => {
+  if (!hasSupabaseConfig()) return [] as DealerOption[];
+  const sb = supabaseServerOptional();
+  if (!sb) return [] as DealerOption[];
+  const { data, error } = await sb
+    .from("dealers")
+    .select("id, name, dealer_name, company_name, logo_url, logo")
+    .limit(4000);
+  if (error || !data) return [] as DealerOption[];
+  return (data as Record<string, unknown>[])
+    .map((row) => ({
+      id: String(row.id ?? ""),
+      name:
+        String(row.name ?? "") ||
+        String(row.dealer_name ?? "") ||
+        String(row.company_name ?? "") ||
+        "Dealer",
+      logo: (row.logo_url ?? row.logo ?? null) as string | null,
+    }))
+    .filter((dealer) => dealer.id)
+    .sort((a, b) => a.name.localeCompare(b.name));
+};
+
 const getPriceBounds = async () => {
   if (!hasSupabaseConfig()) {
     return { min: DEFAULT_PRICE_MIN, max: DEFAULT_PRICE_MAX };
@@ -266,7 +300,7 @@ const getListings = async (searchParams: SearchParams) => {
   let query = sb
     .from("listings")
     .select(
-      "id, make, model, variant, year, price, km, fuel, transmission, location, description, photo_urls, stock_id",
+      "id, dealer_id, make, model, variant, year, price, km, fuel, transmission, location, description, photo_urls, stock_id",
       { count: "exact" }
     )
     .eq("status", "available");
@@ -313,6 +347,12 @@ const getListings = async (searchParams: SearchParams) => {
   const location = getParam(searchParams.location)?.trim();
   if (location) query = query.ilike("location", `%${location}%`);
 
+  const dealerId = getParam(searchParams.dealer_id)?.trim();
+  if (dealerId) query = query.eq("dealer_id", dealerId);
+
+  const verified = getParam(searchParams.verified);
+  if (verified === "1") query = query.not("dealer_id", "is", null);
+
   const sort = getParam(searchParams.sort) ?? "recent";
   switch (sort) {
     case "price_asc":
@@ -354,11 +394,12 @@ export default async function Home({
 }) {
   const whatsappHref = buildWhatsAppLink();
   const params = await searchParams;
-  const [{ listings, count, error, page }, cities, priceBounds] =
+  const [{ listings, count, error, page }, cities, priceBounds, dealers] =
     await Promise.all([
       getListings(params),
       getCityOptions(),
       getPriceBounds(),
+      getDealerOptions(),
     ]);
   const qValue = getParam(params.q);
   const minPriceValue = getParam(params.min_price);
@@ -369,12 +410,57 @@ export default async function Home({
   const fuelValue = getParam(params.fuel);
   const cityValue = getParam(params.city);
   const budgetValue = getParam(params.budget);
+  const dealerIdValue = getParam(params.dealer_id);
+  const verifiedValue = getParam(params.verified);
   const locationValue = getParam(params.location);
   const transmissionValue = getParam(params.transmission);
   const typeValue = getParam(params.type);
   const sortValue = getParam(params.sort) ?? "recent";
   const compareIds = parseCompareIds(params.compare);
   const totalPages = Math.max(1, Math.ceil(count / PAGE_SIZE));
+  const dealerMap = new Map<string, DealerOption>();
+  const dealerCounts = new Map<string, number>();
+  const dealerIds = Array.from(
+    new Set(
+      listings
+        .map((listing) => listing.dealer_id)
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+  if (dealerIds.length > 0 && hasSupabaseConfig()) {
+    const sb = supabaseServerOptional();
+    if (sb) {
+      const { data: dealerRows } = await sb
+        .from("dealers")
+        .select("id, name, dealer_name, company_name, logo_url, logo")
+        .in("id", dealerIds);
+      for (const row of (dealerRows ?? []) as Record<string, unknown>[]) {
+        const id = String(row.id ?? "");
+        if (!id) continue;
+        const name =
+          String(row.name ?? "") ||
+          String(row.dealer_name ?? "") ||
+          String(row.company_name ?? "") ||
+          "Dealer";
+        dealerMap.set(id, {
+          id,
+          name,
+          logo: (row.logo_url ?? row.logo ?? null) as string | null,
+        });
+      }
+
+      const { data: countRows } = await sb
+        .from("listings")
+        .select("dealer_id")
+        .eq("status", "available")
+        .in("dealer_id", dealerIds);
+      for (const row of (countRows ?? []) as { dealer_id?: string | null }[]) {
+        const id = row.dealer_id;
+        if (!id) continue;
+        dealerCounts.set(id, (dealerCounts.get(id) ?? 0) + 1);
+      }
+    }
+  }
   const recentListings = listings.slice(0, 4);
   const featuredListings =
     listings.length > 4 ? listings.slice(4, 8) : listings.slice(0, 4);
@@ -391,6 +477,8 @@ export default async function Home({
     city: cityValue,
     location: locationValue,
     budget: budgetValue,
+    dealer_id: dealerIdValue,
+    verified: verifiedValue,
     compare: compareIds.length > 0 ? compareIds.join(",") : undefined,
   };
   const topSearchHiddenEntries = [
@@ -406,6 +494,8 @@ export default async function Home({
     { key: "year_min", value: yearMinValue },
     { key: "year_max", value: yearMaxValue },
     { key: "location", value: locationValue },
+    { key: "dealer_id", value: dealerIdValue },
+    { key: "verified", value: verifiedValue },
     { key: "sort", value: sortValue },
     {
       key: "compare",
@@ -415,6 +505,9 @@ export default async function Home({
   const preservedParamEntries = Object.entries(preservedParams)
     .filter(([, value]) => value)
     .map(([key, value]) => ({ key, value: String(value) }));
+  const dealerLabel = dealerIdValue
+    ? dealers.find((dealer) => dealer.id === dealerIdValue)?.name ?? "Dealer"
+    : null;
   type RawFilterChip = {
     key: string;
     label: string;
@@ -478,6 +571,20 @@ export default async function Home({
           key: "year",
           label: `Year: ${yearMinValue ?? "Any"} - ${yearMaxValue ?? "Any"}`,
           overrides: { year_min: null, year_max: null },
+        }
+      : null,
+    dealerIdValue
+      ? {
+          key: "dealer_id",
+          label: `Dealer: ${dealerLabel ?? "Dealer"}`,
+          overrides: { dealer_id: null },
+        }
+      : null,
+    verifiedValue === "1"
+      ? {
+          key: "verified",
+          label: "Verified dealers only",
+          overrides: { verified: null },
         }
       : null,
     budgetValue
@@ -939,6 +1046,26 @@ export default async function Home({
                 </select>
               </label>
               <label className="simple-field">
+                Dealer
+                <select name="dealer_id" defaultValue={dealerIdValue ?? ""}>
+                  <option value="">All dealers</option>
+                  {dealers.map((dealer) => (
+                    <option key={dealer.id} value={dealer.id}>
+                      {dealer.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="simple-checkbox">
+                <input
+                  type="checkbox"
+                  name="verified"
+                  value="1"
+                  defaultChecked={verifiedValue === "1"}
+                />
+                Verified dealers only
+              </label>
+              <label className="simple-field">
                 Location (optional)
                 <input
                   name="location"
@@ -1090,6 +1217,14 @@ export default async function Home({
                   const canAddToCompare = isCompared || compareIds.length < 3;
                   const emi = estimateEmi(listing.price);
                   const city = getCityFromLocation(listing.location);
+                  const dealerInfo = listing.dealer_id
+                    ? dealerMap.get(listing.dealer_id)
+                    : null;
+                  const dealerName =
+                    dealerInfo?.name ?? (listing.dealer_id ? "Dealer" : "Private seller");
+                  const dealerCount = listing.dealer_id
+                    ? dealerCounts.get(listing.dealer_id) ?? 0
+                    : null;
                   const kmText = listing.km
                     ? `${listing.km.toLocaleString("en-IN")} km`
                     : "Km on request";
@@ -1164,6 +1299,56 @@ export default async function Home({
                               .join(" • ")}
                           </p>
                         )}
+                        <div className="cw-listing__dealer">
+                          <div className="cw-listing__dealer-head">
+                            {dealerInfo?.logo ? (
+                              <img
+                                className="cw-dealer-logo"
+                                src={dealerInfo.logo}
+                                alt={`${dealerName} logo`}
+                                loading="lazy"
+                              />
+                            ) : (
+                              <span className="cw-dealer-logo cw-dealer-logo--fallback">
+                                {dealerName.charAt(0)}
+                              </span>
+                            )}
+                            <div>
+                              {listing.dealer_id ? (
+                                <Link
+                                  className="cw-dealer-name"
+                                  href={`/dealer/${listing.dealer_id}`}
+                                >
+                                  {dealerName}
+                                </Link>
+                              ) : (
+                                <span className="cw-dealer-name">{dealerName}</span>
+                              )}
+                              <div className="cw-dealer-meta">
+                                {listing.dealer_id
+                                  ? `Verified dealer · ${dealerCount} active cars`
+                                  : "Private seller"}
+                              </div>
+                            </div>
+                          </div>
+                          {listing.dealer_id && (
+                            <div className="cw-dealer-row">
+                              <span className="cw-dealer-badge">Finance available</span>
+                              <span className="cw-dealer-badge">Insurance support</span>
+                              <span className="cw-dealer-response">
+                                Usually responds in 10 mins
+                              </span>
+                            </div>
+                          )}
+                          {listing.dealer_id && (
+                            <Link
+                              className="cw-dealer-link"
+                              href={`/dealer/${listing.dealer_id}`}
+                            >
+                              View dealer profile
+                            </Link>
+                          )}
+                        </div>
                         {emi && <span className="cw-listing__emi">{emi}</span>}
                         <div className="cw-listing__finance">
                           <span>Finance available</span>

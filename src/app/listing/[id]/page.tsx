@@ -251,6 +251,20 @@ export default async function ListingPage({
       dealer = dealerData as Dealer;
     }
   }
+  let moreFromDealer: Listing[] = [];
+  if (listing.dealer_id) {
+    const { data: moreRows } = await sb
+      .from("listings")
+      .select(
+        "id, make, model, variant, year, price, km, fuel, transmission, location, photo_urls"
+      )
+      .eq("dealer_id", listing.dealer_id)
+      .eq("status", "available")
+      .neq("id", listing.id)
+      .order("last_seen_at", { ascending: false })
+      .limit(4);
+    moreFromDealer = (moreRows ?? []) as Listing[];
+  }
 
   const dealerName =
     dealer?.name ?? privateSeller.seller.name ?? "Private seller";
@@ -389,6 +403,14 @@ export default async function ListingPage({
                     View dealer profile
                   </Link>
                 )}
+                {dealer?.id && (
+                  <div className="simple-dealer-card__badges">
+                    <span className="simple-pill">Verified dealer</span>
+                    <span className="simple-pill">Finance available</span>
+                    <span className="simple-pill">Insurance support</span>
+                    <span className="simple-pill">RC transfer help</span>
+                  </div>
+                )}
               </div>
               <div className="simple-dealer-card__actions">
                 {telLink ? (
@@ -426,6 +448,14 @@ export default async function ListingPage({
                     {dealer?.id ? "Email dealer" : "Email seller"}
                   </button>
                 )}
+                {dealer?.id && (
+                  <Link
+                    className="simple-button simple-button--secondary"
+                    href={`/dealer/${dealer.id}`}
+                  >
+                    View dealer stock
+                  </Link>
+                )}
                 <a className="simple-button simple-button--secondary" href="#finance-request">
                   Finance this car
                 </a>
@@ -443,6 +473,60 @@ export default async function ListingPage({
                 listingTitle={listingTitle}
               />
             </div>
+            {moreFromDealer.length > 0 && (
+              <div className="simple-detail__section">
+                <h3>More from {dealerName}</h3>
+                <div className="listings">
+                  {moreFromDealer.map((item) => {
+                    const photo = getPrimaryPhoto(item.photo_urls);
+                    const title = [
+                      item.year ?? undefined,
+                      toTitle(item.make),
+                      toTitle(item.model),
+                      toTitle(item.variant),
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+                    return (
+                      <article className="listing" key={item.id}>
+                        <div className="listing__media">
+                          {photo ? (
+                            <img src={photo} alt={title} />
+                          ) : (
+                            <div className="listing__placeholder" />
+                          )}
+                        </div>
+                        <div className="listing__body">
+                          <h3>{title}</h3>
+                          <p className="listing__location">
+                            {item.location || "Location on request"}
+                          </p>
+                          <div className="listing__meta">
+                            {item.fuel && (
+                              <span className="chip">{toTitle(item.fuel)}</span>
+                            )}
+                            {item.transmission && (
+                              <span className="chip">
+                                {toTitle(item.transmission)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="listing__footer">
+                            <strong>{formatPrice(item.price)}</strong>
+                            <Link
+                              className="btn btn--ghost btn--tight"
+                              href={`/listing/${item.id}`}
+                            >
+                              View details
+                            </Link>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <NearbyDealersMap
               listingDealerId={listing.dealer_id}
               listingLocation={listing.location}
