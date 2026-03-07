@@ -5086,6 +5086,8 @@ button.simple-link-btn:disabled {
 .carwale-listings-page .cw-header__headline h1 {
   margin: 0 0 8px;
   font-size: clamp(28px, 3.2vw, 40px);
+  color: #ffffff;
+  font-weight: 700;
 }
 
 .carwale-listings-page .cw-header__headline p {
@@ -5096,7 +5098,7 @@ button.simple-link-btn:disabled {
 
 .carwale-listings-page .cw-header__actions {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   min-width: 200px;
 }
 
@@ -5112,7 +5114,7 @@ button.simple-link-btn:disabled {
 }
 
 .carwale-listings-page .cw-header__btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-1px) scale(1.02);
   box-shadow: 0 10px 22px rgba(2, 6, 23, 0.35);
 }
 
@@ -5167,9 +5169,10 @@ button.simple-link-btn:disabled {
 .carwale-listings-page .cw-search-bar select {
   width: 100%;
   border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 14px;
-  padding: 12px 14px;
-  font-size: 15px;
+  border-radius: 16px;
+  padding: 16px 16px;
+  font-size: 16px;
+  min-height: 60px;
   color: #0f172a;
   background: #f8fafc;
 }
@@ -5183,12 +5186,13 @@ button.simple-link-btn:disabled {
 
 .carwale-listings-page .cw-search-bar__submit {
   border: none;
-  border-radius: 14px;
+  border-radius: 16px;
   background: #2563eb;
   color: #ffffff;
   font-weight: 700;
-  padding: 0 20px;
-  font-size: 15px;
+  padding: 0 24px;
+  font-size: 16px;
+  min-height: 60px;
 }
 
 .carwale-listings-page .cw-search-popular {
@@ -5206,6 +5210,20 @@ button.simple-link-btn:disabled {
   font-weight: 600;
 }
 
+.carwale-listings-page .cw-pill {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  background: rgba(37, 99, 235, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.carwale-listings-page .cw-pill:hover {
+  transform: translateY(-1px);
+  background: rgba(37, 99, 235, 0.15);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.15);
+}
+
 .carwale-listings-page .cw-trust {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -5214,25 +5232,29 @@ button.simple-link-btn:disabled {
 }
 
 .carwale-listings-page .cw-trust__item {
-  padding: 12px 14px 12px 34px;
+  padding: 12px 16px;
   border-radius: 14px;
   background: #ffffff;
   border: 1px solid rgba(148, 163, 184, 0.25);
   color: #0f172a;
   font-weight: 600;
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.carwale-listings-page .cw-trust__item::before {
-  content: "";
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  left: 14px;
-  top: 18px;
-  background: #16a34a;
-  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
+.carwale-listings-page .cw-trust__icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #16a34a;
+}
+
+.carwale-listings-page .cw-trust__icon svg {
+  width: 18px;
+  height: 18px;
 }
 
 .carwale-listings-page .cw-stats-row {
@@ -5247,15 +5269,37 @@ button.simple-link-btn:disabled {
   border-radius: 16px;
   background: #0f172a;
   color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.carwale-listings-page .cw-stat__icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.2);
+  color: #bfdbfe;
+}
+
+.carwale-listings-page .cw-stat__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.carwale-listings-page .cw-stat__text {
   display: grid;
   gap: 4px;
 }
 
-.carwale-listings-page .cw-stat strong {
+.carwale-listings-page .cw-stat__text strong {
   font-size: 20px;
 }
 
-.carwale-listings-page .cw-stat span {
+.carwale-listings-page .cw-stat__text span {
   color: rgba(226, 232, 240, 0.75);
   font-size: 13px;
 }
@@ -5296,6 +5340,21 @@ button.simple-link-btn:disabled {
   display: grid;
   min-height: 100%;
   box-shadow: 0 20px 32px rgba(15, 23, 42, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.carwale-listings-page .cw-featured__card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 40px rgba(15, 23, 42, 0.16);
+}
+
+.carwale-listings-page .cw-listing {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.carwale-listings-page .cw-listing:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 36px rgba(15, 23, 42, 0.2);
 }
 
 .carwale-listings-page .cw-featured__media {

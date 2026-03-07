@@ -374,6 +374,9 @@ export default async function Home({
   const sortValue = getParam(params.sort) ?? "recent";
   const compareIds = parseCompareIds(params.compare);
   const totalPages = Math.max(1, Math.ceil(count / PAGE_SIZE));
+  const recentListings = listings.slice(0, 4);
+  const featuredListings =
+    listings.length > 4 ? listings.slice(4, 8) : listings.slice(0, 4);
   const preservedParams = {
     q: qValue,
     min_price: minPriceValue,
@@ -562,11 +565,11 @@ export default async function Home({
                   WhatsApp us
                 </a>
               )}
-              <Link className="cw-header__btn cw-header__btn--ghost" href="/">
-                Back to home
-              </Link>
               <Link className="cw-header__btn cw-header__btn--primary" href="/sell">
                 Post your car
+              </Link>
+              <Link className="cw-header__btn cw-header__btn--ghost" href="/">
+                Back to home
               </Link>
             </div>
           </div>
@@ -629,6 +632,7 @@ export default async function Home({
             {POPULAR_SEARCHES.map((term) => (
               <Link
                 key={term}
+                className="cw-pill"
                 href={`/listings?${buildQuery(params, { q: term, page: "1" })}`}
               >
                 {term}
@@ -639,31 +643,164 @@ export default async function Home({
 
         <div className="cw-trust">
           {[
-            "100% Verified Listings",
-            "Direct Owner Cars",
-            "No Dealer Spam",
-            "Secure WhatsApp Contact",
+            {
+              label: "100% Verified Listings",
+              icon: (
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M9.5 16.2L5.8 12.5l1.4-1.4 2.3 2.3 6.3-6.3 1.4 1.4z"
+                  />
+                </svg>
+              ),
+            },
+            {
+              label: "Direct Owner Cars",
+              icon: (
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.3 0-8 1.7-8 5v1h16v-1c0-3.3-4.7-5-8-5Z"
+                  />
+                </svg>
+              ),
+            },
+            {
+              label: "No Dealer Spam",
+              icon: (
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm6.5 10a6.4 6.4 0 0 1-1.3 3.9L8.1 6.8A8 8 0 0 1 18.5 12Zm-13 0a6.4 6.4 0 0 1 1.3-3.9l9.1 9.1A8 8 0 0 1 5.5 12Z"
+                  />
+                </svg>
+              ),
+            },
+            {
+              label: "Secure WhatsApp Contact",
+              icon: (
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M20 3H4a2 2 0 0 0-2 2v12l4-3h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm-2.6 6.6-4.5 4.1a1 1 0 0 1-1.3 0L7 9.6l1.2-1.4 4.1 3.6 4.1-3.6Z"
+                  />
+                </svg>
+              ),
+            },
           ].map((item) => (
-            <div key={item} className="cw-trust__item">
-              {item}
+            <div key={item.label} className="cw-trust__item">
+              <span className="cw-trust__icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <span>{item.label}</span>
             </div>
           ))}
         </div>
 
         <div className="cw-stats-row">
-          <div className="cw-stat">
-            <strong>10,000+</strong>
-            <span>Cars listed</span>
-          </div>
-          <div className="cw-stat">
-            <strong>500+</strong>
-            <span>Cities covered</span>
-          </div>
-          <div className="cw-stat">
-            <strong>50,000+</strong>
-            <span>Monthly visitors</span>
-          </div>
+          {[
+            {
+              label: "Cars listed",
+              value: "10,000+",
+              icon: (
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11h1a1 1 0 0 1 1 1v4a2 2 0 0 1-2 2h-1a2 2 0 0 1-4 0H10a2 2 0 0 1-4 0H5a2 2 0 0 1-2-2v-4a1 1 0 0 1 1-1Zm2.3-4L6.3 10h11.4l-1-3a1 1 0 0 0-.95-.7H8.4a1 1 0 0 0-.95.7Z"
+                  />
+                </svg>
+              ),
+            },
+            {
+              label: "Cities covered",
+              value: "500+",
+              icon: (
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M12 2a7 7 0 0 0-7 7c0 5.3 7 13 7 13s7-7.7 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 14.5 9 2.5 2.5 0 0 1 12 11.5Z"
+                  />
+                </svg>
+              ),
+            },
+            {
+              label: "Monthly visitors",
+              value: "50,000+",
+              icon: (
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4ZM8 12a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 2c-3.3 0-6 1.4-6 3.2V20h12v-2.8c0-1.8-2.7-3.2-6-3.2Zm-8 1c-2.7 0-5 1.1-5 2.6V20h6v-2.4c0-1.1.4-2.1 1.1-2.9A8.3 8.3 0 0 0 8 15Z"
+                  />
+                </svg>
+              ),
+            },
+          ].map((stat) => (
+            <div key={stat.label} className="cw-stat">
+              <span className="cw-stat__icon" aria-hidden="true">
+                {stat.icon}
+              </span>
+              <div className="cw-stat__text">
+                <strong>{stat.value}</strong>
+                <span>{stat.label}</span>
+              </div>
+            </div>
+          ))}
         </div>
+
+        <section className="cw-recent">
+          <div className="cw-featured__header">
+            <div>
+              <h2>Recently added</h2>
+              <p>Fresh arrivals uploaded by verified sellers.</p>
+            </div>
+          </div>
+          <div className="cw-featured__grid">
+            {recentListings.map((listing) => {
+              const photo = getPrimaryPhoto(listing.photo_urls);
+              const titleParts = [
+                listing.year ?? undefined,
+                toTitle(listing.make),
+                toTitle(listing.model),
+                toTitle(listing.variant),
+              ].filter(Boolean);
+              const kmText = listing.km
+                ? `${listing.km.toLocaleString("en-IN")} km`
+                : "Km on request";
+              return (
+                <article className="cw-featured__card" key={`recent-${listing.id}`}>
+                  <div className="cw-featured__media">
+                    {photo ? (
+                      <Image
+                        src={photo}
+                        alt={String(listing.model ?? "Car")}
+                        fill
+                        sizes="(max-width: 980px) 100vw, 320px"
+                        className="cw-featured__image"
+                      />
+                    ) : (
+                      <div className="cw-featured__placeholder" />
+                    )}
+                  </div>
+                  <div className="cw-featured__body">
+                    <h3>{titleParts.join(" ")}</h3>
+                    <strong>{formatPrice(listing.price)}</strong>
+                    <p>
+                      {listing.year ?? "Year"} • {kmText} •{" "}
+                      {toTitle(listing.fuel) ?? "Fuel"}
+                    </p>
+                    <span className="cw-featured__city">
+                      {getCityFromLocation(listing.location) ?? "City on request"}
+                    </span>
+                    <Link className="cw-featured__link" href={`/listing/${listing.id}`}>
+                      View details
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
 
         <section className="cw-featured">
           <div className="cw-featured__header">
@@ -673,7 +810,7 @@ export default async function Home({
             </div>
           </div>
           <div className="cw-featured__grid">
-            {(listings.length ? listings.slice(0, 4) : []).map((listing) => {
+            {featuredListings.map((listing) => {
               const photo = getPrimaryPhoto(listing.photo_urls);
               const titleParts = [
                 listing.year ?? undefined,
