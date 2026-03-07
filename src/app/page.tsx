@@ -2,6 +2,7 @@ import Link from "next/link";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import SocialEmbed from "@/app/components/SocialEmbed";
 import DealerPartnersSection from "@/app/components/DealerPartnersSection";
+import BodyTypeSection from "@/app/components/BodyTypeSection";
 
 type ExclusiveDeal = {
   id: string;
@@ -18,6 +19,19 @@ type ExclusiveDeal = {
 type DealRow = Record<string, unknown>;
 type ListingMakeRow = {
   make?: string | null;
+};
+type FeaturedListing = {
+  id: string;
+  dealer_id: string | null;
+  make: string | null;
+  model: string | null;
+  variant: string | null;
+  year: number | null;
+  price: number | null;
+  km: number | null;
+  fuel: string | null;
+  location: string | null;
+  photo_urls: string[] | null;
 };
 type PopularBrand = {
   key: string;
@@ -341,14 +355,140 @@ const getBrandStats = async (): Promise<BrandStat[]> => {
   }));
 };
 
+const fallbackFeatured: FeaturedListing[] = [
+  {
+    id: "featured-1",
+    dealer_id: null,
+    make: "Hyundai",
+    model: "Creta SX",
+    variant: "Diesel",
+    year: 2022,
+    price: 1120000,
+    km: 45000,
+    fuel: "Diesel",
+    location: "Jalandhar",
+    photo_urls: ["/images/hero-luxury.png"],
+  },
+  {
+    id: "featured-2",
+    dealer_id: "dealer",
+    make: "Toyota",
+    model: "Corolla",
+    variant: "VX",
+    year: 2021,
+    price: 980000,
+    km: 38000,
+    fuel: "Petrol",
+    location: "Ludhiana",
+    photo_urls: ["/images/hero-parking.jpg"],
+  },
+  {
+    id: "featured-3",
+    dealer_id: "dealer",
+    make: "Kia",
+    model: "Seltos",
+    variant: "HTX",
+    year: 2020,
+    price: 1050000,
+    km: 52000,
+    fuel: "Petrol",
+    location: "Chandigarh",
+    photo_urls: ["/images/hero-luxury.png"],
+  },
+  {
+    id: "featured-4",
+    dealer_id: null,
+    make: "Mahindra",
+    model: "XUV700",
+    variant: "AX5",
+    year: 2023,
+    price: 1920000,
+    km: 18000,
+    fuel: "Diesel",
+    location: "Amritsar",
+    photo_urls: ["/images/hero-parking.jpg"],
+  },
+  {
+    id: "featured-5",
+    dealer_id: "dealer",
+    make: "Honda",
+    model: "City",
+    variant: "ZX",
+    year: 2019,
+    price: 840000,
+    km: 61000,
+    fuel: "Petrol",
+    location: "Delhi",
+    photo_urls: ["/images/hero-luxury.png"],
+  },
+  {
+    id: "featured-6",
+    dealer_id: "dealer",
+    make: "Skoda",
+    model: "Slavia",
+    variant: "Style",
+    year: 2022,
+    price: 1350000,
+    km: 21000,
+    fuel: "Petrol",
+    location: "Pune",
+    photo_urls: ["/images/hero-parking.jpg"],
+  },
+];
+
+const getFeaturedListings = async (): Promise<FeaturedListing[]> => {
+  if (!hasSupabaseConfig()) return fallbackFeatured;
+  const sb = supabaseServerOptional();
+  if (!sb) return fallbackFeatured;
+
+  const { data, error } = await sb
+    .from("listings")
+    .select(
+      "id, dealer_id, make, model, variant, year, price, km, fuel, location, photo_urls"
+    )
+    .eq("status", "available")
+    .order("created_at", { ascending: false })
+    .limit(8);
+
+  if (error) return fallbackFeatured;
+  const rows = (data ?? []) as FeaturedListing[];
+  return rows.length ? rows : fallbackFeatured;
+};
+
+const formatFeaturedMeta = (listing: FeaturedListing) => {
+  const parts = [
+    listing.year ? String(listing.year) : null,
+    listing.km ? `${listing.km.toLocaleString("en-IN")} km` : null,
+    listing.fuel ? listing.fuel : null,
+  ].filter(Boolean);
+  return parts.join(" • ");
+};
+
 export default async function Home() {
-  const [{ deals }, brandStats] = await Promise.all([
+  const [{ deals }, brandStats, featuredListings] = await Promise.all([
     getExclusiveDeals(),
     getBrandStats(),
+    getFeaturedListings(),
   ]);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sangrocars.in";
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "SangroCars",
+    url: siteUrl,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${siteUrl}/listings?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
 
   return (
     <main className="home exclusive">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
       <section className="exclusive-hero">
         <div className="exclusive-hero__media" aria-hidden="true">
           <video
@@ -441,6 +581,67 @@ export default async function Home() {
           </aside>
         </div>
       </section>
+
+      <section className="section featured-cars">
+        <div className="section__header section__header--split">
+          <div>
+            <h2>Featured listings</h2>
+            <p>Fresh inventory with verified sellers and fast response.</p>
+          </div>
+          <Link className="btn btn--outline" href="/listings">
+            View all cars
+          </Link>
+        </div>
+        <div className="featured-grid">
+          {featuredListings.map((listing) => {
+            const title = [listing.year, listing.make, listing.model, listing.variant]
+              .filter(Boolean)
+              .join(" ");
+            const meta = formatFeaturedMeta(listing);
+            const price =
+              listing.price !== null
+                ? `₹${listing.price.toLocaleString("en-IN")}`
+                : "Price on request";
+            const badge = listing.dealer_id ? "Dealer" : "Owner";
+            const photo =
+              listing.photo_urls?.[0] ?? "/images/hero-luxury.png";
+            return (
+              <article className="featured-card" key={listing.id}>
+                <div className="featured-card__media">
+                  <img src={photo} alt={title || "Car"} loading="lazy" />
+                  <span className="featured-card__badge">{badge}</span>
+                </div>
+                <div className="featured-card__body">
+                  <h3>{title || "Used car"}</h3>
+                  <p className="featured-card__price">{price}</p>
+                  <p className="featured-card__meta">
+                    {meta || "Ready for inspection"}
+                  </p>
+                  <p className="featured-card__city">
+                    {listing.location ?? "India"}
+                  </p>
+                  <div className="featured-card__actions">
+                    <Link
+                      className="btn btn--solid btn--small"
+                      href={`/listing/${listing.id}`}
+                    >
+                      View details
+                    </Link>
+                    <Link
+                      className="btn btn--outline btn--small"
+                      href={`/listing/${listing.id}`}
+                    >
+                      WhatsApp
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <BodyTypeSection />
 
       <section className="section finance-assist">
         <div className="finance-assist__card">

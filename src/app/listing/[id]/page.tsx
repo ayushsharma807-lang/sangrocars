@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { parsePrivateSellerDescription } from "@/lib/privateSeller";
 import { parseListingExperienceDescription } from "@/lib/listingExperience";
@@ -45,6 +46,68 @@ type PredictivePricing = {
 };
 
 type SupabaseClient = NonNullable<ReturnType<typeof supabaseServerOptional>>;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sangrocars.in";
+  if (!hasSupabaseConfig()) {
+    return {
+      title: "Used car listing",
+      description: "Browse this used car on SangroCars.",
+      alternates: { canonical: `/listing/${params.id}` },
+    };
+  }
+
+  const sb = supabaseServerOptional();
+  if (!sb) {
+    return {
+      title: "Used car listing",
+      description: "Browse this used car on SangroCars.",
+      alternates: { canonical: `/listing/${params.id}` },
+    };
+  }
+
+  const { data } = await sb
+    .from("listings")
+    .select("make, model, variant, year, location, photo_urls")
+    .eq("id", params.id)
+    .maybeSingle();
+
+  if (!data) {
+    return {
+      title: "Used car listing",
+      description: "Browse this used car on SangroCars.",
+      alternates: { canonical: `/listing/${params.id}` },
+    };
+  }
+
+  const title = [
+    data.year,
+    data.make,
+    data.model,
+    data.variant,
+    data.location ? `in ${data.location}` : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const image = Array.isArray(data.photo_urls) ? data.photo_urls[0] : undefined;
+
+  return {
+    title: `${title} | SangroCars`,
+    description: `View ${data.make ?? "used"} ${data.model ?? "car"} on SangroCars.`,
+    alternates: { canonical: `/listing/${params.id}` },
+    openGraph: {
+      title,
+      description: `View ${data.make ?? "used"} ${data.model ?? "car"} on SangroCars.`,
+      url: `${siteUrl}/listing/${params.id}`,
+      images: image ? [{ url: image }] : undefined,
+    },
+  };
+}
 
 const formatPrice = (value: number | null) => {
   if (!value) return "Price on request";
@@ -247,6 +310,34 @@ export default async function ListingPage({
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
     "https://www.sangrocars.in";
   const listingUrl = `${listingUrlBase}/listing/${listing.id}`;
+  const primaryPhoto = getPrimaryPhoto(photos) ?? photos[0] ?? null;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Vehicle",
+    name: listingTitle,
+    brand: listing.make ? { "@type": "Brand", name: listing.make } : undefined,
+    model: listing.model ?? undefined,
+    vehicleModelDate: listing.year ?? undefined,
+    fuelType: listing.fuel ?? undefined,
+    vehicleTransmission: listing.transmission ?? undefined,
+    mileageFromOdometer: listing.km
+      ? {
+          "@type": "QuantitativeValue",
+          value: listing.km,
+          unitCode: "KMT",
+        }
+      : undefined,
+    image: primaryPhoto ? [primaryPhoto] : undefined,
+    offers: listing.price
+      ? {
+          "@type": "Offer",
+          price: listing.price,
+          priceCurrency: "INR",
+          availability: "https://schema.org/InStock",
+          url: listingUrl,
+        }
+      : undefined,
+  };
   const predictivePricing = await getPredictivePricing(sb, listing);
 
   let dealer: Dealer | null = null;
@@ -331,6 +422,10 @@ export default async function ListingPage({
 
   return (
     <main className="simple-page simple-detail-page">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <section className="simple-shell">
         <div
           className="whatsapp-context"
