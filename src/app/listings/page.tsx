@@ -4,6 +4,7 @@ import SortForm from "@/app/components/SortForm";
 import PriceRangeSlider from "@/app/components/PriceRangeSlider";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { getPrimaryPhoto } from "@/lib/photoUrls";
+import BodyTypeSection from "@/app/components/BodyTypeSection";
 
 type SearchParams = {
   q?: string | string[];
@@ -696,6 +697,8 @@ export default async function Home({
             </div>
           ))}
         </div>
+
+        <BodyTypeSection />
 
         <div className="cw-stats-row">
           {[
