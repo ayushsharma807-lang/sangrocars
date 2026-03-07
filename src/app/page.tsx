@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import SocialEmbed from "@/app/components/SocialEmbed";
+import DealerPartnersSection from "@/app/components/DealerPartnersSection";
 
 type ExclusiveDeal = {
   id: string;
@@ -466,6 +467,8 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      <DealerPartnersSection />
 
       <section className="section exclusive-signals">
         <div className="exclusive-signals__grid">

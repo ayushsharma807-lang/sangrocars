@@ -6175,3 +6175,51 @@ button.simple-link-btn:disabled {
     align-items: flex-start;
   }
 }
+
+.dealer-partners {
+  margin-top: 10px;
+}
+
+.dealer-partners__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.dealer-partners__card {
+  border-radius: 18px;
+  border: 1px solid var(--stroke);
+  background: rgba(12, 16, 24, 0.7);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.dealer-partners__head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.dealer-partners__logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--stroke);
+  background: rgba(10, 14, 20, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dealer-partners__logo--fallback {
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.dealer-partners__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
