@@ -582,106 +582,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="section featured-cars">
-        <div className="section__header section__header--split">
-          <div>
-            <h2>Featured listings</h2>
-            <p>Fresh inventory with verified sellers and fast response.</p>
-          </div>
-          <Link className="btn btn--outline" href="/listings">
-            View all cars
-          </Link>
-        </div>
-        <div className="featured-grid">
-          {featuredListings.map((listing) => {
-            const title = [listing.year, listing.make, listing.model, listing.variant]
-              .filter(Boolean)
-              .join(" ");
-            const meta = formatFeaturedMeta(listing);
-            const price =
-              listing.price !== null
-                ? `₹${listing.price.toLocaleString("en-IN")}`
-                : "Price on request";
-            const badge = listing.dealer_id ? "Dealer" : "Owner";
-            const photo =
-              listing.photo_urls?.[0] ?? "/images/hero-luxury.png";
-            return (
-              <article className="featured-card" key={listing.id}>
-                <div className="featured-card__media">
-                  <img src={photo} alt={title || "Car"} loading="lazy" />
-                  <span className="featured-card__badge">{badge}</span>
-                </div>
-                <div className="featured-card__body">
-                  <h3>{title || "Used car"}</h3>
-                  <p className="featured-card__price">{price}</p>
-                  <p className="featured-card__meta">
-                    {meta || "Ready for inspection"}
-                  </p>
-                  <p className="featured-card__city">
-                    {listing.location ?? "India"}
-                  </p>
-                  <div className="featured-card__actions">
-                    <Link
-                      className="btn btn--solid btn--small"
-                      href={`/listing/${listing.id}`}
-                    >
-                      View details
-                    </Link>
-                    <Link
-                      className="btn btn--outline btn--small"
-                      href={`/listing/${listing.id}`}
-                    >
-                      WhatsApp
-                    </Link>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      </section>
-
-      <BodyTypeSection />
-
-      <section className="section finance-assist">
-        <div className="finance-assist__card">
-          <div>
-            <p className="finance-assist__eyebrow">Finance &amp; Insurance Assistance</p>
-            <h2>Find your car. Finance it. Drive it home.</h2>
-            <p>
-              Get easy loans, low EMI options, and insurance support in one place.
-            </p>
-            <div className="finance-assist__bullets">
-              <span>✔ Easy car loans</span>
-              <span>✔ Low EMI options</span>
-              <span>✔ Instant insurance quotes</span>
-              <span>✔ Fast approval</span>
-            </div>
-          </div>
-          <div className="finance-assist__actions">
-            <Link className="btn btn--solid" href="/listings">
-              Check EMI
-            </Link>
-            <Link className="btn btn--outline" href="/sell">
-              Get insurance quote
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <DealerPartnersSection />
-
-      <section className="section exclusive-signals">
-        <div className="exclusive-signals__grid">
-          {premiumSignals.map((item) => (
-            <article className="exclusive-signals__item" key={item.label}>
-              <p>{item.label}</p>
-              <h3>{item.value}</h3>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section className="section" id="exclusive-deals">
         <div className="section__header section__header--split">
           <div>
@@ -792,6 +692,108 @@ export default async function Home() {
           </>
         )}
       </section>
+
+      <section className="section featured-cars">
+        <div className="section__header section__header--split">
+          <div>
+            <h2>Featured listings</h2>
+            <p>Fresh inventory with verified sellers and fast response.</p>
+          </div>
+          <Link className="btn btn--outline" href="/listings">
+            View all cars
+          </Link>
+        </div>
+        <div className="featured-grid">
+          {featuredListings.map((listing) => {
+            const title = [listing.year, listing.make, listing.model, listing.variant]
+              .filter(Boolean)
+              .join(" ");
+            const meta = formatFeaturedMeta(listing);
+            const price =
+              listing.price !== null
+                ? `₹${listing.price.toLocaleString("en-IN")}`
+                : "Price on request";
+            const badge = listing.dealer_id ? "Dealer" : "Owner";
+            const photo =
+              listing.photo_urls?.[0] ?? "/images/hero-luxury.png";
+            return (
+              <article className="featured-card" key={listing.id}>
+                <div className="featured-card__media">
+                  <img src={photo} alt={title || "Car"} loading="lazy" />
+                  <span className="featured-card__badge">{badge}</span>
+                </div>
+                <div className="featured-card__body">
+                  <h3>{title || "Used car"}</h3>
+                  <p className="featured-card__price">{price}</p>
+                  <p className="featured-card__meta">
+                    {meta || "Ready for inspection"}
+                  </p>
+                  <p className="featured-card__city">
+                    {listing.location ?? "India"}
+                  </p>
+                  <div className="featured-card__actions">
+                    <Link
+                      className="btn btn--solid btn--small"
+                      href={`/listing/${listing.id}`}
+                    >
+                      View details
+                    </Link>
+                    <Link
+                      className="btn btn--outline btn--small"
+                      href={`/listing/${listing.id}`}
+                    >
+                      WhatsApp
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <BodyTypeSection />
+
+      <section className="section finance-assist">
+        <div className="finance-assist__card">
+          <div>
+            <p className="finance-assist__eyebrow">Finance &amp; Insurance Assistance</p>
+            <h2>Find your car. Finance it. Drive it home.</h2>
+            <p>
+              Get easy loans, low EMI options, and insurance support in one place.
+            </p>
+            <div className="finance-assist__bullets">
+              <span>✔ Easy car loans</span>
+              <span>✔ Low EMI options</span>
+              <span>✔ Instant insurance quotes</span>
+              <span>✔ Fast approval</span>
+            </div>
+          </div>
+          <div className="finance-assist__actions">
+            <Link className="btn btn--solid" href="/listings">
+              Check EMI
+            </Link>
+            <Link className="btn btn--outline" href="/sell">
+              Get insurance quote
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <DealerPartnersSection />
+
+      <section className="section exclusive-signals">
+        <div className="exclusive-signals__grid">
+          {premiumSignals.map((item) => (
+            <article className="exclusive-signals__item" key={item.label}>
+              <p>{item.label}</p>
+              <h3>{item.value}</h3>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      
 
       <section className="section exclusive-process">
         <div className="section__header">
