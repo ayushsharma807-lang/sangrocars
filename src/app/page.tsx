@@ -441,6 +441,32 @@ export default async function Home() {
         </div>
       </section>
 
+      <section className="section finance-assist">
+        <div className="finance-assist__card">
+          <div>
+            <p className="finance-assist__eyebrow">Finance &amp; Insurance Assistance</p>
+            <h2>Find your car. Finance it. Drive it home.</h2>
+            <p>
+              Get easy loans, low EMI options, and insurance support in one place.
+            </p>
+            <div className="finance-assist__bullets">
+              <span>✔ Easy car loans</span>
+              <span>✔ Low EMI options</span>
+              <span>✔ Instant insurance quotes</span>
+              <span>✔ Fast approval</span>
+            </div>
+          </div>
+          <div className="finance-assist__actions">
+            <Link className="btn btn--solid" href="/listings">
+              Check EMI
+            </Link>
+            <Link className="btn btn--outline" href="/sell">
+              Get insurance quote
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <section className="section exclusive-signals">
         <div className="exclusive-signals__grid">
           {premiumSignals.map((item) => (

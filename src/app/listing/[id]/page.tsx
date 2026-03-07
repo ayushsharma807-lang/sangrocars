@@ -426,6 +426,12 @@ export default async function ListingPage({
                     {dealer?.id ? "Email dealer" : "Email seller"}
                   </button>
                 )}
+                <a className="simple-button simple-button--secondary" href="#finance-request">
+                  Finance this car
+                </a>
+                <a className="simple-button simple-button--secondary" href="#finance-request">
+                  Get insurance
+                </a>
               </div>
             </div>
             <EmiCalculator price={listing.price} />

@@ -1165,6 +1165,10 @@ export default async function Home({
                           </p>
                         )}
                         {emi && <span className="cw-listing__emi">{emi}</span>}
+                        <div className="cw-listing__finance">
+                          <span>Finance available</span>
+                          <span>Insurance assistance</span>
+                        </div>
                         <div className="simple-listing__actions cw-listing__actions">
                           <Link
                             className="simple-button simple-button--full"
