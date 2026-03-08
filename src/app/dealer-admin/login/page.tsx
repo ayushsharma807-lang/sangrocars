@@ -56,9 +56,11 @@ export default async function DealerLoginPage({
                 ? "Access denied. This account is missing the required role."
                 : params.error === "email_confirm"
                   ? "Email confirmation is enabled in Supabase. Disable it to allow instant dealer sign-up."
-                : params.error === "dealer_not_found"
-                  ? "No dealer record found for this account."
-                  : "Invalid email or password. Try again."}
+                  : params.error === "otp_disabled"
+                    ? "OTP login is disabled. Please sign in with email and password."
+                    : params.error === "dealer_not_found"
+                      ? "No dealer record found for this account."
+                      : "Invalid email or password. Try again."}
           </div>
         )}
         {params.signup === "check_email" && (
