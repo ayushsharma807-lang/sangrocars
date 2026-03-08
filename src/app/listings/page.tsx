@@ -643,7 +643,6 @@ export default async function Home({
         <nav className="cw-nav">
           <div className="cw-nav__brand">SangroCars</div>
           <div className="cw-nav__links">
-            <Link href="/">Home</Link>
             <Link href="/listings">Buy Car</Link>
             <Link href="/sell">Sell Car</Link>
             <Link href="/dealer-admin/login">Dealer Login</Link>
