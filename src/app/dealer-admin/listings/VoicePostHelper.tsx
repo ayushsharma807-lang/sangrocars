@@ -47,6 +47,9 @@ declare global {
 const toText = (value: number | null) =>
   value == null ? undefined : String(value);
 
+const SAMPLE_VOICE_TEXT =
+  "Hyundai Creta 2021 petrol automatic 42000 km price 12.9 lakh city Jalandhar";
+
 export default function VoicePostHelper({ onApply }: Props) {
   const [transcript, setTranscript] = useState("");
   const [isListening, setIsListening] = useState(false);
@@ -62,12 +65,11 @@ export default function VoicePostHelper({ onApply }: Props) {
   );
 
   const applyFromText = (value: string) => {
+    const input = value.trim() ? value : SAMPLE_VOICE_TEXT;
     if (!value.trim()) {
-      setError("Add voice text first, then tap Fill from voice.");
-      setStatus("");
-      return;
+      setTranscript(SAMPLE_VOICE_TEXT);
     }
-    const parsed = parseListingText(value);
+    const parsed = parseListingText(input);
     const patch = {
       type: parsed.type,
       status: parsed.status,
@@ -90,7 +92,11 @@ export default function VoicePostHelper({ onApply }: Props) {
     }
     onApply(patch);
     setError("");
-    setStatus(`Filled ${filledFields} fields from the text.`);
+    setStatus(
+      value.trim()
+        ? `Filled ${filledFields} fields from the text.`
+        : `Filled ${filledFields} fields using the sample draft.`
+    );
   };
 
   const startListening = () => {
@@ -182,7 +188,7 @@ export default function VoicePostHelper({ onApply }: Props) {
           rows={3}
           value={transcript}
           onChange={(event) => setTranscript(event.target.value)}
-          placeholder="Say or type: Hyundai Creta 2021 petrol automatic 42000 km price 12.9 lakh city Jalandhar"
+          placeholder={`Say or type: ${SAMPLE_VOICE_TEXT}`}
         />
       </label>
       {status ? <p className="voice-helper__status">{status}</p> : null}
