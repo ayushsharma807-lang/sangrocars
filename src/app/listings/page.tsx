@@ -1271,6 +1271,9 @@ export default async function Home({
                   const compareHref = `/listings?${buildQuery(params, {
                     compare: nextCompareIds.length ? nextCompareIds.join(",") : null,
                   })}`;
+                  const listingHref = compareIds.length
+                    ? `/listing/${listing.id}?compare=${compareIds.join(",")}`
+                    : `/listing/${listing.id}`;
                   return (
                     <article className="simple-listing cw-listing" key={listing.id}>
                       <div className="simple-listing__media cw-listing__media">
@@ -1300,7 +1303,7 @@ export default async function Home({
                           )}
                         </div>
                         <Link
-                          href={`/listing/${listing.id}`}
+                          href={listingHref}
                           className="cw-listing__image-link"
                           aria-label={`View ${titleParts.join(" ") || "car listing"}`}
                         />
@@ -1402,7 +1405,7 @@ export default async function Home({
                         <div className="simple-listing__actions cw-listing__actions">
                           <Link
                             className="simple-button simple-button--full"
-                            href={`/listing/${listing.id}`}
+                            href={listingHref}
                           >
                             View details
                           </Link>

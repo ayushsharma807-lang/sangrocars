@@ -130,6 +130,22 @@ const normalizePhone = (value?: string | null) => {
   return digits;
 };
 
+const getSearchParam = (value?: string | string[]) =>
+  Array.isArray(value) ? value[0] : value;
+
+const parseCompareIds = (value?: string | string[]) => {
+  const raw = getSearchParam(value);
+  if (!raw) return [] as string[];
+  return Array.from(
+    new Set(
+      raw
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    )
+  ).slice(0, 3);
+};
+
 const buildSupportLinks = (
   listingTitle: string,
   listingUrl: string,
@@ -241,6 +257,7 @@ export default async function ListingPage({
       : Array.isArray(searchParams?.debug)
         ? searchParams?.debug[0] === "1"
         : false;
+  const compareIds = parseCompareIds(searchParams?.compare);
   if (!hasSupabaseConfig()) {
     return (
       <main className="simple-page simple-detail-page">
@@ -337,6 +354,8 @@ export default async function ListingPage({
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
     "https://www.sangrocars.in";
   const listingUrl = `${listingUrlBase}/listing/${listing.id}`;
+  const compareTargetIds = Array.from(new Set([...compareIds, listing.id])).slice(0, 3);
+  const compareHref = `/compare?ids=${compareTargetIds.join(",")}`;
   const primaryPhoto = getPrimaryPhoto(photos) ?? photos[0] ?? null;
   const structuredData = {
     "@context": "https://schema.org",
@@ -465,7 +484,7 @@ export default async function ListingPage({
             <Link className="simple-button simple-button--secondary" href="/listings">
               ← Back to listings
             </Link>
-            <Link className="simple-button simple-button--secondary" href={`/compare?ids=${listing.id}`}>
+            <Link className="simple-button simple-button--secondary" href={compareHref}>
               🆚 Compare this car
             </Link>
             <SaveToGarageButton
