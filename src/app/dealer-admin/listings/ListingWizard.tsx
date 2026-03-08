@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import VoicePostHelper from "./VoicePostHelper";
 import { buildPolishedDescription } from "@/lib/descriptionPolisher";
 
@@ -60,6 +60,7 @@ const formatPrice = (value: string) => {
 export default function ListingWizard({ action, submitLabel }: Props) {
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState<WizardState>(defaultState);
 
   const photoCount = useMemo(
@@ -102,12 +103,41 @@ export default function ListingWizard({ action, submitLabel }: Props) {
     if (step > 1) setStep((prev) => prev - 1);
   };
 
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (step !== 3 || isSubmitting) return;
+
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData(event.currentTarget);
+      const response = await fetch(action, {
+        method: "POST",
+        body: formData,
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) {
+        setError("Could not save listing. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (typeof window !== "undefined") {
+        window.location.assign(response.url);
+      }
+    } catch {
+      setError("Could not save listing. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <form
       className="dealer-wizard"
-      method="post"
-      action={action}
       encType="multipart/form-data"
+      onSubmit={handleSubmit}
     >
       <input type="hidden" name="type" value={form.type} />
       <input type="hidden" name="status" value={form.status} />
@@ -395,8 +425,8 @@ export default function ListingWizard({ action, submitLabel }: Props) {
             Next
           </button>
         ) : (
-          <button className="btn btn--solid" type="submit">
-            {submitLabel}
+          <button className="btn btn--solid" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : submitLabel}
           </button>
         )}
       </div>
