@@ -534,6 +534,7 @@ export default async function ListingPage({
             )}
             <div className="simple-detail__trust">
               <span>✓ Verified listing</span>
+              <span>✓ SangroCars assisted deal</span>
               <span>✓ {listing.dealer_id ? "Dealer" : "Owner"} verified</span>
               <span>✓ No hidden fees</span>
               <span>✓ Finance available</span>
@@ -643,13 +644,17 @@ export default async function ListingPage({
             </div>
             <div className="simple-dealer-card">
               <div>
-                <p className="simple-dealer-card__label">
-                  Listed by
-                </p>
-                <h3>{dealerName}</h3>
-                <p className="simple-dealer-card__meta">{dealerAddress}</p>
+                <p className="simple-dealer-card__label">LISTED BY</p>
+                <h3>{dealer?.id ? `Dealer: ${dealerName}` : "Private seller"}</h3>
                 <p className="simple-dealer-card__meta">
-                  Verified by SangroCars
+                  📍 {dealerAddress}
+                </p>
+                <p className="simple-dealer-card__meta">✓ Verified by SangroCars</p>
+                <p className="simple-dealer-card__meta">
+                  Usually responds within 10 minutes
+                </p>
+                <p className="simple-dealer-card__meta">
+                  Contact SangroCars to connect with the seller.
                 </p>
                 {dealer?.id && (
                   <Link
@@ -665,11 +670,37 @@ export default async function ListingPage({
                     <span className="simple-pill">Finance available</span>
                     <span className="simple-pill">Insurance support</span>
                     <span className="simple-pill">RC transfer help</span>
-                    <span className="simple-pill">Responds in ~10 min</span>
+                    <span className="simple-pill">SangroCars assisted</span>
                   </div>
                 )}
               </div>
               <div className="simple-dealer-card__actions">
+                {supportLinks.tel ? (
+                  <a className="simple-button simple-button--secondary" href={supportLinks.tel}>
+                    📞 Call SangroCars
+                  </a>
+                ) : (
+                  <button className="simple-button simple-button--secondary" disabled>
+                    📞 Call SangroCars
+                  </button>
+                )}
+                {supportLinks.whatsapp ? (
+                  <a
+                    className="simple-button"
+                    href={supportLinks.whatsapp}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    💬 WhatsApp SangroCars
+                  </a>
+                ) : (
+                  <button className="simple-button" disabled>
+                    💬 WhatsApp SangroCars
+                  </button>
+                )}
+                <a className="simple-button simple-button--secondary" href="#lead-form">
+                  📩 Request callback
+                </a>
                 {dealer?.id && (
                   <Link
                     className="simple-button simple-button--secondary"
