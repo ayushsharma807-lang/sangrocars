@@ -901,7 +901,11 @@ export default async function Home({
                 ? `${listing.km.toLocaleString("en-IN")} km`
                 : "Km on request";
               return (
-                <article className="cw-featured__card" key={`recent-${listing.id}`}>
+                <Link
+                  className="cw-featured__card"
+                  href={`/listing/${listing.id}`}
+                  key={`recent-${listing.id}`}
+                >
                   <div className="cw-featured__media">
                     {photo ? (
                       <Image
@@ -925,11 +929,11 @@ export default async function Home({
                     <span className="cw-featured__city">
                       {getCityFromLocation(listing.location) ?? "City on request"}
                     </span>
-                    <Link className="cw-featured__link" href={`/listing/${listing.id}`}>
+                    <span className="cw-featured__link">
                       View details
-                    </Link>
+                    </span>
                   </div>
-                </article>
+                </Link>
               );
             })}
           </div>
@@ -955,7 +959,11 @@ export default async function Home({
                 ? `${listing.km.toLocaleString("en-IN")} km`
                 : "Km on request";
               return (
-                <article className="cw-featured__card" key={`featured-${listing.id}`}>
+                <Link
+                  className="cw-featured__card"
+                  href={`/listing/${listing.id}`}
+                  key={`featured-${listing.id}`}
+                >
                   <div className="cw-featured__media">
                     {photo ? (
                       <Image
@@ -979,11 +987,11 @@ export default async function Home({
                     <span className="cw-featured__city">
                       {getCityFromLocation(listing.location) ?? "City on request"}
                     </span>
-                    <Link className="cw-featured__link" href={`/listing/${listing.id}`}>
+                    <span className="cw-featured__link">
                       View details
-                    </Link>
+                    </span>
                   </div>
-                </article>
+                </Link>
               );
             })}
             {listings.length === 0 &&
@@ -1017,7 +1025,7 @@ export default async function Home({
                   city: "Jaipur",
                 },
               ].map((item) => (
-                <article className="cw-featured__card" key={item.id}>
+                <div className="cw-featured__card" key={item.id}>
                   <div className="cw-featured__media">
                     <div className="cw-featured__placeholder" />
                   </div>
@@ -1030,7 +1038,7 @@ export default async function Home({
                       View details
                     </span>
                   </div>
-                </article>
+                </div>
               ))}
           </div>
         </section>

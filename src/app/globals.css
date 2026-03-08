@@ -6135,6 +6135,8 @@ button.simple-link-btn:disabled {
   min-height: 100%;
   box-shadow: 0 20px 32px rgba(15, 23, 42, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+  color: inherit;
 }
 
 .carwale-listings-page .cw-featured__card:hover {
