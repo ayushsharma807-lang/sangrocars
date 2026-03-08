@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/adminAuth";
 
@@ -11,8 +11,8 @@ const parseNumber = (value: FormDataEntryValue | null) => {
 };
 
 export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdmin();
   if (!auth.ok) {
@@ -20,7 +20,7 @@ export async function POST(
   }
 
   const form = await req.formData();
-  const id = params.id;
+  const { id } = await params;
   const returnPath = String(form.get("return") ?? "/admin/listings");
   const contactOnly = String(form.get("contact_for_price") ?? "") === "on";
   const price = contactOnly ? null : parseNumber(form.get("price"));
