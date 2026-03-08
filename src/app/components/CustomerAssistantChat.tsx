@@ -160,7 +160,10 @@ const getSpeechConstructor = (): SpeechRecognitionConstructor | null => {
 export default function CustomerAssistantChat() {
   const pathname = usePathname();
   const hidden = useMemo(
-    () => pathname.startsWith("/admin") || pathname.startsWith("/dealer-admin"),
+    () =>
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/dealer-admin") ||
+      pathname.startsWith("/listing/"),
     [pathname]
   );
   const [open, setOpen] = useState(false);

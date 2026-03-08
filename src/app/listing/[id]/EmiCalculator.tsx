@@ -104,11 +104,9 @@ export default function EmiCalculator({ price }: Props) {
           <strong>{formatMoney(totalInterest)}</strong>
         </div>
       </div>
-      <div className="emi-card__actions">
-        <a className="btn btn--solid" href="#finance-request">
-          Apply for loan
-        </a>
-      </div>
+      <p className="emi-card__note">
+        Want finance assistance? Use the “Request callback” button on the right.
+      </p>
     </div>
   );
 }

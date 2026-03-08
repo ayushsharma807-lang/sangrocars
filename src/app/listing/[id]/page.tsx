@@ -4,12 +4,11 @@ import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { parsePrivateSellerDescription } from "@/lib/privateSeller";
 import { parseListingExperienceDescription } from "@/lib/listingExperience";
 import ListingGallery from "./ListingGallery";
-import LeadForm from "./LeadForm";
-import EmiCalculator from "./EmiCalculator";
+import LeadModal from "./LeadModal";
+import EmiModal from "./EmiModal";
 import NearbyDealersMap from "./NearbyDealersMap";
 import SaveToGarageButton from "@/app/components/SaveToGarageButton";
 import RecentViewTracker from "@/app/components/RecentViewTracker";
-import PersonalizedPriceSignal from "@/app/components/PersonalizedPriceSignal";
 import { getPrimaryPhoto, normalizePhotoUrls } from "@/lib/photoUrls";
 import { dealerSlug } from "@/lib/dealerSlug";
 
@@ -434,21 +433,12 @@ export default async function ListingPage({
         max: Math.round(predictivePricing.median * 1.1),
       }
     : null;
-  const priceLabel = predictivePricing?.median
-    ? listing.price && listing.price <= predictivePricing.median
-      ? "Good price"
-      : "Premium price"
-    : null;
-
   return (
     <main className="simple-page simple-detail-page">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <a className="floating-cta" href={`?intent=best_price#lead-form`}>
-        Request best price
-      </a>
       <section className="simple-shell">
         <div
           className="whatsapp-context"
@@ -510,10 +500,8 @@ export default async function ListingPage({
           )}
         </div>
         <div className="simple-detail__layout">
-          <div className="simple-detail__panel">
+          <div className="simple-detail__panel simple-detail__panel--gallery">
             <ListingGallery photos={photos} alt={listingTitle} />
-          </div>
-          <div className="simple-detail__panel simple-detail__panel--stack">
             {debug && (
               <div className="simple-debug">
                 <h3>Debug: Photo URLs</h3>
@@ -530,21 +518,38 @@ export default async function ListingPage({
                 </div>
               </div>
             )}
-            <div className="simple-detail__price">{formatPrice(listing.price)}</div>
-            {estimatedEmi && (
-              <div className="simple-detail__emi">
-                Finance available from ₹{estimatedEmi.toLocaleString("en-IN")}/month
+          </div>
+          <aside className="simple-detail__panel simple-detail__panel--sidebar">
+            <div className="detail-sidebar__price">
+              <div className="detail-sidebar__amount">
+                {formatPrice(listing.price)}
+              </div>
+              {estimatedEmi && (
+                <div className="detail-sidebar__emi">
+                  Finance from ₹{estimatedEmi.toLocaleString("en-IN")}/month
+                </div>
+              )}
+            </div>
+            {priceRange && (
+              <div className="detail-sidebar__range">
+                <div>
+                  <span>Market price range</span>
+                  <strong>
+                    {formatPrice(priceRange.min)} — {formatPrice(priceRange.max)}
+                  </strong>
+                </div>
+                <div>
+                  <span>Your price</span>
+                  <strong>{formatPrice(listing.price)}</strong>
+                </div>
               </div>
             )}
-            <div className="simple-detail__trust">
+            <div className="detail-sidebar__trust">
               <span>✓ Verified listing</span>
               <span>✓ SangroCars assisted deal</span>
-              <span>✓ {listing.dealer_id ? "Dealer" : "Owner"} verified</span>
-              <span>✓ No hidden fees</span>
-              <span>✓ Finance available</span>
-              <span>✓ Insurance support</span>
+              <span>✓ Finance & insurance support</span>
             </div>
-            <div className="simple-detail__cta-row">
+            <div className="detail-sidebar__cta">
               {supportLinks.tel ? (
                 <a className="simple-button" href={supportLinks.tel}>
                   📞 Call SangroCars
@@ -568,320 +573,212 @@ export default async function ListingPage({
                   💬 WhatsApp SangroCars
                 </button>
               )}
-              <a className="simple-button simple-button--secondary" href="#lead-form">
-                📩 Request callback
-              </a>
-              <a
-                className="simple-button simple-button--secondary"
-                href={`?intent=best_price#lead-form`}
-              >
-                Request best price
-              </a>
-            </div>
-            <div className="simple-detail__cta-row">
-              <a className="simple-button" href={`?intent=finance#lead-form`}>
-                💰 Finance this car
-              </a>
-              <a
-                className="simple-button simple-button--secondary"
-                href={`?intent=insurance#lead-form`}
-              >
-                🛡 Get insurance quote
-              </a>
-              <SaveToGarageButton
+              <LeadModal
+                label="Request best price"
                 listingId={listing.id}
-                title={listingTitle}
-                price={listing.price}
-                location={listing.location}
-                photo={getPrimaryPhoto(photos)}
+                dealerId={listing.dealer_id}
+                listingTitle={listingTitle}
+                defaultIntent="best_price"
+                variant="secondary"
+              />
+              <EmiModal price={listing.price} />
+              <LeadModal
+                label="Request callback"
+                listingId={listing.id}
+                dealerId={listing.dealer_id}
+                listingTitle={listingTitle}
+                defaultIntent="callback"
+                variant="secondary"
               />
             </div>
-            <div className="simple-detail__section assisted-buying">
-              <h3>Buy with SangroCars assistance</h3>
+            <div className="detail-sidebar__listed">
+              <p className="detail-sidebar__label">LISTED BY</p>
+              <strong>{dealer?.id ? `Dealer: ${dealerName}` : "Private seller"}</strong>
+              <span>📍 {dealerAddress}</span>
+              <span>✓ Verified by SangroCars</span>
+              <span>Usually responds within 10 minutes</span>
+              {dealer?.id && (
+                <Link
+                  className="simple-link"
+                  href={`/dealers/${dealerSlug(dealerName, dealer.id)}`}
+                >
+                  View dealer profile
+                </Link>
+              )}
+            </div>
+            <div className="detail-sidebar__assist">
+              <p>Buy with SangroCars assistance</p>
               <ul>
                 <li>Negotiation help to get the best price</li>
                 <li>Finance support from trusted partners</li>
                 <li>Insurance assistance in one call</li>
-                <li>Verified seller checks before delivery</li>
               </ul>
             </div>
-            <div className="simple-detail__section">
-              <h3>Overview</h3>
-              <p>{overviewDescription}</p>
+          </aside>
+        </div>
+        <div className="simple-detail__section">
+          <h3>Overview</h3>
+          <p>{overviewDescription}</p>
+        </div>
+        <div className="simple-detail__section">
+          <h3>Key specs</h3>
+          <div className="spec-grid">
+            <div>
+              <span>Year</span>
+              <strong>{listing.year ?? "—"}</strong>
             </div>
-            <div className="simple-detail__section">
-              <h3>Dynamic predictive pricing</h3>
-              {predictivePricing ? (
-                <>
-                  <p>
-                    Median price for this model:{" "}
-                    <strong>{formatPrice(predictivePricing.median)}</strong> based on{" "}
-                    {predictivePricing.total} similar live listings.
-                  </p>
-                  <p>{predictivePricing.recommendation}</p>
-                </>
-              ) : (
-                <p>Not enough similar market data yet for price prediction.</p>
-              )}
-              <PersonalizedPriceSignal
-                listingId={listing.id}
-                currentPrice={listing.price}
-                marketMedian={predictivePricing?.median ?? null}
-              />
-              {priceRange && (
-                <div className="price-insight">
-                  <div>
-                    <p>Market price range</p>
-                    <strong>
-                      {formatPrice(priceRange.min)} — {formatPrice(priceRange.max)}
-                    </strong>
-                  </div>
-                  <div>
-                    <p>Your price</p>
-                    <strong>{formatPrice(listing.price)}</strong>
-                    {priceLabel && (
-                      <span className="price-insight__badge">{priceLabel}</span>
-                    )}
-                  </div>
-                </div>
-              )}
+            <div>
+              <span>Fuel</span>
+              <strong>{toTitle(listing.fuel) ?? "—"}</strong>
             </div>
-            <div className="simple-dealer-card">
-              <div>
-                <p className="simple-dealer-card__label">LISTED BY</p>
-                <h3>{dealer?.id ? `Dealer: ${dealerName}` : "Private seller"}</h3>
-                <p className="simple-dealer-card__meta">
-                  📍 {dealerAddress}
-                </p>
-                <p className="simple-dealer-card__meta">✓ Verified by SangroCars</p>
-                <p className="simple-dealer-card__meta">
-                  Usually responds within 10 minutes
-                </p>
-                <p className="simple-dealer-card__meta">
-                  Contact SangroCars to connect with the seller.
-                </p>
-                {dealer?.id && (
-                  <Link
-                    className="simple-link"
-                    href={`/dealers/${dealerSlug(dealerName, dealer.id)}`}
-                  >
-                    View dealer profile
-                  </Link>
-                )}
-                {dealer?.id && (
-                  <div className="simple-dealer-card__badges">
-                    <span className="simple-pill">Verified dealer</span>
-                    <span className="simple-pill">Finance available</span>
-                    <span className="simple-pill">Insurance support</span>
-                    <span className="simple-pill">RC transfer help</span>
-                    <span className="simple-pill">SangroCars assisted</span>
-                  </div>
-                )}
-              </div>
-              <div className="simple-dealer-card__actions">
-                {supportLinks.tel ? (
-                  <a className="simple-button simple-button--secondary" href={supportLinks.tel}>
-                    📞 Call SangroCars
-                  </a>
-                ) : (
-                  <button className="simple-button simple-button--secondary" disabled>
-                    📞 Call SangroCars
-                  </button>
-                )}
-                {supportLinks.whatsapp ? (
-                  <a
-                    className="simple-button"
-                    href={supportLinks.whatsapp}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    💬 WhatsApp SangroCars
-                  </a>
-                ) : (
-                  <button className="simple-button" disabled>
-                    💬 WhatsApp SangroCars
-                  </button>
-                )}
-                <a className="simple-button simple-button--secondary" href="#lead-form">
-                  📩 Request callback
-                </a>
-                {dealer?.id && (
-                  <Link
-                    className="simple-button simple-button--secondary"
-                    href={`/dealers/${dealerSlug(dealerName, dealer.id)}`}
-                  >
-                    View dealer stock
-                  </Link>
-                )}
-              </div>
+            <div>
+              <span>Transmission</span>
+              <strong>{toTitle(listing.transmission) ?? "—"}</strong>
             </div>
-            <div className="simple-detail__section">
-              <h3>Key specifications</h3>
-              <div className="spec-grid">
-                <div>
-                  <span>Year</span>
-                  <strong>{listing.year ?? "—"}</strong>
-                </div>
-                <div>
-                  <span>Fuel</span>
-                  <strong>{toTitle(listing.fuel) ?? "—"}</strong>
-                </div>
-                <div>
-                  <span>Transmission</span>
-                  <strong>{toTitle(listing.transmission) ?? "—"}</strong>
-                </div>
-                <div>
-                  <span>Mileage</span>
-                  <strong>{listing.km ? `${listing.km.toLocaleString("en-IN")} km` : "—"}</strong>
-                </div>
-                <div>
-                  <span>Location</span>
-                  <strong>{listing.location ?? "—"}</strong>
-                </div>
-                <div>
-                  <span>Registration</span>
-                  <strong>{listing.location?.split(",")[0] ?? "—"}</strong>
-                </div>
-              </div>
+            <div>
+              <span>Mileage</span>
+              <strong>{listing.km ? `${listing.km.toLocaleString("en-IN")} km` : "—"}</strong>
             </div>
-            <div className="simple-detail__section">
-              <h3>Vehicle highlights</h3>
-              <ul className="highlight-list">
-                {highlights.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
+            <div>
+              <span>Location</span>
+              <strong>{listing.location ?? "—"}</strong>
             </div>
-            <EmiCalculator price={listing.price} />
-            <div className="simple-detail__section" id="lead-form">
-              <h3>Talk to SangroCars</h3>
-              <LeadForm
-                listingId={listing.id}
-                dealerId={listing.dealer_id}
-                listingTitle={listingTitle}
-              />
+            <div>
+              <span>Registration</span>
+              <strong>{listing.location?.split(",")[0] ?? "—"}</strong>
             </div>
-            {moreFromDealer.length > 0 && (
-              <div className="simple-detail__section">
-                <h3>More from {dealerName}</h3>
-                <div className="listings">
-                  {moreFromDealer.map((item) => {
-                    const photo = getPrimaryPhoto(item.photo_urls);
-                    const title = [
-                      item.year ?? undefined,
-                      toTitle(item.make),
-                      toTitle(item.model),
-                      toTitle(item.variant),
-                    ]
-                      .filter(Boolean)
-                      .join(" ");
-                    return (
-                      <article className="listing" key={item.id}>
-                        <div className="listing__media">
-                          {photo ? (
-                            <img src={photo} alt={title} />
-                          ) : (
-                            <div className="listing__placeholder" />
-                          )}
-                        </div>
-                        <div className="listing__body">
-                          <h3>{title}</h3>
-                          <p className="listing__location">
-                            {item.location || "Location on request"}
-                          </p>
-                          <div className="listing__meta">
-                            {item.fuel && (
-                              <span className="chip">{toTitle(item.fuel)}</span>
-                            )}
-                            {item.transmission && (
-                              <span className="chip">
-                                {toTitle(item.transmission)}
-                              </span>
-                            )}
-                          </div>
-                          <div className="listing__footer">
-                            <strong>{formatPrice(item.price)}</strong>
-                            <Link
-                              className="btn btn--ghost btn--tight"
-                              href={`/listing/${item.id}`}
-                            >
-                              View details
-                            </Link>
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            {similarListings.length > 0 && (
-              <div className="simple-detail__section">
-                <h3>Similar cars near {listing.location?.split(",")[0] ?? "you"}</h3>
-                <div className="listings">
-                  {similarListings.map((item) => {
-                    const photo = getPrimaryPhoto(item.photo_urls);
-                    const title = [
-                      item.year ?? undefined,
-                      toTitle(item.make),
-                      toTitle(item.model),
-                      toTitle(item.variant),
-                    ]
-                      .filter(Boolean)
-                      .join(" ");
-                    return (
-                      <article className="listing" key={item.id}>
-                        <div className="listing__media">
-                          {photo ? (
-                            <img src={photo} alt={title} />
-                          ) : (
-                            <div className="listing__placeholder" />
-                          )}
-                        </div>
-                        <div className="listing__body">
-                          <h3>{title}</h3>
-                          <p className="listing__location">
-                            {item.location || "Location on request"}
-                          </p>
-                          <div className="listing__meta">
-                            {item.fuel && (
-                              <span className="chip">{toTitle(item.fuel)}</span>
-                            )}
-                            {item.transmission && (
-                              <span className="chip">
-                                {toTitle(item.transmission)}
-                              </span>
-                            )}
-                          </div>
-                          <div className="listing__footer">
-                            <strong>{formatPrice(item.price)}</strong>
-                            <Link
-                              className="btn btn--ghost btn--tight"
-                              href={`/listing/${item.id}`}
-                            >
-                              View details
-                            </Link>
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            <div className="simple-detail__section" id="report-listing">
-              <h3>Report this listing</h3>
-              <p>
-                Something not right? Tell us and we&apos;ll review this listing.
-              </p>
-              <Link className="simple-link-btn" href="/support">
-                Report a problem
-              </Link>
+          </div>
+          {highlights.length > 0 && (
+            <div className="spec-highlights">
+              {highlights.map((item) => (
+                <span key={item} className="spec-highlight">
+                  {item}
+                </span>
+              ))}
             </div>
-            <NearbyDealersMap
-              listingDealerId={listing.dealer_id}
-              listingLocation={listing.location}
-            />
+          )}
+        </div>
+        {moreFromDealer.length > 0 && (
+          <div className="simple-detail__section">
+            <h3>More from {dealerName}</h3>
+            <div className="listings">
+              {moreFromDealer.map((item) => {
+                const photo = getPrimaryPhoto(item.photo_urls);
+                const title = [
+                  item.year ?? undefined,
+                  toTitle(item.make),
+                  toTitle(item.model),
+                  toTitle(item.variant),
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+                return (
+                  <article className="listing" key={item.id}>
+                    <div className="listing__media">
+                      {photo ? (
+                        <img src={photo} alt={title} />
+                      ) : (
+                        <div className="listing__placeholder" />
+                      )}
+                    </div>
+                    <div className="listing__body">
+                      <h3>{title}</h3>
+                      <p className="listing__location">
+                        {item.location || "Location on request"}
+                      </p>
+                      <div className="listing__meta">
+                        {item.fuel && (
+                          <span className="chip">{toTitle(item.fuel)}</span>
+                        )}
+                        {item.transmission && (
+                          <span className="chip">
+                            {toTitle(item.transmission)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="listing__footer">
+                        <strong>{formatPrice(item.price)}</strong>
+                        <Link
+                          className="btn btn--ghost btn--tight"
+                          href={`/listing/${item.id}`}
+                        >
+                          View details
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {similarListings.length > 0 && (
+          <div className="simple-detail__section">
+            <h3>Similar cars near {listing.location?.split(",")[0] ?? "you"}</h3>
+            <div className="listings">
+              {similarListings.map((item) => {
+                const photo = getPrimaryPhoto(item.photo_urls);
+                const title = [
+                  item.year ?? undefined,
+                  toTitle(item.make),
+                  toTitle(item.model),
+                  toTitle(item.variant),
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+                return (
+                  <article className="listing" key={item.id}>
+                    <div className="listing__media">
+                      {photo ? (
+                        <img src={photo} alt={title} />
+                      ) : (
+                        <div className="listing__placeholder" />
+                      )}
+                    </div>
+                    <div className="listing__body">
+                      <h3>{title}</h3>
+                      <p className="listing__location">
+                        {item.location || "Location on request"}
+                      </p>
+                      <div className="listing__meta">
+                        {item.fuel && (
+                          <span className="chip">{toTitle(item.fuel)}</span>
+                        )}
+                        {item.transmission && (
+                          <span className="chip">
+                            {toTitle(item.transmission)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="listing__footer">
+                        <strong>{formatPrice(item.price)}</strong>
+                        <Link
+                          className="btn btn--ghost btn--tight"
+                          href={`/listing/${item.id}`}
+                        >
+                          View details
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        <div className="simple-detail__section" id="report-listing">
+          <h3>Report this listing</h3>
+          <p>
+            Something not right? Tell us and we&apos;ll review this listing.
+          </p>
+          <Link className="simple-link-btn" href="/support">
+            Report a problem
+          </Link>
+        </div>
+        <NearbyDealersMap
+          listingDealerId={listing.dealer_id}
+          listingLocation={listing.location}
+        />
           </div>
         </div>
       </section>

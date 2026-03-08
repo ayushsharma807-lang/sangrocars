@@ -7,6 +7,7 @@ type Props = {
   listingId: string;
   dealerId: string | null;
   listingTitle: string;
+  defaultIntent?: string;
 };
 
 type Status =
@@ -15,18 +16,32 @@ type Status =
   | { state: "success" }
   | { state: "error"; message: string };
 
-export default function LeadForm({ listingId, dealerId, listingTitle }: Props) {
+export default function LeadForm({
+  listingId,
+  dealerId,
+  listingTitle,
+  defaultIntent,
+}: Props) {
   const [status, setStatus] = useState<Status>({ state: "idle" });
   const searchParams = useSearchParams();
-  const [intent, setIntent] = useState("callback");
-  const [wantsFinance, setWantsFinance] = useState(false);
+  const [intent, setIntent] = useState(defaultIntent ?? "callback");
+  const [wantsFinance, setWantsFinance] = useState(
+    defaultIntent === "finance"
+  );
 
   useEffect(() => {
+    if (defaultIntent) {
+      setIntent(defaultIntent);
+      setWantsFinance(defaultIntent === "finance");
+      return;
+    }
     const param = searchParams.get("intent");
-    if (!param) return;
-    setIntent(param);
-    setWantsFinance(param === "finance");
-  }, [searchParams]);
+    if (param) {
+      setIntent(param);
+      setWantsFinance(param === "finance");
+      return;
+    }
+  }, [searchParams, defaultIntent]);
 
   const buildMessage = (payload: Record<string, FormDataEntryValue>) => {
     const parts: string[] = [];
@@ -97,7 +112,8 @@ export default function LeadForm({ listingId, dealerId, listingTitle }: Props) {
     }
 
     setStatus({ state: "success" });
-    setWantsFinance(false);
+    setIntent(defaultIntent ?? "callback");
+    setWantsFinance(defaultIntent === "finance");
     event.currentTarget.reset();
   };
 

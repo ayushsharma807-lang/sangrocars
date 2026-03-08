@@ -4620,7 +4620,7 @@ body {
 
 .simple-detail__layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -4687,6 +4687,18 @@ body {
   padding: 14px;
 }
 
+.simple-detail__panel--gallery {
+  padding: 12px;
+}
+
+.simple-detail__panel--sidebar {
+  position: sticky;
+  top: 18px;
+  align-self: start;
+  display: grid;
+  gap: 14px;
+}
+
 .simple-detail__panel--stack {
   display: grid;
   gap: 14px;
@@ -4730,6 +4742,117 @@ body {
   font-size: 30px;
   font-weight: 700;
   color: #111827;
+}
+
+.detail-sidebar__price {
+  display: grid;
+  gap: 6px;
+}
+
+.detail-sidebar__amount {
+  font-size: 30px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.detail-sidebar__emi {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.detail-sidebar__range {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.detail-sidebar__range span {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #6b7280;
+}
+
+.detail-sidebar__range strong {
+  font-size: 15px;
+  color: #111827;
+}
+
+.detail-sidebar__trust {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.detail-sidebar__cta {
+  display: grid;
+  gap: 10px;
+}
+
+.detail-sidebar__listed {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  color: #374151;
+}
+
+.detail-sidebar__listed span {
+  color: #475569;
+}
+
+.detail-sidebar__label {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.detail-sidebar__assist {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  padding: 12px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.detail-sidebar__assist p {
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.detail-sidebar__assist ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.spec-highlights {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.spec-highlight {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 600;
 }
 
 .simple-detail__section h3 {
@@ -5012,6 +5135,59 @@ button.simple-link-btn:disabled {
 
 .emi-card__summary strong {
   font-size: 1rem;
+}
+
+.emi-card__note {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 60;
+  padding: 20px;
+}
+
+.modal-card {
+  width: min(680px, 92vw);
+  max-height: 90vh;
+  overflow: auto;
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+  padding: 18px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.modal-header h3 {
+  margin: 0;
+}
+
+.modal-close {
+  border: none;
+  background: #f1f5f9;
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+}
+
+.modal-body {
+  display: grid;
+  gap: 12px;
 }
 
 .nearby-card {
