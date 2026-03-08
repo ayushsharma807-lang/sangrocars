@@ -12,6 +12,7 @@ const parseIds = (value: FormDataEntryValue[] | string[] | null) => {
 
 export async function POST(req: Request) {
   const contentType = req.headers.get("content-type") ?? "";
+  const wantsJson = contentType.includes("application/json");
   let ids: string[] = [];
   let status = "";
   let notes = "";
@@ -46,14 +47,26 @@ export async function POST(req: Request) {
     returnPath = String(form.get("return") ?? "");
   }
 
+  const redirectToError = (code: string) => {
+    const base =
+      (returnPath && returnPath.trim()) ||
+      req.headers.get("referer") ||
+      "/admin/leads";
+    const url = new URL(base, req.url);
+    url.searchParams.set("bulkError", code);
+    return NextResponse.redirect(url);
+  };
+
   if (!ids.length || (!status && !notes && !assignedTo)) {
+    if (!wantsJson) {
+      return redirectToError("missing");
+    }
     return NextResponse.json(
       { ok: false, error: "Missing ids, status, notes, or assignment" },
       { status: 400 }
     );
   }
 
-  const wantsJson = contentType.includes("application/json");
   const auth = await requireAdmin();
   if (!auth.ok) {
     const loginUrl = new URL("/admin/login", req.url);

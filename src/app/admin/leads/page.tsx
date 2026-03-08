@@ -218,6 +218,7 @@ export default async function LeadsPage({
     q?: string | string[];
     status?: string | string[];
     source?: string | string[];
+    bulkError?: string | string[];
     imported?: string;
     skipped?: string;
     failed?: string;
@@ -229,6 +230,7 @@ export default async function LeadsPage({
     status: getParam(params.status),
     source: getParam(params.source),
   };
+  const bulkError = getParam(params.bulkError);
   const [{ data: leads, error }, stats, dealerStats] = await Promise.all([
     getLeads(filters),
     getLeadStats(),
@@ -258,6 +260,7 @@ export default async function LeadsPage({
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
   const bulkFormId = "bulk-leads-form";
+  const hasLeads = leads.length > 0;
   const importResult =
     params.imported || params.skipped || params.failed
       ? {
@@ -378,6 +381,12 @@ export default async function LeadsPage({
           <div className="admin-banner">
             Import complete. Imported: {importResult.imported}, Skipped:{" "}
             {importResult.skipped}, Failed: {importResult.failed}.
+          </div>
+        )}
+        {bulkError === "missing" && (
+          <div className="admin-banner admin-banner--error">
+            Select at least one lead and choose a status, assignee, or note
+            before updating.
           </div>
         )}
         <form className="admin-filter" method="get">
@@ -549,9 +558,12 @@ export default async function LeadsPage({
                 <input type="checkbox" name="append" value="1" />
                 Append to existing notes
               </label>
-              <button className="btn btn--solid" type="submit">
+              <button className="btn btn--solid" type="submit" disabled={!hasLeads}>
                 Update selected
               </button>
+              {!hasLeads && (
+                <span className="bulk-hint">Add leads to enable bulk updates.</span>
+              )}
             </div>
             <div className="table-wrapper">
               <table className="leads-table">

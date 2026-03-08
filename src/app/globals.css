@@ -1961,6 +1961,13 @@ body {
   color: var(--fg-muted);
 }
 
+.bulk-hint {
+  font-size: 12px;
+  color: var(--fg-muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .bulk-actions select {
   padding: 10px 12px;
   border-radius: 12px;
