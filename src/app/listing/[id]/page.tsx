@@ -131,7 +131,11 @@ const normalizePhone = (value?: string | null) => {
   return digits;
 };
 
-const buildSupportLinks = (listingTitle: string, listingUrl: string) => {
+const buildSupportLinks = (
+  listingTitle: string,
+  listingUrl: string,
+  listingId: string
+) => {
   const raw =
     process.env.NEXT_PUBLIC_SUPPORT_PHONE ??
     process.env.NEXT_PUBLIC_SANGRO_PHONE ??
@@ -139,7 +143,7 @@ const buildSupportLinks = (listingTitle: string, listingUrl: string) => {
     "";
   const digits = normalizePhone(raw);
   const message = encodeURIComponent(
-    `Hi, I'm interested in the ${listingTitle} listed on SangroCars. ${listingUrl}`
+    `Hi, I'm interested in listing ${listingId} (${listingTitle}) on SangroCars. ${listingUrl}`
   );
   return {
     tel: digits ? `tel:+${digits}` : null,
@@ -411,7 +415,7 @@ export default async function ListingPage({
   const dealerName =
     dealer?.name ?? privateSellerName ?? "Private seller";
   const dealerAddress = dealer?.address ?? listing.location ?? "Address on request";
-  const supportLinks = buildSupportLinks(listingTitle, listingUrl);
+  const supportLinks = buildSupportLinks(listingTitle, listingUrl, listing.id);
   const estimatedEmi = estimateEmi(listing.price);
   const quickMeta = [
     listing.km ? `${listing.km.toLocaleString("en-IN")} km` : null,

@@ -1247,6 +1247,7 @@ export default async function Home({
                     ? `${listing.km.toLocaleString("en-IN")} km`
                     : "Km on request";
                   const isCertified = Boolean(listing.stock_id);
+                  const listingCode = listing.id.slice(0, 6).toUpperCase();
                   const compareHref = `/listings?${buildQuery(params, {
                     compare: nextCompareIds.length ? nextCompareIds.join(",") : null,
                   })}`;
@@ -1266,6 +1267,12 @@ export default async function Home({
                         )}
                         <div className="simple-listing__tag-stack">
                           <span className="simple-listing__tag">Available</span>
+                          <span
+                            className="simple-listing__tag simple-listing__tag--id"
+                            title={`Listing ID: ${listing.id}`}
+                          >
+                            ID {listingCode}
+                          </span>
                           {isLuxury && (
                             <span className="simple-listing__tag simple-listing__tag--luxury">
                               Luxury
