@@ -354,8 +354,15 @@ export default async function ListingPage({
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
     "https://www.sangrocars.in";
   const listingUrl = `${listingUrlBase}/listing/${listing.id}`;
-  const compareTargetIds = Array.from(new Set([...compareIds, listing.id])).slice(0, 3);
-  const compareHref = `/compare?ids=${compareTargetIds.join(",")}`;
+  const compareTargetIds = Array.from(
+    new Set([...compareIds.filter((compareId) => compareId !== listing.id), listing.id])
+  ).slice(0, 3);
+  const compareHref =
+    compareTargetIds.length >= 2
+      ? `/compare?ids=${compareTargetIds.join(",")}`
+      : `/listings?compare=${compareTargetIds.join(",")}`;
+  const compareLabel =
+    compareTargetIds.length >= 2 ? "Compare this car" : "Select another car to compare";
   const primaryPhoto = getPrimaryPhoto(photos) ?? photos[0] ?? null;
   const structuredData = {
     "@context": "https://schema.org",
@@ -610,7 +617,7 @@ export default async function ListingPage({
                 ← Back to listings
               </Link>
               <Link className="simple-button simple-button--secondary" href={compareHref}>
-                Compare this car
+                {compareLabel}
               </Link>
             </div>
             <div className="detail-sidebar__listed">

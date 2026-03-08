@@ -1268,9 +1268,15 @@ export default async function Home({
                     : "Km on request";
                   const isCertified = Boolean(listing.stock_id);
                   const listingCode = listing.id.slice(0, 6).toUpperCase();
-                  const compareHref = `/listings?${buildQuery(params, {
-                    compare: nextCompareIds.length ? nextCompareIds.join(",") : null,
-                  })}`;
+                  const compareHref = isCompared
+                    ? `/listings?${buildQuery(params, {
+                        compare: nextCompareIds.length ? nextCompareIds.join(",") : null,
+                      })}`
+                    : nextCompareIds.length >= 2
+                      ? `/compare?ids=${nextCompareIds.join(",")}`
+                      : `/listings?${buildQuery(params, {
+                          compare: nextCompareIds.length ? nextCompareIds.join(",") : null,
+                        })}`;
                   const listingHref = compareIds.length
                     ? `/listing/${listing.id}?compare=${compareIds.join(",")}`
                     : `/listing/${listing.id}`;
