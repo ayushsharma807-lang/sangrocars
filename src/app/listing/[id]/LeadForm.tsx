@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 type Props = {
   listingId: string;
@@ -16,7 +17,16 @@ type Status =
 
 export default function LeadForm({ listingId, dealerId, listingTitle }: Props) {
   const [status, setStatus] = useState<Status>({ state: "idle" });
+  const searchParams = useSearchParams();
+  const [intent, setIntent] = useState("callback");
   const [wantsFinance, setWantsFinance] = useState(false);
+
+  useEffect(() => {
+    const param = searchParams.get("intent");
+    if (!param) return;
+    setIntent(param);
+    setWantsFinance(param === "finance");
+  }, [searchParams]);
 
   const buildMessage = (payload: Record<string, FormDataEntryValue>) => {
     const parts: string[] = [];
@@ -25,7 +35,11 @@ export default function LeadForm({ listingId, dealerId, listingTitle }: Props) {
       parts.push(`Preferred time: ${preferredTime}`);
     }
 
-    if (String(payload.want_finance ?? "no") === "yes") {
+    const intentValue = String(payload.intent ?? "callback");
+    if (intentValue) {
+      parts.push(`Intent: ${intentValue.replace(/_/g, " ")}`);
+    }
+    if (String(payload.want_finance ?? "no") === "yes" || intentValue === "finance") {
       parts.push("Finance request: Yes");
       const downPayment = String(payload.down_payment ?? "").trim();
       const monthlyBudget = String(payload.monthly_budget ?? "").trim();
@@ -45,7 +59,10 @@ export default function LeadForm({ listingId, dealerId, listingTitle }: Props) {
     const payload = Object.fromEntries(
       formData.entries()
     ) as Record<string, FormDataEntryValue>;
-    const wantsFinanceRequest = String(payload.want_finance ?? "no") === "yes";
+    const wantsFinanceRequest =
+      String(payload.want_finance ?? "no") === "yes" ||
+      String(payload.intent ?? "") === "finance";
+    const source = String(payload.intent ?? "") || (wantsFinanceRequest ? "finance" : "website");
 
     try {
       const res = await fetch("/api/leads", {
@@ -58,7 +75,7 @@ export default function LeadForm({ listingId, dealerId, listingTitle }: Props) {
           phone: payload.phone,
           email: payload.email,
           message: buildMessage(payload),
-          source: wantsFinanceRequest ? "finance" : "website",
+          source,
           listing_title: listingTitle,
         }),
       });
@@ -85,7 +102,11 @@ export default function LeadForm({ listingId, dealerId, listingTitle }: Props) {
   };
 
   return (
-    <form className="lead-form" onSubmit={handleSubmit}>
+    <form className="lead-form" id="lead-form" onSubmit={handleSubmit}>
+      <div className="lead-form__header">
+        <h3>Contact SangroCars</h3>
+        <p>We will negotiate the best deal and connect you with verified sellers.</p>
+      </div>
       <div className="lead-form__row">
         <label>
           Name
@@ -108,14 +129,31 @@ export default function LeadForm({ listingId, dealerId, listingTitle }: Props) {
       </div>
       <div className="lead-form__row">
         <label>
+          How can we help?
+          <select
+            name="intent"
+            value={intent}
+            onChange={(event) => {
+              const value = event.target.value;
+              setIntent(value);
+              setWantsFinance(value === "finance");
+            }}
+          >
+            <option value="callback">Request callback</option>
+            <option value="best_price">Request best price</option>
+            <option value="finance">Finance this car</option>
+            <option value="insurance">Get insurance quote</option>
+          </select>
+        </label>
+        <label>
           Need finance help?
           <select
             name="want_finance"
-            defaultValue="no"
+            value={wantsFinance ? "yes" : "no"}
             onChange={(event) => setWantsFinance(event.target.value === "yes")}
           >
-            <option value="no">No, just callback</option>
-            <option value="yes">Yes, need finance option</option>
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
           </select>
         </label>
       </div>
@@ -146,11 +184,11 @@ export default function LeadForm({ listingId, dealerId, listingTitle }: Props) {
         type="submit"
         disabled={status.state === "loading"}
       >
-        {status.state === "loading" ? "Sending..." : "Request callback"}
+        {status.state === "loading" ? "Sending..." : "Send request"}
       </button>
       {status.state === "success" && (
         <p className="lead-form__success">
-          Thanks! A dealer will reach out shortly.
+          Thanks! SangroCars will reach out shortly.
         </p>
       )}
       {status.state === "error" && (

@@ -40,6 +40,16 @@ export default async function DealerRegisterPage({
           </div>
         )}
 
+        <div className="dealer-register__benefits">
+          <h3>Why join SangroCars?</h3>
+          <ul>
+            <li>Free listings with qualified buyer leads</li>
+            <li>Finance support to improve closure rates</li>
+            <li>Insurance assistance for faster deals</li>
+            <li>Dedicated dealer dashboard and bulk uploads</li>
+          </ul>
+        </div>
+
         <form
           className="dealer-form dealer-form--stacked"
           method="post"

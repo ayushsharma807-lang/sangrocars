@@ -796,6 +796,18 @@ body {
   gap: 12px;
 }
 
+.lead-form__header h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: var(--fg);
+}
+
+.lead-form__header p {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+
 .lead-form label {
   display: grid;
   gap: 6px;
@@ -2583,6 +2595,15 @@ body {
   margin-bottom: 12px;
 }
 
+.sell-page__benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #1f2937;
+}
+
 .sell-page__top-actions {
   display: flex;
   align-items: center;
@@ -2692,6 +2713,29 @@ body {
   color: #334155;
 }
 
+.dealer-register__benefits {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  margin-bottom: 16px;
+}
+
+.dealer-register__benefits h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.dealer-register__benefits ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #334155;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+
 .featured-cars {
   margin-top: 20px;
 }
@@ -2770,6 +2814,57 @@ body {
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 8px;
+}
+
+.assistance-strip__card {
+  border-radius: 20px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(120deg, rgba(12, 12, 16, 0.95), rgba(18, 22, 30, 0.9));
+  color: #e2e8f0;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
+  align-items: center;
+}
+
+.assistance-strip__eyebrow {
+  margin: 0 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.assistance-strip__card h2 {
+  margin: 0 0 8px;
+  font-size: clamp(22px, 3vw, 28px);
+}
+
+.assistance-strip__card p {
+  margin: 0 0 12px;
+  color: rgba(248, 250, 252, 0.78);
+}
+
+.assistance-strip__bullets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(248, 250, 252, 0.85);
+}
+
+.assistance-strip__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+@media (max-width: 900px) {
+  .assistance-strip__card {
+    grid-template-columns: 1fr;
+  }
 }
 
 .btn--small {
@@ -6588,6 +6683,21 @@ button.simple-link-btn:disabled {
   border: 1px solid rgba(37, 99, 235, 0.2);
   padding: 4px 8px;
   border-radius: 999px;
+}
+
+.simple-detail__emi {
+  font-size: 14px;
+  color: #22c55e;
+  font-weight: 600;
+  margin: 8px 0 12px;
+}
+
+.assisted-buying ul {
+  margin: 0;
+  padding-left: 18px;
+  color: rgba(226, 232, 240, 0.8);
+  display: grid;
+  gap: 6px;
 }
 
 .simple-detail__cta-row {

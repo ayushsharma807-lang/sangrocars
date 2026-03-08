@@ -515,13 +515,13 @@ export default async function Home() {
             </p>
             <div className="exclusive-hero__actions">
               <Link className="btn btn--solid" href="/listings">
-                Browse luxury cars
+                Browse cars
               </Link>
               <Link className="btn btn--outline" href="/sell">
-                Post your car
+                Sell your car
               </Link>
-              <Link className="btn btn--glass" href="#exclusive-deals">
-                Watch weekly drops
+              <Link className="btn btn--glass" href="#assistance">
+                Talk to SangroCars advisor
               </Link>
             </div>
             <div className="exclusive-hero__trust">
@@ -579,6 +579,33 @@ export default async function Home() {
               Feature with us
             </Link>
           </aside>
+        </div>
+      </section>
+
+      <section className="section assistance-strip" id="assistance">
+        <div className="assistance-strip__card">
+          <div>
+            <p className="assistance-strip__eyebrow">SangroCars Assisted Buying</p>
+            <h2>Find your car. We handle the deal.</h2>
+            <p>
+              SangroCars helps you shortlist the right car, negotiate the best price,
+              arrange finance, and secure insurance in one place.
+            </p>
+            <div className="assistance-strip__bullets">
+              <span>✔ Find the right car faster</span>
+              <span>✔ Negotiation support</span>
+              <span>✔ Finance assistance</span>
+              <span>✔ Instant insurance quotes</span>
+            </div>
+          </div>
+          <div className="assistance-strip__actions">
+            <Link className="btn btn--solid" href="/listings">
+              Browse cars
+            </Link>
+            <Link className="btn btn--outline" href="/sell">
+              Sell your car
+            </Link>
+          </div>
         </div>
       </section>
 

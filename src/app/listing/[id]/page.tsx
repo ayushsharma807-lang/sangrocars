@@ -130,13 +130,31 @@ const normalizePhone = (value?: string | null) => {
   return digits;
 };
 
-const buildWhatsAppLink = (value?: string | null, message?: string) => {
-  const digits = normalizePhone(value);
-  if (!digits) return null;
-  const text = encodeURIComponent(
-    message ?? "Hi, I'm interested in this car on CarHub."
+const buildSupportLinks = (listingTitle: string, listingUrl: string) => {
+  const raw =
+    process.env.NEXT_PUBLIC_SUPPORT_PHONE ??
+    process.env.NEXT_PUBLIC_SANGRO_PHONE ??
+    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ??
+    "";
+  const digits = normalizePhone(raw);
+  const message = encodeURIComponent(
+    `Hi, I'm interested in the ${listingTitle} listed on SangroCars. ${listingUrl}`
   );
-  return `https://wa.me/${digits}?text=${text}`;
+  return {
+    tel: digits ? `tel:+${digits}` : null,
+    whatsapp: digits ? `https://wa.me/${digits}?text=${message}` : null,
+  };
+};
+
+const estimateEmi = (price?: number | null) => {
+  if (!price) return null;
+  const principal = price * 0.8;
+  const monthlyRate = 0.009;
+  const months = 60;
+  const factor = Math.pow(1 + monthlyRate, months);
+  const emi = (principal * monthlyRate * factor) / (factor - 1);
+  if (!Number.isFinite(emi)) return null;
+  return Math.round(emi);
 };
 
 const formatListingMeta = (listing: Listing) => {
@@ -147,24 +165,6 @@ const formatListingMeta = (listing: Listing) => {
   ].filter(Boolean) as string[];
 
   return parts.join(", ");
-};
-
-const buildListingMessage = (
-  listing: Listing,
-  dealerName: string,
-  title: string
-) => {
-  const location = listing.location ? ` in ${listing.location}` : "";
-  const priceText = formatPrice(listing.price);
-  const meta = formatListingMeta(listing);
-  const parts = [
-    `Hi ${dealerName}, I'm interested in the ${title}${location}.`,
-    `Price shown: ${priceText}.`,
-    meta ? `Details: ${meta}.` : null,
-    "Is it still available? Please share the best offer and inspection report.",
-  ].filter(Boolean) as string[];
-
-  return parts.join(" ");
 };
 
 const sanitizeSellerName = (value: string | null) => {
@@ -386,17 +386,9 @@ export default async function ListingPage({
   const privateSellerName = sanitizeSellerName(privateSeller.seller.name);
   const dealerName =
     dealer?.name ?? privateSellerName ?? "Private seller";
-  const dealerPhone =
-    dealer?.phone ?? dealer?.whatsapp ?? privateSeller.seller.phone ?? null;
-  const dealerEmail = dealer?.email ?? privateSeller.seller.email ?? null;
   const dealerAddress = dealer?.address ?? listing.location ?? "Address on request";
-  const dealerPhoneDigits = normalizePhone(dealerPhone);
-  const whatsappLink = buildWhatsAppLink(
-    dealer?.whatsapp ?? dealer?.phone ?? privateSeller.seller.phone,
-    buildListingMessage(listing, dealerName, listingTitle)
-  );
-  const telLink = dealerPhoneDigits ? `tel:${dealerPhoneDigits}` : null;
-  const mailLink = dealerEmail ? `mailto:${dealerEmail}` : null;
+  const supportLinks = buildSupportLinks(listingTitle, listingUrl);
+  const estimatedEmi = estimateEmi(listing.price);
   const quickMeta = [
     listing.km ? `${listing.km.toLocaleString("en-IN")} km` : null,
     listing.fuel ? toTitle(listing.fuel) : null,
@@ -508,6 +500,11 @@ export default async function ListingPage({
               </div>
             )}
             <div className="simple-detail__price">{formatPrice(listing.price)}</div>
+            {estimatedEmi && (
+              <div className="simple-detail__emi">
+                Finance available from ₹{estimatedEmi.toLocaleString("en-IN")}/month
+              </div>
+            )}
             <div className="simple-detail__trust">
               <span>✓ Verified listing</span>
               <span>✓ {listing.dealer_id ? "Dealer" : "Owner"} verified</span>
@@ -516,15 +513,49 @@ export default async function ListingPage({
               <span>✓ Insurance support</span>
             </div>
             <div className="simple-detail__cta-row">
-              <a className="simple-button" href="#finance-request">
-                Finance this car
+              {supportLinks.tel ? (
+                <a className="simple-button" href={supportLinks.tel}>
+                  📞 Call SangroCars
+                </a>
+              ) : (
+                <button className="simple-button" disabled>
+                  📞 Call SangroCars
+                </button>
+              )}
+              {supportLinks.whatsapp ? (
+                <a
+                  className="simple-button simple-button--secondary"
+                  href={supportLinks.whatsapp}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  💬 WhatsApp SangroCars
+                </a>
+              ) : (
+                <button className="simple-button simple-button--secondary" disabled>
+                  💬 WhatsApp SangroCars
+                </button>
+              )}
+              <a className="simple-button simple-button--secondary" href="#lead-form">
+                📩 Request callback
               </a>
-              <a className="simple-button simple-button--secondary" href="#finance-request">
-                Get insurance
+              <a
+                className="simple-button simple-button--secondary"
+                href={`?intent=best_price#lead-form`}
+              >
+                Request best price
               </a>
-              <button className="simple-button simple-button--secondary">
-                Book inspection
-              </button>
+            </div>
+            <div className="simple-detail__cta-row">
+              <a className="simple-button" href={`?intent=finance#lead-form`}>
+                💰 Finance this car
+              </a>
+              <a
+                className="simple-button simple-button--secondary"
+                href={`?intent=insurance#lead-form`}
+              >
+                🛡 Get insurance quote
+              </a>
               <SaveToGarageButton
                 listingId={listing.id}
                 title={listingTitle}
@@ -532,6 +563,15 @@ export default async function ListingPage({
                 location={listing.location}
                 photo={getPrimaryPhoto(photos)}
               />
+            </div>
+            <div className="simple-detail__section assisted-buying">
+              <h3>Buy with SangroCars assistance</h3>
+              <ul>
+                <li>Negotiation help to get the best price</li>
+                <li>Finance support from trusted partners</li>
+                <li>Insurance assistance in one call</li>
+                <li>Verified seller checks before delivery</li>
+              </ul>
             </div>
             <div className="simple-detail__section">
               <h3>Overview</h3>
@@ -577,16 +617,13 @@ export default async function ListingPage({
             <div className="simple-dealer-card">
               <div>
                 <p className="simple-dealer-card__label">
-                  {dealer?.id ? "Dealer" : "Seller"}
+                  Listed by
                 </p>
                 <h3>{dealerName}</h3>
                 <p className="simple-dealer-card__meta">{dealerAddress}</p>
-                {dealerPhone && (
-                  <p className="simple-dealer-card__meta">Phone: {dealerPhone}</p>
-                )}
-                {dealerEmail && (
-                  <p className="simple-dealer-card__meta">Email: {dealerEmail}</p>
-                )}
+                <p className="simple-dealer-card__meta">
+                  Verified by SangroCars
+                </p>
                 {dealer?.id && (
                   <Link
                     className="simple-link"
@@ -606,41 +643,6 @@ export default async function ListingPage({
                 )}
               </div>
               <div className="simple-dealer-card__actions">
-                {telLink ? (
-                  <a className="simple-button simple-button--secondary" href={telLink}>
-                    {dealer?.id ? "Call dealer" : "Call seller"}
-                  </a>
-                ) : (
-                  <button
-                    className="simple-button simple-button--secondary"
-                    disabled
-                  >
-                    {dealer?.id ? "Call dealer" : "Call seller"}
-                  </button>
-                )}
-                {whatsappLink ? (
-                  <a
-                    className="simple-button"
-                    href={whatsappLink}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {dealer?.id ? "WhatsApp dealer" : "WhatsApp seller"}
-                  </a>
-                ) : (
-                  <button className="simple-button" disabled>
-                    {dealer?.id ? "WhatsApp dealer" : "WhatsApp seller"}
-                  </button>
-                )}
-                {mailLink ? (
-                  <a className="simple-link-btn" href={mailLink}>
-                    {dealer?.id ? "Email dealer" : "Email seller"}
-                  </a>
-                ) : (
-                  <button className="simple-link-btn" disabled>
-                    {dealer?.id ? "Email dealer" : "Email seller"}
-                  </button>
-                )}
                 {dealer?.id && (
                   <Link
                     className="simple-button simple-button--secondary"
@@ -689,8 +691,8 @@ export default async function ListingPage({
               </ul>
             </div>
             <EmiCalculator price={listing.price} />
-            <div className="simple-detail__section" id="finance-request">
-              <h3>Request callback / finance</h3>
+            <div className="simple-detail__section" id="lead-form">
+              <h3>Talk to SangroCars</h3>
               <LeadForm
                 listingId={listing.id}
                 dealerId={listing.dealer_id}
