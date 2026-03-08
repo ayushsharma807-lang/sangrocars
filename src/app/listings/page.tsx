@@ -680,6 +680,12 @@ export default async function Home({
               </div>
             </div>
             <div className="cw-header__actions">
+              <Link
+                className="cw-header__btn cw-header__btn--luxury"
+                href="/deals-of-the-week"
+              >
+                Deals of week
+              </Link>
               <Link className="cw-header__btn cw-header__btn--ghost" href="/sell">
                 Post your car
               </Link>
@@ -696,12 +702,6 @@ export default async function Home({
                   WhatsApp SangroCars
                 </a>
               )}
-              <Link
-                className="cw-header__btn cw-header__btn--luxury"
-                href="/deals-of-the-week"
-              >
-                Deals of week
-              </Link>
             </div>
           </div>
         </div>
