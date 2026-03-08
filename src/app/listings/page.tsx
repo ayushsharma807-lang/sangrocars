@@ -828,7 +828,19 @@ export default async function Home({
           ))}
         </div>
 
-        <BodyTypeSection />
+        <BodyTypeSection
+          activeTab={
+            transmissionValue === "automatic"
+              ? "Automatic"
+              : priceModeValue === "custom" && (parseNumber(minPriceValue ?? undefined) ?? 0) >= 4500000
+                ? "Luxury"
+                : qValue?.toLowerCase().includes("hatchback")
+                  ? "Hatchback"
+                  : qValue?.toLowerCase().includes("sedan")
+                    ? "Sedan"
+                    : "SUV"
+          }
+        />
 
         <div className="cw-stats-row">
           {[
