@@ -646,8 +646,9 @@ export default async function Home({
             <Link href="/">Home</Link>
             <Link href="/listings">Buy Car</Link>
             <Link href="/sell">Sell Car</Link>
-            <Link href="/listings?price_mode=custom&min_price=4500000&sort=price_desc&page=1">
-              Luxury Cars
+            <Link href="/dealer-admin/login">Dealer Login</Link>
+            <Link href="/deals-of-the-week">
+              Deals of Week
             </Link>
             <Link href="/#about">About</Link>
             <Link href="/#contact">Contact</Link>
@@ -686,6 +687,9 @@ export default async function Home({
               <Link className="cw-header__btn cw-header__btn--ghost" href="/sell">
                 Post your car
               </Link>
+              <Link className="cw-header__btn cw-header__btn--ghost" href="/dealer-admin/login">
+                Dealer login
+              </Link>
               {whatsappHref && (
                 <a
                   className="cw-header__btn cw-header__btn--whatsapp"
@@ -698,9 +702,9 @@ export default async function Home({
               )}
               <Link
                 className="cw-header__btn cw-header__btn--luxury"
-                href="/listings?price_mode=custom&min_price=4500000&sort=price_desc&page=1"
+                href="/deals-of-the-week"
               >
-                Luxury collection
+                Deals of week
               </Link>
             </div>
           </div>
@@ -1446,9 +1450,9 @@ export default async function Home({
               </a>
               <a
                 className="cw-footer__link"
-                href="/listings?price_mode=custom&min_price=4500000&sort=price_desc&page=1"
+                href="/deals-of-the-week"
               >
-                Luxury collection
+                Deals of week
               </a>
               <a className="cw-footer__link" href="/#contact">
                 Contact
