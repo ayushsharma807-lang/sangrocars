@@ -418,6 +418,9 @@ export default async function ListingPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
+      <a className="floating-cta" href={`?intent=best_price#lead-form`}>
+        Request best price
+      </a>
       <section className="simple-shell">
         <div
           className="whatsapp-context"

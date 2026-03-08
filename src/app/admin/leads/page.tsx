@@ -19,6 +19,14 @@ const STATUS_OPTIONS = [
   "lost",
 ];
 
+const SOURCE_FILTERS = [
+  { value: "", label: "All sources" },
+  { value: "website", label: "Callback" },
+  { value: "best_price", label: "Best price" },
+  { value: "finance", label: "Finance" },
+  { value: "insurance", label: "Insurance" },
+];
+
 const EXPORT_COLUMNS = [
   { key: "id", label: "ID", default: false },
   { key: "name", label: "Name", default: true },
@@ -393,12 +401,11 @@ export default async function LeadsPage({
             </select>
           </label>
           <label>
-            Source
+            Lead type
             <select name="source" defaultValue={filters.source ?? ""}>
-              <option value="">All</option>
-              {sources.map((source) => (
-                <option key={source} value={source}>
-                  {source}
+              {SOURCE_FILTERS.map((source) => (
+                <option key={source.value || "all"} value={source.value}>
+                  {source.label}
                 </option>
               ))}
             </select>

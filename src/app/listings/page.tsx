@@ -38,6 +38,23 @@ const buildWhatsAppLink = () => {
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 };
 
+
+const getSupportPhone = () => {
+  const raw = process.env.NEXT_PUBLIC_SUPPORT_PHONE ??
+    process.env.NEXT_PUBLIC_SANGRO_PHONE ??
+    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
+  const digits = raw.replace(/\D/g, "");
+  return digits || null;
+};
+
+const buildSupportWhatsApp = () => {
+  const digits = getSupportPhone();
+  if (!digits) return "";
+  const message = process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE ??
+    "Hi, I'm interested in a car listing on SangroCars.";
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+};
+
 type Listing = {
   id: string;
   dealer_id: string | null;
@@ -393,7 +410,7 @@ export default async function Home({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const whatsappHref = buildWhatsAppLink();
+  const whatsappHref = buildSupportWhatsApp();
   const params = await searchParams;
   const [{ listings, count, error, page }, cities, priceBounds, dealers] =
     await Promise.all([
@@ -676,7 +693,7 @@ export default async function Home({
                   target="_blank"
                   rel="noreferrer"
                 >
-                  WhatsApp us
+                  WhatsApp SangroCars
                 </a>
               )}
               <Link
