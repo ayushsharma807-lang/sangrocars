@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { parseListingText } from "@/lib/listingTextParser";
 
 type VoicePatch = {
@@ -81,13 +81,18 @@ export default function VoicePostHelper({ onApply }: Props) {
 
   const startListening = () => {
     if (!isSupported) {
-      setError("Voice input is not supported in this browser.");
+      setError("Voice input is not supported in this browser. Try Chrome.");
+      return;
+    }
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setError("Voice needs HTTPS. Open this page on https://");
       return;
     }
     setError("");
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
+    recognitionRef.current?.stop();
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;
@@ -101,20 +106,35 @@ export default function VoicePostHelper({ onApply }: Props) {
       setTranscript(chunks.join(" ").trim());
     };
     recognition.onerror = (event) => {
-      setError(event.error ? `Voice error: ${event.error}` : "Voice capture failed.");
+      const errorMessage = event.error
+        ? `Voice error: ${event.error}. Allow microphone access.`
+        : "Voice capture failed. Allow microphone access.";
+      setError(errorMessage);
     };
     recognition.onend = () => {
       setIsListening(false);
     };
     recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
+    try {
+      recognition.start();
+      setIsListening(true);
+    } catch (err) {
+      setError("Microphone access blocked. Please allow mic and try again.");
+      setIsListening(false);
+    }
   };
 
   const stopListening = () => {
     recognitionRef.current?.stop();
     setIsListening(false);
   };
+
+  useEffect(
+    () => () => {
+      recognitionRef.current?.stop();
+    },
+    []
+  );
 
   return (
     <div className="voice-helper">
