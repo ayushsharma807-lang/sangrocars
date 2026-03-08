@@ -444,9 +444,18 @@ export default async function LeadsPage({
               <h3>Export CSV</h3>
               <p>Choose the columns you want to export.</p>
             </div>
-            <button className="btn btn--outline" type="submit">
-              Download CSV
-            </button>
+            <div className="export-actions">
+              <button className="btn btn--outline" type="submit">
+                Download CSV
+              </button>
+              <button
+                className="btn btn--solid"
+                type="submit"
+                formAction="/api/leads/export-xlsx"
+              >
+                Download Excel
+              </button>
+            </div>
           </div>
           <div className="export-options">
             {EXPORT_COLUMNS.map((column) => (

@@ -2010,6 +2010,12 @@ body {
   gap: 16px;
 }
 
+.export-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .export-header h3 {
   margin: 0 0 6px;
 }
