@@ -136,6 +136,9 @@ export default async function AdminListingsPage({
   ]);
   const listings = (data ?? []) as ListingRow[];
   const pendingCount = pendingCountResponse.count ?? 0;
+  const pendingVisibleCount = listings.filter(
+    (listing) => listing.status === "pending"
+  ).length;
 
   const dealerIds = Array.from(
     new Set(listings.map((listing) => listing.dealer_id).filter(Boolean))
@@ -154,6 +157,14 @@ export default async function AdminListingsPage({
   const returnPath = buildQueryPath("/admin/listings", {
     q: filters.q || null,
     status: filters.status || null,
+    type: filters.type || null,
+    owner: filters.owner || null,
+    sort: filters.sort || null,
+    dealer_id: filters.dealerId || null,
+  });
+  const pendingPath = buildQueryPath("/admin/listings", {
+    q: filters.q || null,
+    status: "pending",
     type: filters.type || null,
     owner: filters.owner || null,
     sort: filters.sort || null,
@@ -198,9 +209,12 @@ export default async function AdminListingsPage({
         {action === "listing_approved" && (
           <div className="admin-banner">Listing approved successfully.</div>
         )}
-        {pendingCount > 0 && (
+        {pendingCount > 0 && filters.status !== "pending" && (
           <div className="admin-banner">
-            Pending approvals: {pendingCount}. Approve below to publish.
+            {pendingCount} listings are waiting for approval.{" "}
+            <Link className="link" href={pendingPath}>
+              Show pending
+            </Link>
           </div>
         )}
         {errorText && (
@@ -271,6 +285,14 @@ export default async function AdminListingsPage({
             <div>
               <strong>Bulk approve pending</strong>
               <p>Select pending listings below to publish them.</p>
+              {pendingVisibleCount === 0 && (
+                <p className="notification-meta">
+                  No pending listings in this view.{" "}
+                  <Link className="link" href={pendingPath}>
+                    View pending approvals
+                  </Link>
+                </p>
+              )}
             </div>
             <div className="admin-bulk-actions__controls">
               <input name="price" placeholder="Set one price (optional)" />
@@ -278,7 +300,11 @@ export default async function AdminListingsPage({
                 <input type="checkbox" name="contact_for_price" />
                 Contact for price
               </label>
-              <button className="btn btn--solid" type="submit">
+              <button
+                className="btn btn--solid"
+                type="submit"
+                disabled={pendingVisibleCount === 0}
+              >
                 Approve selected
               </button>
             </div>
@@ -334,6 +360,11 @@ export default async function AdminListingsPage({
                             name="ids"
                             value={listing.id}
                             disabled={!isPending}
+                            title={
+                              isPending
+                                ? "Select listing"
+                                : "Only pending listings can be selected"
+                            }
                           />
                         </td>
                         <td>{title || "Listing"}</td>
