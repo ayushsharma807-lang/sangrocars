@@ -3,6 +3,7 @@ import { parse } from "csv-parse/sync";
 import { requireDealer } from "@/lib/dealerAuth";
 import { supabaseServer } from "@/lib/supabase";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
+import { notifyPendingBatch } from "@/lib/adminNotifications";
 
 const HEADER_MAP: Record<string, string> = {
   make: "make",
@@ -153,6 +154,11 @@ export async function POST(req: Request) {
 
     imported += data?.length ?? batch.length;
   }
+
+  await notifyPendingBatch({
+    count: imported,
+    source: "dealer_csv",
+  });
 
   return NextResponse.redirect(
     new URL(

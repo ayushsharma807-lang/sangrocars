@@ -3,6 +3,7 @@ import { requireDealer } from "@/lib/dealerAuth";
 import { supabaseServer } from "@/lib/supabase";
 import { parseListingText, extractUrlsFromText } from "@/lib/listingTextParser";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
+import { notifyPendingListing } from "@/lib/adminNotifications";
 
 const parsePhotos = (value: FormDataEntryValue | null) => {
   if (!value) return [] as string[];
@@ -58,12 +59,27 @@ export async function POST(req: Request) {
   };
 
   const sb = supabaseServer();
-  const { error } = await sb.from("listings").insert(payload);
+  const { data, error } = await sb
+    .from("listings")
+    .insert(payload)
+    .select("id")
+    .single();
 
   if (error) {
     return NextResponse.redirect(
       new URL("/dealer-admin/whatsapp?error=create_failed", req.url)
     );
+  }
+
+  if (data?.id) {
+    const title = [payload.year, payload.make, payload.model, payload.variant]
+      .filter(Boolean)
+      .join(" ");
+    await notifyPendingListing({
+      id: data.id,
+      title: title || "Dealer WhatsApp listing",
+      source: "dealer_whatsapp",
+    });
   }
 
   return NextResponse.redirect(

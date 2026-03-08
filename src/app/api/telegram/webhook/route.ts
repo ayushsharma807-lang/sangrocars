@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { ensureListingPhotoBucket, LISTING_PHOTO_BUCKET } from "@/lib/listingPhotoBucket";
 import { buildPrivateSellerDescription } from "@/lib/privateSeller";
+import { notifyPendingListing } from "@/lib/adminNotifications";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
 const TELEGRAM_BROADCAST_CHAT_ID =
@@ -354,6 +355,15 @@ export async function POST(req: Request) {
       await broadcast(`${displayName} listing failed: ${error.message}`);
       return;
     }
+
+    const title = [data.year, data.make, data.model, data.variant]
+      .filter(Boolean)
+      .join(" ");
+    await notifyPendingListing({
+      id: created.id,
+      title: title || "New Telegram listing",
+      source: "telegram",
+    });
 
     if (photoUrls.length === 0 && photoFileIds.length > 0) {
       await sendTelegramMessage(

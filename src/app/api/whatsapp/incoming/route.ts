@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { parseListingText } from "@/lib/listingTextParser";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
+import { notifyPendingListing } from "@/lib/adminNotifications";
 
 const WHATSAPP_SYNC_TOKEN = process.env.WHATSAPP_SYNC_TOKEN ?? "";
 
@@ -154,6 +155,12 @@ const createListingFromMessage = async (dealerId: string, text: string, media: s
       error: error?.message ?? "Unable to create listing.",
     };
   }
+
+  await notifyPendingListing({
+    id: String(data.id),
+    title: `${payload.make} ${payload.model}`.trim() || "WhatsApp listing",
+    source: "whatsapp_incoming",
+  });
 
   return { ok: true as const, listingId: String(data.id) };
 };

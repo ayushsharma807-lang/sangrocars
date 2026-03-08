@@ -4,6 +4,7 @@ import { requireDealer } from "@/lib/dealerAuth";
 import { uploadListingPhotoFiles } from "@/lib/uploadListingPhotos";
 import { buildListingExperienceDescription } from "@/lib/listingExperience";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
+import { notifyPendingListing } from "@/lib/adminNotifications";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
@@ -70,7 +71,7 @@ export async function POST(req: Request) {
   }
 
   const sb = supabaseServer();
-  const { error } = await sb
+  const { data, error } = await sb
     .from("listings")
     .insert(payload)
     .select("id")
@@ -78,6 +79,17 @@ export async function POST(req: Request) {
 
   if (error) {
     return NextResponse.redirect(new URL("/dealer-admin/listings/new", req.url));
+  }
+
+  if (data?.id) {
+    const title = [payload.year, payload.make, payload.model, payload.variant]
+      .filter(Boolean)
+      .join(" ");
+    await notifyPendingListing({
+      id: data.id,
+      title: title || "Dealer listing",
+      source: "dealer_dashboard",
+    });
   }
 
   return NextResponse.redirect(new URL("/dealer-admin/listings", req.url));

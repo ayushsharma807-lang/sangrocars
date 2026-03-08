@@ -6,6 +6,7 @@ import { uploadListingPhotoFiles } from "@/lib/uploadListingPhotos";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
 import { phoneVariants } from "@/lib/phone";
 import { verifyPhoneCookie } from "@/lib/phoneVerification";
+import { notifyPendingListing } from "@/lib/adminNotifications";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
@@ -270,6 +271,15 @@ export async function POST(req: Request) {
       status: 303,
     });
   }
+
+  const title = [payload.year, payload.make, payload.model, payload.variant]
+    .filter(Boolean)
+    .join(" ");
+  await notifyPendingListing({
+    id: data.id,
+    title: title || "New listing",
+    source: "website",
+  });
 
   return NextResponse.redirect(toRedirectUrl(req, `/listing/${data.id}?posted=1`), {
     status: 303,
