@@ -171,7 +171,6 @@ export default function VoicePostHelper({ onApply }: Props) {
           className="btn btn--solid"
           type="button"
           onClick={() => applyFromText(transcript)}
-          disabled={!transcript.trim()}
         >
           Fill from voice
         </button>
