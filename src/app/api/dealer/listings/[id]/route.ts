@@ -62,7 +62,7 @@ export async function POST(
     price: parseNumber(form.get("price")),
     location: String(form.get("location") ?? "").trim() || null,
     description,
-    status: String(form.get("status") ?? "available"),
+    status: "pending",
     photo_urls: photoUrls,
   };
 

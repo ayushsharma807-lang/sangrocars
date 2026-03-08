@@ -186,6 +186,9 @@ export default async function AdminListingsPage({
         {action === "listing_deleted" && (
           <div className="admin-banner">Listing deleted successfully.</div>
         )}
+        {action === "listing_approved" && (
+          <div className="admin-banner">Listing approved successfully.</div>
+        )}
         {errorText && (
           <div className="admin-banner admin-banner--error">
             {decodeURIComponent(errorText)}
@@ -206,6 +209,7 @@ export default async function AdminListingsPage({
             <select name="status" defaultValue={filters.status}>
               <option value="">All</option>
               <option value="available">Available</option>
+              <option value="pending">Pending approval</option>
               <option value="sold">Sold</option>
               <option value="expired">Expired</option>
             </select>
@@ -300,6 +304,27 @@ export default async function AdminListingsPage({
                           <Link className="link" href={`/listing/${listing.id}`}>
                             View
                           </Link>
+                          {listing.status === "pending" && (
+                            <form
+                              method="post"
+                              action={`/api/admin/listings/${listing.id}/approve`}
+                              className="admin-row-approve"
+                            >
+                              <input type="hidden" name="return" value={returnPath} />
+                              <input
+                                name="price"
+                                placeholder="Set price"
+                                defaultValue={listing.price ?? ""}
+                              />
+                              <label className="admin-row-approve__check">
+                                <input type="checkbox" name="contact_for_price" />
+                                Contact for price
+                              </label>
+                              <button className="btn btn--solid" type="submit">
+                                Approve
+                              </button>
+                            </form>
+                          )}
                           <form
                             method="post"
                             action={`/api/admin/listings/${listing.id}/delete`}

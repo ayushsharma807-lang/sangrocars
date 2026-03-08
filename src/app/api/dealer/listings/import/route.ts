@@ -110,7 +110,7 @@ export async function POST(req: Request) {
       source: DEFAULT_LISTING_SOURCE,
       dealer_id: auth.dealer.id,
       type: String(typeValue).trim() || "used",
-      status: String(statusValue).trim() || "available",
+      status: String(statusValue).trim().toLowerCase() === "sold" ? "sold" : "pending",
       make,
       model,
       variant: String(record.variant ?? "").trim() || null,

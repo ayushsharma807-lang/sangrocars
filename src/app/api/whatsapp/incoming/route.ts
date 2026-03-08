@@ -113,7 +113,7 @@ const findDealerByPhone = async (phone: string) => {
 };
 
 const normalizeType = (value: string) => (value === "new" ? "new" : "used");
-const normalizeStatus = (value: string) => (value === "sold" ? "sold" : "available");
+const normalizeStatus = (value: string) => (value === "sold" ? "sold" : "pending");
 
 const createListingFromMessage = async (dealerId: string, text: string, media: string[]) => {
   const parsed = parseListingText(text, media);

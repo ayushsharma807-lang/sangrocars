@@ -13,7 +13,7 @@ const parsePhotos = (value: FormDataEntryValue | null) => {
 };
 
 const normalizeType = (value: string) => (value === "new" ? "new" : "used");
-const normalizeStatus = (value: string) => (value === "sold" ? "sold" : "available");
+const normalizeStatus = (value: string) => (value === "sold" ? "sold" : "pending");
 
 export async function POST(req: Request) {
   const auth = await requireDealer();

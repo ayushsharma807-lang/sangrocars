@@ -5102,6 +5102,28 @@ button.simple-link-btn:disabled {
   flex-wrap: wrap;
 }
 
+.admin-row-approve {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-row-approve input[name="price"] {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  min-width: 120px;
+}
+
+.admin-row-approve__check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #475569;
+}
+
 @media (min-width: 981px) {
   .listings-layout--carwale .listings-layout__results {
     margin-left: 0;

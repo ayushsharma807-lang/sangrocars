@@ -327,7 +327,7 @@ export async function POST(req: Request) {
       source: "individual",
       dealer_id: null,
       type: "used",
-      status: "available",
+      status: "pending",
       make: data.make ?? null,
       model: data.model ?? null,
       variant: data.variant ?? null,

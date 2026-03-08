@@ -20,7 +20,7 @@ type NormalizedListing = {
   location: string | null;
   description: string | null;
   photo_urls: string[];
-  status: "available" | "sold";
+  status: "pending" | "sold";
 };
 
 type DealerSyncRecord = {
@@ -85,6 +85,9 @@ const toStatus = (value: unknown) => {
   return v ? "available" : "available";
 };
 
+const toApprovalStatus = (value: unknown) =>
+  toStatus(value) === "sold" ? "sold" : "pending";
+
 const toPhotos = (value: unknown) => {
   if (Array.isArray(value)) {
     return value.map((item) => toString(item)).filter(Boolean);
@@ -144,7 +147,7 @@ const normalizeRow = (row: FeedRow): NormalizedListing | null => {
       row.photo_urls && Array.isArray(row.photo_urls)
         ? toPhotos(row.photo_urls)
         : toPhotos(row.photos ?? row.images),
-    status: toStatus(row.status),
+    status: toApprovalStatus(row.status),
   };
 };
 
@@ -396,7 +399,7 @@ const extractVehicleFromJsonLd = (
     location,
     description,
     photo_urls,
-    status: toStatus(offers?.availability ?? best.status ?? "available"),
+    status: toApprovalStatus(offers?.availability ?? best.status ?? "available"),
   };
 };
 

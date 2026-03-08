@@ -244,7 +244,7 @@ export async function POST(req: Request) {
     source: DEFAULT_LISTING_SOURCE,
     dealer_id: dealerId,
     type: toType(form.get("type")),
-    status: "available",
+    status: "pending",
     make,
     model,
     variant: String(form.get("variant") ?? "").trim() || null,

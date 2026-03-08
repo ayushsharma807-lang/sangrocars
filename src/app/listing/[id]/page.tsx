@@ -28,6 +28,7 @@ type Listing = {
   description: string | null;
   photo_urls: string[] | null;
   type: string | null;
+  status: string | null;
 };
 
 type Dealer = {
@@ -271,7 +272,7 @@ export default async function ListingPage({
   const { data, error } = await sb
     .from("listings")
     .select(
-      "id, dealer_id, make, model, variant, year, price, km, fuel, transmission, location, description, photo_urls, type"
+      "id, dealer_id, make, model, variant, year, price, km, fuel, transmission, location, description, photo_urls, type, status"
     )
     .eq("id", id)
     .single();
@@ -293,6 +294,29 @@ export default async function ListingPage({
   }
 
   const listing = data as Listing;
+  if (listing.status && listing.status !== "available") {
+    return (
+      <main className="simple-page simple-detail-page">
+        <section className="simple-shell">
+          <div className="simple-header">
+            <h2>
+              {listing.status === "pending"
+                ? "Listing awaiting approval"
+                : "Listing not available"}
+            </h2>
+            <p>
+              {listing.status === "pending"
+                ? "Your car is submitted and will go live after admin approval."
+                : "This listing is not available right now."}
+            </p>
+          </div>
+          <Link className="simple-button" href="/listings">
+            Back to listings
+          </Link>
+        </section>
+      </main>
+    );
+  }
   const experienceInfo = parseListingExperienceDescription(listing.description);
   const privateSeller = parsePrivateSellerDescription(experienceInfo.cleanDescription);
   const overviewDescription =
