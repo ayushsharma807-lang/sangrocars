@@ -4647,6 +4647,31 @@ body {
   background: rgba(30, 41, 59, 0.8);
 }
 
+.listing-hero__actions {
+  justify-self: end;
+}
+
+.garage-save-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.55);
+  color: #f8fafc;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.garage-save-icon:hover {
+  transform: translateY(-2px);
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(248, 250, 252, 0.45);
+}
+
 .simple-detail__panel {
   border: 1px solid #e5e7eb;
   border-radius: 14px;
@@ -4978,6 +5003,12 @@ button.simple-link-btn:disabled {
 .simple-detail__top-actions .simple-button {
   min-width: 180px;
   justify-content: center;
+}
+
+.detail-sidebar__secondary-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .simple-compare-bar {

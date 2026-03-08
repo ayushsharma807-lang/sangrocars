@@ -8,6 +8,7 @@ type Props = {
   price: number | null;
   location: string | null;
   photo: string | null;
+  iconOnly?: boolean;
 };
 
 const STORAGE_KEY = "carhub:garage:listings";
@@ -18,6 +19,7 @@ export default function SaveToGarageButton({
   price,
   location,
   photo,
+  iconOnly = false,
 }: Props) {
   const [saved, setSaved] = useState(false);
 
@@ -47,8 +49,14 @@ export default function SaveToGarageButton({
   };
 
   return (
-    <button className="simple-button simple-button--secondary" onClick={save} type="button">
-      {saved ? "✅ Saved to My Garage" : "💾 Save to My Garage"}
+    <button
+      className={iconOnly ? "garage-save-icon" : "simple-button simple-button--secondary"}
+      onClick={save}
+      type="button"
+      aria-label={saved ? "Saved to My Garage" : "Save to My Garage"}
+      title={saved ? "Saved to My Garage" : "Save to My Garage"}
+    >
+      {iconOnly ? (saved ? "❤" : "♡") : saved ? "Saved to My Garage" : "Save to My Garage"}
     </button>
   );
 }

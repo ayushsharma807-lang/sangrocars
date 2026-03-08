@@ -480,19 +480,14 @@ export default async function ListingPage({
               )}
             </div>
           </div>
-          <div className="simple-detail__top-actions listing-hero__actions">
-            <Link className="simple-button simple-button--secondary" href="/listings">
-              ← Back to listings
-            </Link>
-            <Link className="simple-button simple-button--secondary" href={compareHref}>
-              🆚 Compare this car
-            </Link>
+          <div className="listing-hero__actions">
             <SaveToGarageButton
               listingId={listing.id}
               title={listingTitle}
               price={listing.price}
               location={listing.location}
               photo={getPrimaryPhoto(photos)}
+              iconOnly
             />
           </div>
         </div>
@@ -609,6 +604,14 @@ export default async function ListingPage({
                 defaultIntent="callback"
                 variant="secondary"
               />
+            </div>
+            <div className="detail-sidebar__secondary-actions">
+              <Link className="simple-button simple-button--secondary" href="/listings">
+                ← Back to listings
+              </Link>
+              <Link className="simple-button simple-button--secondary" href={compareHref}>
+                Compare this car
+              </Link>
             </div>
             <div className="detail-sidebar__listed">
               <p className="detail-sidebar__label">LISTED BY</p>
