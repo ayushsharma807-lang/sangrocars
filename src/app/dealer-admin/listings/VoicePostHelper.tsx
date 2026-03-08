@@ -51,6 +51,7 @@ export default function VoicePostHelper({ onApply }: Props) {
   const [transcript, setTranscript] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   const isSupported = useMemo(
@@ -61,9 +62,13 @@ export default function VoicePostHelper({ onApply }: Props) {
   );
 
   const applyFromText = (value: string) => {
-    if (!value.trim()) return;
+    if (!value.trim()) {
+      setError("Add voice text first, then tap Fill from voice.");
+      setStatus("");
+      return;
+    }
     const parsed = parseListingText(value);
-    onApply({
+    const patch = {
       type: parsed.type,
       status: parsed.status,
       make: parsed.make ?? undefined,
@@ -76,19 +81,31 @@ export default function VoicePostHelper({ onApply }: Props) {
       transmission: parsed.transmission ?? undefined,
       location: parsed.location ?? undefined,
       description: parsed.description ?? undefined,
-    });
+    };
+    const filledFields = Object.values(patch).filter(Boolean).length;
+    if (!patch.make && !patch.model && !patch.year && !patch.price && !patch.km) {
+      setError("Could not understand the text. Try: Hyundai Creta 2021 petrol automatic 42000 km price 12.9 lakh city Jalandhar");
+      setStatus("");
+      return;
+    }
+    onApply(patch);
+    setError("");
+    setStatus(`Filled ${filledFields} fields from the text.`);
   };
 
   const startListening = () => {
     if (!isSupported) {
       setError("Voice input is not supported in this browser. Try Chrome.");
+      setStatus("");
       return;
     }
     if (typeof window !== "undefined" && !window.isSecureContext) {
       setError("Voice needs HTTPS. Open this page on https://");
+      setStatus("");
       return;
     }
     setError("");
+    setStatus("");
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -110,6 +127,7 @@ export default function VoicePostHelper({ onApply }: Props) {
         ? `Voice error: ${event.error}. Allow microphone access.`
         : "Voice capture failed. Allow microphone access.";
       setError(errorMessage);
+      setStatus("");
     };
     recognition.onend = () => {
       setIsListening(false);
@@ -120,6 +138,7 @@ export default function VoicePostHelper({ onApply }: Props) {
       setIsListening(true);
     } catch (err) {
       setError("Microphone access blocked. Please allow mic and try again.");
+      setStatus("");
       setIsListening(false);
     }
   };
@@ -167,6 +186,7 @@ export default function VoicePostHelper({ onApply }: Props) {
           placeholder="Say or type: Hyundai Creta 2021 petrol automatic 42000 km price 12.9 lakh city Jalandhar"
         />
       </label>
+      {status ? <p className="voice-helper__status">{status}</p> : null}
       {error ? <p className="dealer-wizard__error">{error}</p> : null}
     </div>
   );

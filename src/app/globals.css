@@ -5234,6 +5234,13 @@ button.simple-link-btn:disabled {
   pointer-events: auto;
 }
 
+.voice-helper__status {
+  margin: 8px 0 0;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .dealer-whatsapp {
   display: grid;
   gap: 16px;

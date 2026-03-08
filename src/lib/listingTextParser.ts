@@ -122,6 +122,8 @@ const detectPrice = (text: string) => {
 const detectLocation = (text: string) => {
   const labeled = text.match(/\b(city|location|loc)\s*[:\-]\s*([a-z ,.-]{2,60})/i);
   if (labeled?.[2]) return titleCase(labeled[2].trim());
+  const softLabeled = text.match(/\b(city|location|loc)\s+([a-z][a-z ,.-]{1,60})/i);
+  if (softLabeled?.[2]) return titleCase(softLabeled[2].trim());
   return null;
 };
 
@@ -164,7 +166,14 @@ const detectMakeModelVariant = (text: string) => {
     .replace(/[|,]/g, " ")
     .split(/\s+/)
     .filter(Boolean)
-    .filter((word) => !/^(price|km|kms|petrol|diesel|automatic|manual|cng)$/i.test(word))
+    .filter(
+      (word) =>
+        !/^(price|asking|offer|km|kms|petrol|diesel|automatic|manual|cng|electric|hybrid|city|location|loc)$/i.test(
+          word
+        )
+    )
+    .filter((word) => !/^(19\d{2}|20\d{2})$/.test(word))
+    .filter((word) => !/^\d[\d,.]*$/.test(word))
     .slice(0, 3);
 
   const model = tailParts[0] ? titleCase(tailParts[0]) : null;
