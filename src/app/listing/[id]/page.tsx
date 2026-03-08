@@ -779,8 +779,6 @@ export default async function ListingPage({
           listingDealerId={listing.dealer_id}
           listingLocation={listing.location}
         />
-          </div>
-        </div>
       </section>
     </main>
   );
