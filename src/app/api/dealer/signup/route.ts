@@ -186,13 +186,33 @@ export async function POST(req: Request) {
     return NextResponse.redirect(url);
   }
 
-  const accessToken = signUpData?.access_token ?? signUpData?.session?.access_token;
-  const refreshToken = signUpData?.refresh_token ?? signUpData?.session?.refresh_token;
-  const expiresIn = signUpData?.expires_in ?? signUpData?.session?.expires_in ?? 3600;
+  let accessToken = signUpData?.access_token ?? signUpData?.session?.access_token;
+  let refreshToken = signUpData?.refresh_token ?? signUpData?.session?.refresh_token;
+  let expiresIn = signUpData?.expires_in ?? signUpData?.session?.expires_in ?? 3600;
+
+  if (!accessToken || !refreshToken) {
+    const loginRes = await fetch(
+      `${supabaseUrl}/auth/v1/token?grant_type=password`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: supabaseAnon,
+        },
+        body: JSON.stringify({ email, password }),
+      }
+    );
+    if (loginRes.ok) {
+      const loginData = await loginRes.json().catch(() => ({}));
+      accessToken = loginData?.access_token;
+      refreshToken = loginData?.refresh_token;
+      expiresIn = loginData?.expires_in ?? 3600;
+    }
+  }
 
   if (!accessToken || !refreshToken) {
     const url = new URL("/dealer-admin/login", req.url);
-    url.searchParams.set("signup", "check_email");
+    url.searchParams.set("error", "email_confirm");
     url.searchParams.set("next", nextPath);
     return NextResponse.redirect(url);
   }
@@ -217,4 +237,3 @@ export async function POST(req: Request) {
   });
   return response;
 }
-

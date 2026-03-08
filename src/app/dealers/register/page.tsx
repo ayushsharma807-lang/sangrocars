@@ -30,7 +30,7 @@ export default async function DealerRegisterPage({
 
         {status === "created" && (
           <div className="simple-alert">
-            Dealer profile created. Please verify your phone to access the dealer
+            Dealer profile created. You can sign in to access the dealer
             dashboard.
           </div>
         )}
