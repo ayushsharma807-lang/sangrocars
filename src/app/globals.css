@@ -5219,6 +5219,9 @@ button.simple-link-btn:disabled {
   padding: 10px;
   margin-bottom: 12px;
   background: #f9fafb;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .voice-helper__actions {
@@ -5226,6 +5229,9 @@ button.simple-link-btn:disabled {
   gap: 10px;
   margin-bottom: 8px;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .dealer-whatsapp {
