@@ -845,8 +845,8 @@ export default async function Home({
         <div className="cw-stats-row">
           {[
             {
-              label: "Cars listed",
-              value: "10,000+",
+              label: "Local listings from verified sellers",
+              value: "Jalandhar car marketplace",
               icon: (
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path
@@ -857,8 +857,8 @@ export default async function Home({
               ),
             },
             {
-              label: "Cities covered",
-              value: "500+",
+              label: "SangroCars helps buyers get the best price",
+              value: "Direct negotiation",
               icon: (
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path
@@ -869,8 +869,8 @@ export default async function Home({
               ),
             },
             {
-              label: "Monthly visitors",
-              value: "50,000+",
+              label: "Get everything done in one place",
+              value: "Finance & insurance support",
               icon: (
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path
