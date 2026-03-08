@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BulkSelectAll from "../leads/BulkSelectAll";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/adminAuth";
@@ -126,8 +127,15 @@ export default async function AdminListingsPage({
       break;
   }
 
-  const { data, error } = await query.limit(2000);
+  const [{ data, error }, pendingCountResponse] = await Promise.all([
+    query.limit(2000),
+    sb
+      .from("listings")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+  ]);
   const listings = (data ?? []) as ListingRow[];
+  const pendingCount = pendingCountResponse.count ?? 0;
 
   const dealerIds = Array.from(
     new Set(listings.map((listing) => listing.dealer_id).filter(Boolean))
@@ -151,6 +159,7 @@ export default async function AdminListingsPage({
     sort: filters.sort || null,
     dealer_id: filters.dealerId || null,
   });
+  const bulkFormId = "bulk-approve-form";
 
   return (
     <main className="home">
@@ -188,6 +197,11 @@ export default async function AdminListingsPage({
         )}
         {action === "listing_approved" && (
           <div className="admin-banner">Listing approved successfully.</div>
+        )}
+        {pendingCount > 0 && (
+          <div className="admin-banner">
+            Pending approvals: {pendingCount}. Approve below to publish.
+          </div>
         )}
         {errorText && (
           <div className="admin-banner admin-banner--error">
@@ -246,103 +260,139 @@ export default async function AdminListingsPage({
           </Link>
         </form>
 
-        <div className="table-wrapper">
-          <table className="leads-table">
-            <thead>
-              <tr>
-                <th>Car</th>
-                <th>Owner</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Price</th>
-                <th>Location</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {listings.length === 0 ? (
+        <form
+          id={bulkFormId}
+          className="admin-bulk-form"
+          method="post"
+          action="/api/admin/listings/bulk-approve"
+        >
+          <input type="hidden" name="return" value={returnPath} />
+          <div className="admin-bulk-actions">
+            <div>
+              <strong>Bulk approve pending</strong>
+              <p>Select pending listings below to publish them.</p>
+            </div>
+            <div className="admin-bulk-actions__controls">
+              <input name="price" placeholder="Set one price (optional)" />
+              <label className="admin-row-approve__check">
+                <input type="checkbox" name="contact_for_price" />
+                Contact for price
+              </label>
+              <button className="btn btn--solid" type="submit">
+                Approve selected
+              </button>
+            </div>
+          </div>
+          <div className="table-wrapper">
+            <table className="leads-table">
+              <thead>
                 <tr>
-                  <td colSpan={8} className="empty">
-                    No listings found.
-                  </td>
+                  <th>
+                    <BulkSelectAll formId={bulkFormId} name="ids" />
+                  </th>
+                  <th>Car</th>
+                  <th>Owner</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Price</th>
+                  <th>Location</th>
+                  <th>Created</th>
+                  <th>Actions</th>
                 </tr>
-              ) : (
-                listings.map((listing) => {
-                  const title = [
-                    listing.year ?? undefined,
-                    toTitle(listing.make),
-                    toTitle(listing.model),
-                    toTitle(listing.variant),
-                  ]
-                    .filter(Boolean)
-                    .join(" ");
-                  const privateSeller = parsePrivateSellerDescription(
-                    listing.description
-                  );
-                  const ownerLabel = listing.dealer_id
-                    ? dealerMap.get(listing.dealer_id) ?? "Dealer"
-                    : privateSeller.seller.name || "Private seller";
-                  const ownerType = listing.dealer_id ? "Dealer" : "Private";
+              </thead>
+              <tbody>
+                {listings.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="empty">
+                      No listings found.
+                    </td>
+                  </tr>
+                ) : (
+                  listings.map((listing) => {
+                    const title = [
+                      listing.year ?? undefined,
+                      toTitle(listing.make),
+                      toTitle(listing.model),
+                      toTitle(listing.variant),
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+                    const privateSeller = parsePrivateSellerDescription(
+                      listing.description
+                    );
+                    const ownerLabel = listing.dealer_id
+                      ? dealerMap.get(listing.dealer_id) ?? "Dealer"
+                      : privateSeller.seller.name || "Private seller";
+                    const ownerType = listing.dealer_id ? "Dealer" : "Private";
+                    const isPending = listing.status === "pending";
 
-                  return (
-                    <tr key={listing.id}>
-                      <td>{title || "Listing"}</td>
-                      <td>
-                        <div>{ownerLabel}</div>
-                        <div className="notification-meta">{ownerType}</div>
-                      </td>
-                      <td>{toTitle(listing.type)}</td>
-                      <td>
-                        <span className="status-badge">{toTitle(listing.status)}</span>
-                      </td>
-                      <td>{formatPrice(listing.price)}</td>
-                      <td>{listing.location || "—"}</td>
-                      <td>{formatDate(listing.created_at || listing.last_seen_at)}</td>
-                      <td>
-                        <div className="admin-row-actions">
-                          <Link className="link" href={`/listing/${listing.id}`}>
-                            View
-                          </Link>
-                          {listing.status === "pending" && (
+                    return (
+                      <tr key={listing.id}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            name="ids"
+                            value={listing.id}
+                            disabled={!isPending}
+                          />
+                        </td>
+                        <td>{title || "Listing"}</td>
+                        <td>
+                          <div>{ownerLabel}</div>
+                          <div className="notification-meta">{ownerType}</div>
+                        </td>
+                        <td>{toTitle(listing.type)}</td>
+                        <td>
+                          <span className="status-badge">{toTitle(listing.status)}</span>
+                        </td>
+                        <td>{formatPrice(listing.price)}</td>
+                        <td>{listing.location || "—"}</td>
+                        <td>{formatDate(listing.created_at || listing.last_seen_at)}</td>
+                        <td>
+                          <div className="admin-row-actions">
+                            <Link className="link" href={`/listing/${listing.id}`}>
+                              View
+                            </Link>
+                            {isPending && (
+                              <form
+                                method="post"
+                                action={`/api/admin/listings/${listing.id}/approve`}
+                                className="admin-row-approve"
+                              >
+                                <input type="hidden" name="return" value={returnPath} />
+                                <input
+                                  name="price"
+                                  placeholder="Set price"
+                                  defaultValue={listing.price ?? ""}
+                                />
+                                <label className="admin-row-approve__check">
+                                  <input type="checkbox" name="contact_for_price" />
+                                  Contact for price
+                                </label>
+                                <button className="btn btn--solid" type="submit">
+                                  Approve
+                                </button>
+                              </form>
+                            )}
                             <form
                               method="post"
-                              action={`/api/admin/listings/${listing.id}/approve`}
-                              className="admin-row-approve"
+                              action={`/api/admin/listings/${listing.id}/delete`}
                             >
                               <input type="hidden" name="return" value={returnPath} />
-                              <input
-                                name="price"
-                                placeholder="Set price"
-                                defaultValue={listing.price ?? ""}
-                              />
-                              <label className="admin-row-approve__check">
-                                <input type="checkbox" name="contact_for_price" />
-                                Contact for price
-                              </label>
-                              <button className="btn btn--solid" type="submit">
-                                Approve
+                              <button className="btn btn--ghost" type="submit">
+                                Delete
                               </button>
                             </form>
-                          )}
-                          <form
-                            method="post"
-                            action={`/api/admin/listings/${listing.id}/delete`}
-                          >
-                            <input type="hidden" name="return" value={returnPath} />
-                            <button className="btn btn--ghost" type="submit">
-                              Delete
-                            </button>
-                          </form>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </form>
       </section>
     </main>
   );

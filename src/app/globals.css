@@ -5124,6 +5124,37 @@ button.simple-link-btn:disabled {
   color: #475569;
 }
 
+.admin-bulk-form {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.admin-bulk-actions__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-bulk-actions input[name="price"] {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  min-width: 160px;
+}
+
 @media (min-width: 981px) {
   .listings-layout--carwale .listings-layout__results {
     margin-left: 0;
