@@ -168,6 +168,79 @@ const findDealerForUser = async (user: SupabaseUser) => {
   return null;
 };
 
+const buildDealerName = (user: SupabaseUser) => {
+  const metaName =
+    (user.user_metadata?.dealer_name as string | undefined) ??
+    (user.user_metadata?.name as string | undefined);
+  if (metaName && metaName.trim().length > 1) return metaName.trim();
+  const email = user.email ?? "";
+  if (email.includes("@")) return email.split("@")[0];
+  return "Dealer";
+};
+
+const createDealerForUser = async (user: SupabaseUser) => {
+  if (!user.id || !user.email) return null;
+  const sb = supabaseServer();
+  const name = buildDealerName(user);
+  const email = user.email.toLowerCase();
+  const phone =
+    (user.user_metadata?.phone as string | undefined) ??
+    (user.user_metadata?.whatsapp as string | undefined) ??
+    "";
+  const city = (user.user_metadata?.city as string | undefined) ?? "";
+
+  const payloads: Record<string, unknown>[] = [
+    {
+      auth_user_id: user.id,
+      name,
+      email,
+      phone: phone || null,
+      whatsapp: phone || null,
+      address: city || null,
+      city: city || null,
+    },
+    {
+      auth_user_id: user.id,
+      name,
+      email,
+      phone: phone || null,
+      whatsapp: phone || null,
+      address: city || null,
+    },
+    {
+      auth_user_id: user.id,
+      name,
+      email,
+      phone: phone || null,
+    },
+    {
+      name,
+      email,
+      phone: phone || null,
+    },
+    {
+      name,
+      email,
+    },
+  ];
+
+  for (const payload of payloads) {
+    const { data, error } = await sb
+      .from("dealers")
+      .insert(payload)
+      .select("*")
+      .single();
+    if (!error && data) {
+      return data as DealerRecord;
+    }
+    if (error && !isMissingSchema(error.message)) {
+      continue;
+    }
+  }
+
+  return null;
+};
+
 export const requireDealer = async (): Promise<DealerAuthResult> => {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return { ok: false, error: "auth_not_configured" as const };
@@ -190,7 +263,10 @@ export const requireDealer = async (): Promise<DealerAuthResult> => {
     return { ok: false, error: "forbidden_role" as const };
   }
 
-  const dealer = await findDealerForUser(user);
+  let dealer = await findDealerForUser(user);
+  if (!dealer) {
+    dealer = await createDealerForUser(user);
+  }
   if (!dealer) {
     return { ok: false, error: "dealer_not_found" as const };
   }
