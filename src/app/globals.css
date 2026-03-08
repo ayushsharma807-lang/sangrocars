@@ -5915,22 +5915,23 @@ button.simple-link-btn:disabled {
 }
 
 .carwale-listings-page .cw-header__btn--whatsapp {
-  background: #22c55e;
-  color: #ffffff;
+  background: rgba(7, 9, 14, 0.55);
+  color: rgba(248, 250, 252, 0.92);
+  border-color: rgba(255, 255, 255, 0.16);
 }
 
 .carwale-listings-page .cw-header__btn--ghost {
-  background: #ffffff;
-  color: #0b0b0f;
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(7, 9, 14, 0.55);
+  color: rgba(248, 250, 252, 0.92);
+  border-color: rgba(255, 255, 255, 0.16);
 }
 
 .carwale-listings-page .cw-header__btn--luxury {
-  background: transparent;
-  color: #f8fafc;
-  border-color: rgba(248, 250, 252, 0.45);
-  font-size: 12px;
-  padding: 8px 14px;
+  background: rgba(7, 9, 14, 0.55);
+  color: rgba(248, 250, 252, 0.92);
+  border-color: rgba(255, 255, 255, 0.16);
+  font-size: 13px;
+  padding: 10px 16px;
 }
 
 .carwale-listings-page .cw-search {

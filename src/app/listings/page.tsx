@@ -680,9 +680,6 @@ export default async function Home({
               </div>
             </div>
             <div className="cw-header__actions">
-              <Link className="cw-header__btn cw-header__btn--primary" href="/listings">
-                Browse cars
-              </Link>
               <Link className="cw-header__btn cw-header__btn--ghost" href="/sell">
                 Post your car
               </Link>
