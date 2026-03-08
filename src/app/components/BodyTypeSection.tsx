@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef } from "react";
 
 const bodyTypes = ["SUV", "Hatchback", "Sedan", "Luxury", "Automatic"];
@@ -7,6 +8,7 @@ const bodyTypes = ["SUV", "Hatchback", "Sedan", "Luxury", "Automatic"];
 const cards = [
   {
     name: "Mahindra XUV700",
+    href: "/listings?q=Mahindra%20XUV700",
     variants: "+67 Variants",
     fuel: "Petrol",
     extra: "+1 More",
@@ -17,6 +19,7 @@ const cards = [
   },
   {
     name: "Hyundai Creta",
+    href: "/listings?q=Hyundai%20Creta",
     variants: "+70 Variants",
     fuel: "Petrol",
     extra: "+1 More",
@@ -27,6 +30,7 @@ const cards = [
   },
   {
     name: "Kia Seltos",
+    href: "/listings?q=Kia%20Seltos",
     variants: "+40 Variants",
     fuel: "Petrol",
     extra: "+1 More",
@@ -37,6 +41,7 @@ const cards = [
   },
   {
     name: "Toyota Fortuner",
+    href: "/listings?q=Toyota%20Fortuner",
     variants: "+24 Variants",
     fuel: "Diesel",
     extra: "+1 More",
@@ -84,7 +89,7 @@ export default function BodyTypeSection() {
         aria-label="Browse body type cards"
       >
         {cards.map((car) => (
-          <article key={car.name} className="cw-bodytype__card">
+          <Link key={car.name} href={car.href} className="cw-bodytype__card">
             <div className="cw-bodytype__media">
               <div className="cw-bodytype__image" aria-hidden="true">
                 <svg viewBox="0 0 200 80" role="img" aria-hidden="true">
@@ -101,9 +106,7 @@ export default function BodyTypeSection() {
 
             <div className="cw-bodytype__body">
               <h3>{car.name}</h3>
-              <a className="cw-bodytype__variants" href="#">
-                {car.variants}
-              </a>
+              <span className="cw-bodytype__variants">{car.variants}</span>
 
               <div className="cw-bodytype__meta">
                 <div className="cw-bodytype__meta-block">
@@ -132,7 +135,7 @@ export default function BodyTypeSection() {
                 </div>
               </div>
             </div>
-          </article>
+          </Link>
         ))}
       </div>
 

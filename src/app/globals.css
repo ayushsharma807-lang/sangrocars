@@ -6418,6 +6418,16 @@ button.simple-link-btn:disabled {
   overflow: hidden;
   scroll-snap-align: start;
   box-shadow: 0 16px 28px rgba(15, 23, 42, 0.08);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.cw-bodytype__card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+  border-color: #cbd5e1;
 }
 
 .cw-bodytype__media {
