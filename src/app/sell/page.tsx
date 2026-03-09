@@ -4,16 +4,21 @@ import SellCarForm from "./SellCarForm";
 const errorText = {
   missing_fields: "Please fill required fields (make, model, and phone).",
   create_failed: "Could not create your ad right now. Please try again.",
-  phone_unverified: "Please verify your phone number before publishing.",
+} as const;
+
+const statusText = {
+  submitted:
+    "Your car was submitted successfully. It is waiting for admin approval. We will update you soon.",
 } as const;
 
 export default async function SellCarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; status?: string }>;
 }) {
   const params = await searchParams;
   const errorKey = params.error as keyof typeof errorText | undefined;
+  const statusKey = params.status as keyof typeof statusText | undefined;
 
   return (
     <main className="simple-page sell-page">
@@ -37,6 +42,9 @@ export default async function SellCarPage({
 
         {errorKey && (
           <div className="simple-alert simple-alert--error">{errorText[errorKey]}</div>
+        )}
+        {statusKey && (
+          <div className="simple-alert simple-alert--success">{statusText[statusKey]}</div>
         )}
 
         <SellCarForm />

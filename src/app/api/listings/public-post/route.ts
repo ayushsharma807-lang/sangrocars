@@ -278,7 +278,7 @@ export async function POST(req: Request) {
     source: "website",
   });
 
-  return NextResponse.redirect(toRedirectUrl(req, `/listing/${data.id}?posted=1`), {
+  return NextResponse.redirect(toRedirectUrl(req, `/sell?status=submitted&id=${data.id}`), {
     status: 303,
   });
 }
