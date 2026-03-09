@@ -10,6 +10,7 @@ import {
   getVariantOptions,
 } from "@/lib/carOptions";
 import { buildPolishedDescription } from "@/lib/descriptionPolisher";
+import { parseIndianMoney } from "@/lib/parseIndianMoney";
 
 const MIN_PHOTOS = 1;
 
@@ -54,12 +55,6 @@ export default function SellCarForm() {
   const [sellerName, setSellerName] = useState("");
   const [sellerPhone, setSellerPhone] = useState("");
   const [sellerEmail, setSellerEmail] = useState("");
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
-  const [otpMessage, setOtpMessage] = useState<string | null>(null);
-  const [otpError, setOtpError] = useState<string | null>(null);
-  const [otpSending, setOtpSending] = useState(false);
-  const [otpVerifying, setOtpVerifying] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
   const modelOptions = useMemo(() => getModelOptions(make), [make]);
@@ -75,13 +70,6 @@ export default function SellCarForm() {
       urls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [photoFiles]);
-
-  useEffect(() => {
-    setPhoneVerified(false);
-    setOtpCode("");
-    setOtpMessage(null);
-    setOtpError(null);
-  }, [sellerPhone]);
 
   const updateFiles = (files: File[]) => {
     setPhotoFiles(files);
@@ -137,8 +125,8 @@ export default function SellCarForm() {
 
   const suggestedRange = useMemo(() => {
     if (!make || !model || !location) return null;
-    const numericPrice = Number(price || 0);
-    const base = Number.isFinite(numericPrice) && numericPrice > 0 ? numericPrice : 1_200_000;
+    const numericPrice = parseIndianMoney(price);
+    const base = numericPrice && numericPrice > 0 ? numericPrice : 1_200_000;
     const min = Math.round(base * 0.9);
     const max = Math.round(base * 1.1);
     return { min, max };
@@ -162,7 +150,7 @@ export default function SellCarForm() {
 
   const step1Ready = Boolean(make && model && year && price && km && fuel && transmission && location);
   const step2Ready = totalPhotos >= MIN_PHOTOS;
-  const step3Ready = Boolean(sellerPhone && phoneVerified);
+  const step3Ready = Boolean(sellerPhone);
 
   const completionParts = [
     make,
@@ -194,51 +182,6 @@ export default function SellCarForm() {
   const goBack = () => {
     setFormError(null);
     setStep(Math.max(1, step - 1));
-  };
-
-  const requestOtp = async () => {
-    if (!sellerPhone) {
-      setOtpError("Enter a phone number first.");
-      return;
-    }
-    setOtpError(null);
-    setOtpMessage(null);
-    setOtpSending(true);
-    const response = await fetch("/api/listings/otp/request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: sellerPhone }),
-    }).catch(() => null);
-    const payload = await response?.json().catch(() => null);
-    setOtpSending(false);
-    if (!response?.ok || !payload?.ok) {
-      setOtpError("Unable to send OTP. Please try again.");
-      return;
-    }
-    setOtpMessage("OTP sent. Please check your phone.");
-  };
-
-  const verifyOtp = async () => {
-    if (!sellerPhone || !otpCode) {
-      setOtpError("Enter the OTP code.");
-      return;
-    }
-    setOtpError(null);
-    setOtpMessage(null);
-    setOtpVerifying(true);
-    const response = await fetch("/api/listings/otp/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: sellerPhone, token: otpCode }),
-    }).catch(() => null);
-    const payload = await response?.json().catch(() => null);
-    setOtpVerifying(false);
-    if (!response?.ok || !payload?.ok) {
-      setOtpError("OTP verification failed. Try again.");
-      return;
-    }
-    setPhoneVerified(true);
-    setOtpMessage("Phone verified. You can publish now.");
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -374,8 +317,8 @@ export default function SellCarForm() {
               Price (INR) *
               <input
                 name="price"
-                type="number"
-                placeholder="e.g., 950000"
+                type="text"
+                placeholder="e.g., 11.5 lakh"
                 required
                 value={price}
                 onChange={(event) => setPrice(event.target.value)}
@@ -618,34 +561,6 @@ export default function SellCarForm() {
               />
             </label>
           </div>
-          <div className="sell-otp">
-            <div className="sell-otp__row">
-              <button
-                type="button"
-                className="simple-button simple-button--secondary"
-                onClick={requestOtp}
-                disabled={otpSending}
-              >
-                {otpSending ? "Sending OTP..." : "Send OTP"}
-              </button>
-              <input
-                type="text"
-                placeholder="Enter OTP"
-                value={otpCode}
-                onChange={(event) => setOtpCode(event.target.value)}
-              />
-              <button
-                type="button"
-                className="simple-button"
-                onClick={verifyOtp}
-                disabled={otpVerifying}
-              >
-                {otpVerifying ? "Verifying..." : "Verify OTP"}
-              </button>
-            </div>
-            {otpMessage && <p className="sell-otp__message">{otpMessage}</p>}
-            {otpError && <p className="sell-otp__error">{otpError}</p>}
-          </div>
           <div className="sell-hint">
             Your phone number is only shared with interested buyers. SangroCars does not charge listing fees.
           </div>
@@ -676,7 +591,14 @@ export default function SellCarForm() {
                 <div>
                   <h3>{formattedTitle || "Your car"}</h3>
                   <p>{location || "Location"}</p>
-                  <strong>{price ? `₹${Number(price).toLocaleString("en-IN")}` : "Price"}</strong>
+                  <strong>
+                    {(() => {
+                      const parsedPrice = parseIndianMoney(price);
+                      return parsedPrice
+                        ? `₹${parsedPrice.toLocaleString("en-IN")}`
+                        : "Price";
+                    })()}
+                  </strong>
                 </div>
               </div>
             </div>

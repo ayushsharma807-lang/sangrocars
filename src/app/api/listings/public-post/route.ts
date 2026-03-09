@@ -7,11 +7,17 @@ import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
 import { phoneVariants } from "@/lib/phone";
 import { notifyPendingListing } from "@/lib/adminNotifications";
 import { markListingPendingApproval } from "@/lib/listingApproval";
+import { parseIndianMoney } from "@/lib/parseIndianMoney";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
   const num = Number(String(value).replace(/[^0-9.]/g, ""));
   return Number.isFinite(num) ? Math.round(num) : null;
+};
+
+const parsePrice = (value: FormDataEntryValue | null) => {
+  if (!value) return null;
+  return parseIndianMoney(String(value));
 };
 
 const parsePhotos = (value: FormDataEntryValue | null) => {
@@ -243,7 +249,7 @@ export async function POST(req: Request) {
     model,
     variant: String(form.get("variant") ?? "").trim() || null,
     year: parseNumber(form.get("year")),
-    price: parseNumber(form.get("price")),
+    price: parsePrice(form.get("price")),
     km: parseNumber(form.get("km")),
     fuel: String(form.get("fuel") ?? "").trim() || null,
     transmission: String(form.get("transmission") ?? "").trim() || null,
