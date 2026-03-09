@@ -76,6 +76,11 @@ export default async function DealerListingsPage({
             in the CSV. Example: CSV row has <code>HONDA-CITY-01</code> and ZIP
             has <code>HONDA-CITY-01-1.jpg</code>, <code>HONDA-CITY-01-2.jpg</code>.
           </p>
+          <p>
+            <Link className="link" href="/templates/dealer-bulk-import-template.csv">
+              Download sample CSV template
+            </Link>
+          </p>
           <form
             className="dealer-form dealer-form--inline"
             method="post"
