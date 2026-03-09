@@ -9,7 +9,6 @@ import {
   getModelOptions,
   getVariantOptions,
 } from "@/lib/carOptions";
-import { buildPolishedDescription } from "@/lib/descriptionPolisher";
 import { parseIndianMoney } from "@/lib/parseIndianMoney";
 
 const MIN_PHOTOS = 1;
@@ -38,8 +37,6 @@ export default function SellCarForm() {
 
   const [ownerType, setOwnerType] = useState("1st owner");
 
-  const [notes, setNotes] = useState("");
-  const [photoUrlsText, setPhotoUrlsText] = useState("");
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -55,8 +52,7 @@ export default function SellCarForm() {
   const modelOptions = useMemo(() => getModelOptions(make), [make]);
   const variantOptions = useMemo(() => getVariantOptions(model), [model]);
 
-  const photoUrls = useMemo(() => parsePhotoUrls(photoUrlsText), [photoUrlsText]);
-  const totalPhotos = photoFiles.length + photoUrls.length;
+  const totalPhotos = photoFiles.length;
 
   useEffect(() => {
     const urls = photoFiles.map((file) => URL.createObjectURL(file));
@@ -133,22 +129,6 @@ export default function SellCarForm() {
     updateFiles(next);
   };
 
-  const polishDescription = () => {
-    const polished = buildPolishedDescription({
-      make,
-      model,
-      variant,
-      year,
-      price,
-      km,
-      fuel,
-      transmission,
-      location,
-      notes,
-    });
-    if (polished) setNotes(polished);
-  };
-
   const suggestedRange = useMemo(() => {
     if (!make || !model || !location) return null;
     const numericPrice = parseIndianMoney(price);
@@ -165,7 +145,6 @@ export default function SellCarForm() {
     `Owner type: ${ownerType}`,
     sellerType === "dealer" ? `Seller type: Dealer` : `Seller type: Private seller`,
     sellerType === "dealer" && dealerName ? `Dealership: ${dealerName}` : null,
-    notes ? `Notes: ${notes}` : null,
   ]
     .filter(Boolean)
     .join("\n");
@@ -421,41 +400,6 @@ export default function SellCarForm() {
               ))}
             </div>
           )}
-          <label>
-            Photo URLs (optional)
-            <textarea
-              name="photo_urls"
-              rows={4}
-              placeholder="https://example.com/photo1.jpg"
-              value={photoUrlsText}
-              onChange={(event) => setPhotoUrlsText(event.target.value)}
-            />
-          </label>
-          <label>
-            Walkthrough video URL (optional)
-            <input
-              name="walkthrough_video_url"
-              placeholder="YouTube / MP4 / Instagram / Facebook embed link"
-            />
-          </label>
-          <label>
-            Description
-            <textarea
-              rows={5}
-              placeholder="Example: Single owner car. All services done at Toyota service center. New tyres installed. Insurance valid till Dec 2025."
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-            />
-          </label>
-          <div className="dealer-form__actions">
-            <button
-              className="simple-button simple-button--secondary"
-              type="button"
-              onClick={polishDescription}
-            >
-              Polish description
-            </button>
-          </div>
         </section>
       )}
 
