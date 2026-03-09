@@ -64,10 +64,17 @@ export default async function DealerListingsPage({
           </div>
         ) : null}
         <div className="dealer-panel dealer-panel--import">
-          <h3>Bulk upload listings (CSV)</h3>
+          <h3>Bulk upload listings (CSV + ZIP photos)</h3>
           <p>
             Upload a CSV with columns like make, model, variant, year, price, km,
-            fuel, transmission, location, status, type, description, photo_urls.
+            fuel, transmission, location, status, type, description, photo_urls,
+            image_key.
+          </p>
+          <p>
+            For phone photos, upload an optional ZIP file and put the same
+            <code> image_key </code>
+            in the CSV. Example: CSV row has <code>HONDA-CITY-01</code> and ZIP
+            has <code>HONDA-CITY-01-1.jpg</code>, <code>HONDA-CITY-01-2.jpg</code>.
           </p>
           <form
             className="dealer-form dealer-form--inline"
@@ -79,6 +86,10 @@ export default async function DealerListingsPage({
             <label>
               CSV file
               <input name="file" type="file" accept=".csv,text/csv" required />
+            </label>
+            <label>
+              Photos ZIP (optional)
+              <input name="images_zip" type="file" accept=".zip,application/zip" />
             </label>
             <label>
               Default status

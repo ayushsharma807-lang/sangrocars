@@ -7,10 +7,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "check:db": "node scripts/db-check.mjs"
+    "check:db": "node scripts/db-check.mjs",
+    "cap": "cap",
+    "cap:sync": "npm run cap -- sync",
+    "cap:copy": "npm run cap -- copy",
+    "cap:open:ios": "npm run cap -- open ios",
+    "cap:open:android": "npm run cap -- open android",
+    "cap:assets": "capacitor-assets generate"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
+    "adm-zip": "^0.5.16",
     "cheerio": "^1.0.0-rc.12",
     "csv-parse": "^6.1.0",
     "next": "16.1.6",
@@ -19,7 +26,13 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@capacitor/android": "^7.6.0",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.6.0",
+    "@capacitor/core": "^7.6.0",
+    "@capacitor/ios": "^7.6.0",
     "@tailwindcss/postcss": "^4",
+    "@types/adm-zip": "^0.5.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
