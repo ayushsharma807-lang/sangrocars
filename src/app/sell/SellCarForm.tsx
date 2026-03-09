@@ -37,9 +37,6 @@ export default function SellCarForm() {
   const [location, setLocation] = useState("");
 
   const [ownerType, setOwnerType] = useState("1st owner");
-  const [registration, setRegistration] = useState("");
-  const [serviceHistory, setServiceHistory] = useState("Full service history");
-  const [accidentHistory, setAccidentHistory] = useState("No accidents");
 
   const [notes, setNotes] = useState("");
   const [photoUrlsText, setPhotoUrlsText] = useState("");
@@ -166,9 +163,6 @@ export default function SellCarForm() {
 
   const compiledDescription = [
     `Owner type: ${ownerType}`,
-    `Registration/RTO: ${registration || "Not provided"}`,
-    `Service history: ${serviceHistory}`,
-    `Accident history: ${accidentHistory}`,
     sellerType === "dealer" ? `Seller type: Dealer` : `Seller type: Private seller`,
     sellerType === "dealer" && dealerName ? `Dealership: ${dealerName}` : null,
     notes ? `Notes: ${notes}` : null,
@@ -373,39 +367,6 @@ export default function SellCarForm() {
                 <option>2nd owner</option>
                 <option>3rd owner</option>
                 <option>Dealer</option>
-              </select>
-            </label>
-            <label>
-              Registration / RTO
-              <input
-                name="registration"
-                value={registration}
-                onChange={(event) => setRegistration(event.target.value)}
-                placeholder="PB08 / DL01 / HR26"
-              />
-            </label>
-            <label>
-              Service history
-              <select
-                name="service_history"
-                value={serviceHistory}
-                onChange={(event) => setServiceHistory(event.target.value)}
-              >
-                <option>Full service history</option>
-                <option>Partial</option>
-                <option>Not available</option>
-              </select>
-            </label>
-            <label>
-              Accident history
-              <select
-                name="accident_history"
-                value={accidentHistory}
-                onChange={(event) => setAccidentHistory(event.target.value)}
-              >
-                <option>No accidents</option>
-                <option>Minor</option>
-                <option>Major</option>
               </select>
             </label>
           </div>
