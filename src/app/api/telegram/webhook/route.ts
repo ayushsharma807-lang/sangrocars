@@ -4,6 +4,7 @@ import { ensureListingPhotoBucket, LISTING_PHOTO_BUCKET } from "@/lib/listingPho
 import { buildPrivateSellerDescription } from "@/lib/privateSeller";
 import { notifyPendingListing } from "@/lib/adminNotifications";
 import { markListingPendingApproval } from "@/lib/listingApproval";
+import { parseListingText } from "@/lib/listingTextParser";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
 const TELEGRAM_BROADCAST_CHAT_ID =
@@ -191,6 +192,256 @@ const nextPrompt = (step: string) => {
   }
 };
 
+const QUICK_REQUIRED_TEXT_FIELDS = [
+  "make",
+  "model",
+  "year",
+  "transmission",
+  "fuel",
+  "km",
+  "price",
+  "location",
+  "phone",
+] as const;
+
+const FIELD_LABELS: Record<string, string> = {
+  make: "Make",
+  model: "Model",
+  variant: "Variant",
+  year: "Year",
+  transmission: "Transmission",
+  fuel: "Fuel",
+  km: "KM driven",
+  price: "Price",
+  location: "City",
+  phone: "Phone number",
+  photos: "Photos",
+  color: "Color",
+  condition: "Condition",
+};
+
+const formatPrice = (value: unknown) => {
+  const num = typeof value === "number" ? value : null;
+  return num ? `₹${num.toLocaleString("en-IN")}` : null;
+};
+
+const formatKm = (value: unknown) => {
+  const num = typeof value === "number" ? value : null;
+  return num ? num.toLocaleString("en-IN") : null;
+};
+
+const normalizeColor = (value: string) => {
+  const cleaned = value.trim().toLowerCase();
+  if (!cleaned) return null;
+  return cleaned === "gray"
+    ? "Grey"
+    : cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+};
+
+const parseKm = (value: string) => {
+  const num = parseNumber(value);
+  if (!num) return null;
+  if (/\bk\b/i.test(value)) return Math.round(num * 1_000);
+  return Math.round(num);
+};
+
+const toText = (value: unknown) =>
+  typeof value === "string" && value.trim() ? value.trim() : null;
+
+const buildQuickPreview = (
+  data: Record<string, unknown>,
+  photoCount: number,
+  missingFields: string[]
+) => {
+  const lines = ["I found this:", ""];
+  const previewFields: Array<[string, string | null]> = [
+    ["Make", toText(data.make)],
+    ["Model", toText(data.model)],
+    ["Variant", toText(data.variant)],
+    ["Year", typeof data.year === "number" ? String(data.year) : null],
+    ["Transmission", toText(data.transmission)],
+    ["Fuel", toText(data.fuel)],
+    ["KM driven", formatKm(data.km)],
+    ["Price", formatPrice(data.price)],
+    ["City", toText(data.location)],
+    ["Color", toText(data.color)],
+    ["Phone number", toText(data.phone)],
+  ];
+
+  for (const [label, value] of previewFields) {
+    if (value) lines.push(`${label}: ${value}`);
+  }
+
+  lines.push(`Photos: ${photoCount}/8`);
+
+  if (missingFields.length > 0) {
+    lines.push("", "Missing:");
+    for (const field of missingFields) {
+      lines.push(`- ${FIELD_LABELS[field] ?? field}`);
+    }
+  } else {
+    lines.push("", "Everything looks complete.");
+  }
+
+  lines.push(
+    "",
+    "Type confirm to continue.",
+    "Type edit field value to change anything.",
+    "Type cancel to stop."
+  );
+
+  return lines.join("\n");
+};
+
+const getQuickMissingFields = (
+  data: Record<string, unknown>,
+  photoCount: number
+): string[] => {
+  const missing: string[] = QUICK_REQUIRED_TEXT_FIELDS.filter((field) => {
+    const value = data[field];
+    if (typeof value === "number") return !Number.isFinite(value);
+    return !(typeof value === "string" && value.trim());
+  });
+  if (photoCount < 1) missing.push("photos");
+  return missing;
+};
+
+const parseFieldValue = (field: string, rawValue: string) => {
+  switch (field) {
+    case "make":
+    case "model":
+    case "variant":
+    case "location":
+      return titleCase(rawValue);
+    case "year": {
+      const year = Number(rawValue.replace(/[^0-9]/g, ""));
+      return year >= 1990 && year <= 2100 ? year : null;
+    }
+    case "transmission":
+      return normalizeTransmission(rawValue);
+    case "fuel":
+      return normalizeFuel(rawValue);
+    case "km":
+      return parseKm(rawValue);
+    case "price":
+      return parseIndianMoney(rawValue);
+    case "phone": {
+      const digits = rawValue.replace(/\D/g, "");
+      return digits.length >= 10 ? digits : null;
+    }
+    case "condition":
+      return normalizeCondition(rawValue);
+    case "color":
+      return normalizeColor(rawValue);
+    default:
+      return titleCase(rawValue);
+  }
+};
+
+const applyEditCommand = (
+  commandText: string,
+  data: Record<string, unknown>
+) => {
+  const match = commandText.match(/^edit\s+([a-z ]+?)\s+(.+)$/i);
+  if (!match) return { error: "Use: edit field value" };
+
+  const rawField = match[1].trim().toLowerCase();
+  const rawValue = match[2].trim();
+  const fieldMap: Record<string, string> = {
+    make: "make",
+    model: "model",
+    variant: "variant",
+    year: "year",
+    transmission: "transmission",
+    gearbox: "transmission",
+    fuel: "fuel",
+    km: "km",
+    mileage: "km",
+    price: "price",
+    city: "location",
+    location: "location",
+    phone: "phone",
+    number: "phone",
+    condition: "condition",
+    color: "color",
+  };
+
+  const field = fieldMap[rawField];
+  if (!field) {
+    return { error: "Unknown field. Try edit price 15 lakh" };
+  }
+
+  const parsed = parseFieldValue(field, rawValue);
+  if (parsed === null || parsed === "") {
+    return { error: `Could not understand ${FIELD_LABELS[field] ?? field}.` };
+  }
+
+  return {
+    data: {
+      ...data,
+      [field]: parsed,
+    },
+  };
+};
+
+const mergeQuickParsedData = (
+  existingData: Record<string, unknown>,
+  text: string
+) => {
+  const parsed = parseListingText(text);
+  const nextData = { ...existingData };
+
+  for (const field of [
+    "make",
+    "model",
+    "variant",
+    "year",
+    "price",
+    "km",
+    "fuel",
+    "transmission",
+    "location",
+    "color",
+  ] as const) {
+    const value = parsed[field];
+    if (
+      value !== null &&
+      value !== undefined &&
+      !(typeof value === "string" && !value.trim())
+    ) {
+      nextData[field] = value;
+    }
+  }
+
+  const phone = text.replace(/\D/g, "");
+  if (phone.length >= 10) {
+    nextData.phone = phone;
+  }
+
+  const condition = normalizeCondition(text);
+  if (condition) {
+    nextData.condition = condition;
+  }
+
+  return nextData;
+};
+
+const shouldUseQuickMode = (text: string) => {
+  const parsed = parseListingText(text);
+  const score = [
+    parsed.make,
+    parsed.model,
+    parsed.year,
+    parsed.price,
+    parsed.km,
+    parsed.fuel,
+    parsed.transmission,
+    parsed.location,
+  ].filter(Boolean).length;
+
+  return Boolean(parsed.make && parsed.model && score >= 5);
+};
+
 export async function POST(req: Request) {
   if (TELEGRAM_WEBHOOK_SECRET) {
     const secret = req.headers.get("x-telegram-bot-api-secret-token");
@@ -265,6 +516,40 @@ export async function POST(req: Request) {
   }
 
   if (!session) {
+    if (trimmedText && shouldUseQuickMode(trimmedText)) {
+      const payload = {
+        user_id: userId,
+        chat_id: chatId,
+        username,
+        step: "quick_preview",
+        data: {},
+        photo_file_ids: [...photoIds].slice(0, 8),
+      };
+      await sb.from("telegram_sessions").upsert(payload, { onConflict: "user_id" });
+      const { data: freshSession } = await sb
+        .from("telegram_sessions")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+      if (freshSession) {
+        const freshPhotos = Array.isArray(freshSession.photo_file_ids)
+          ? [...freshSession.photo_file_ids]
+          : [];
+        const freshData = (freshSession.data ?? {}) as Record<string, unknown>;
+        const nextData = mergeQuickParsedData(freshData, trimmedText);
+        if (!nextData.condition) nextData.condition = "Good";
+        await sb
+          .from("telegram_sessions")
+          .update({ data: nextData, photo_file_ids: freshPhotos, step: "quick_preview" })
+          .eq("user_id", userId);
+        await sendTelegramMessage(
+          chatId,
+          buildQuickPreview(nextData, freshPhotos.length, getQuickMissingFields(nextData, freshPhotos.length))
+        );
+        await broadcast(`${displayName} started a quick Telegram listing.`);
+        return NextResponse.json({ ok: true });
+      }
+    }
     await sendTelegramMessage(chatId, "Send hi to start listing a car.");
     return NextResponse.json({ ok: true });
   }
@@ -274,12 +559,17 @@ export async function POST(req: Request) {
     ? [...session.photo_file_ids]
     : [];
 
-  const updateSession = async (nextStep: string, nextData: Record<string, unknown>) => {
+  const updateSession = async (
+    nextStep: string,
+    nextData: Record<string, unknown>,
+    photoFileIds: string[] = existingPhotos
+  ) => {
     await sb
       .from("telegram_sessions")
       .update({
         step: nextStep,
         data: nextData,
+        photo_file_ids: photoFileIds,
       })
       .eq("user_id", userId);
   };
@@ -312,6 +602,7 @@ export async function POST(req: Request) {
 
     const details = [
       data.condition ? `Condition: ${data.condition}` : null,
+      data.color ? `Color: ${data.color}` : null,
       data.location ? `Location: ${data.location}` : null,
     ]
       .filter(Boolean)
@@ -384,8 +675,177 @@ export async function POST(req: Request) {
     );
   };
 
+  const sendQuickPreview = async (
+    nextData: Record<string, unknown>,
+    nextPhotos: string[]
+  ) => {
+    const missing = getQuickMissingFields(nextData, nextPhotos.length);
+    await updateSession("quick_preview", nextData, nextPhotos);
+    await sendTelegramMessage(
+      chatId,
+      buildQuickPreview(nextData, nextPhotos.length, missing)
+    );
+  };
+
+  const enterQuickMode = async (
+    textValue: string,
+    seedPhotos: string[] = existingPhotos
+  ) => {
+    const nextData = mergeQuickParsedData({}, textValue);
+    if (!nextData.condition) {
+      nextData.condition = "Good";
+    }
+    await sendQuickPreview(nextData, seedPhotos);
+    await broadcast(`${displayName} started a quick Telegram listing.`);
+  };
+
   if (command === "edit") {
     await sendTelegramMessage(chatId, `Okay. ${nextPrompt(session.step)}`);
+    return NextResponse.json({ ok: true });
+  }
+
+  if (session.step === "quick_preview") {
+    const mergedPhotos =
+      photoIds.size > 0 ? [...existingPhotos, ...photoIds].slice(0, 8) : existingPhotos;
+
+    if (command === "confirm") {
+      const missingText = getQuickMissingFields(data, mergedPhotos.length).filter(
+        (field) => field !== "photos"
+      );
+      if (missingText.length > 0) {
+        const nextData = {
+          ...data,
+          quick_missing_fields: missingText,
+        };
+        await updateSession("quick_missing", nextData, mergedPhotos);
+        await sendTelegramMessage(
+          chatId,
+          `Please send ${FIELD_LABELS[missingText[0]] ?? missingText[0]}.`
+        );
+        return NextResponse.json({ ok: true });
+      }
+      if (mergedPhotos.length < 1) {
+        await updateSession("photos", data, mergedPhotos);
+        await sendTelegramMessage(chatId, nextPrompt("photos"));
+        return NextResponse.json({ ok: true });
+      }
+      await finalizeListing(mergedPhotos);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (command.startsWith("edit ")) {
+      const edited = applyEditCommand(trimmedText, data);
+      if (edited.error) {
+        await sendTelegramMessage(chatId, edited.error);
+        return NextResponse.json({ ok: true });
+      }
+      await sendQuickPreview(edited.data ?? data, mergedPhotos);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (photoIds.size > 0 && !trimmedText) {
+      await sendQuickPreview(data, mergedPhotos);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (trimmedText) {
+      const nextData = mergeQuickParsedData(data, trimmedText);
+      await sendQuickPreview(nextData, mergedPhotos);
+      return NextResponse.json({ ok: true });
+    }
+  }
+
+  if (session.step === "quick_missing") {
+    const mergedPhotos =
+      photoIds.size > 0 ? [...existingPhotos, ...photoIds].slice(0, 8) : existingPhotos;
+    const queuedFields = Array.isArray(data.quick_missing_fields)
+      ? data.quick_missing_fields.map((item) => String(item))
+      : [];
+    const remainingFields = queuedFields.filter((field) => field !== "photos");
+
+    if (command.startsWith("edit ")) {
+      const edited = applyEditCommand(trimmedText, data);
+      if (edited.error) {
+        await sendTelegramMessage(chatId, edited.error);
+        return NextResponse.json({ ok: true });
+      }
+      const nextMissing = getQuickMissingFields(edited.data ?? data, mergedPhotos.length).filter(
+        (field) => field !== "photos"
+      );
+      if (nextMissing.length === 0) {
+        if (mergedPhotos.length < 1) {
+          await updateSession("photos", edited.data ?? data, mergedPhotos);
+          await sendTelegramMessage(chatId, nextPrompt("photos"));
+          return NextResponse.json({ ok: true });
+        }
+        await finalizeListing(mergedPhotos);
+        return NextResponse.json({ ok: true });
+      }
+      await updateSession(
+        "quick_missing",
+        { ...(edited.data ?? data), quick_missing_fields: nextMissing },
+        mergedPhotos
+      );
+      await sendTelegramMessage(
+        chatId,
+        `Please send ${FIELD_LABELS[nextMissing[0]] ?? nextMissing[0]}.`
+      );
+      return NextResponse.json({ ok: true });
+    }
+
+    if (remainingFields.length === 0) {
+      if (mergedPhotos.length < 1) {
+        await updateSession("photos", data, mergedPhotos);
+        await sendTelegramMessage(chatId, nextPrompt("photos"));
+        return NextResponse.json({ ok: true });
+      }
+      await finalizeListing(mergedPhotos);
+      return NextResponse.json({ ok: true });
+    }
+
+    const currentField = remainingFields[0];
+    if (!trimmedText) {
+      await sendTelegramMessage(
+        chatId,
+        `Please send ${FIELD_LABELS[currentField] ?? currentField}.`
+      );
+      return NextResponse.json({ ok: true });
+    }
+
+    const parsedValue = parseFieldValue(currentField, trimmedText);
+    if (parsedValue === null || parsedValue === "") {
+      await sendTelegramMessage(
+        chatId,
+        `Could not understand ${FIELD_LABELS[currentField] ?? currentField}. Please try again.`
+      );
+      return NextResponse.json({ ok: true });
+    }
+
+    const nextData = { ...data, [currentField]: parsedValue };
+    const nextMissing = getQuickMissingFields(nextData, mergedPhotos.length).filter(
+      (field) => field !== "photos"
+    );
+
+    if (nextMissing.length > 0) {
+      await updateSession(
+        "quick_missing",
+        { ...nextData, quick_missing_fields: nextMissing },
+        mergedPhotos
+      );
+      await sendTelegramMessage(
+        chatId,
+        `Got it. Now send ${FIELD_LABELS[nextMissing[0]] ?? nextMissing[0]}.`
+      );
+      return NextResponse.json({ ok: true });
+    }
+
+    if (mergedPhotos.length < 1) {
+      await updateSession("photos", nextData, mergedPhotos);
+      await sendTelegramMessage(chatId, nextPrompt("photos"));
+      return NextResponse.json({ ok: true });
+    }
+
+    await finalizeListing(mergedPhotos);
     return NextResponse.json({ ok: true });
   }
 
@@ -415,6 +875,14 @@ export async function POST(req: Request) {
 
   if (!trimmedText) {
     await sendTelegramMessage(chatId, "Please reply with text.");
+    return NextResponse.json({ ok: true });
+  }
+
+  if (
+    ["make", "model", "variant"].includes(session.step) &&
+    shouldUseQuickMode(trimmedText)
+  ) {
+    await enterQuickMode(trimmedText, existingPhotos);
     return NextResponse.json({ ok: true });
   }
 

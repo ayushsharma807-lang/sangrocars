@@ -24,6 +24,22 @@ const KNOWN_MAKES = [
 
 const FUEL_TYPES = ["petrol", "diesel", "cng", "electric", "hybrid"];
 const TRANSMISSIONS = ["automatic", "manual", "cvt", "amt", "dct"];
+const COLORS = [
+  "white",
+  "black",
+  "silver",
+  "grey",
+  "gray",
+  "red",
+  "blue",
+  "brown",
+  "green",
+  "orange",
+  "yellow",
+  "gold",
+  "beige",
+  "maroon",
+];
 
 export type ParsedListingDraft = {
   type: "used" | "new";
@@ -37,6 +53,7 @@ export type ParsedListingDraft = {
   fuel: string | null;
   transmission: string | null;
   location: string | null;
+  color: string | null;
   description: string | null;
   photo_urls: string[];
 };
@@ -73,6 +90,14 @@ const parseIndianMoney = (value: string) => {
   return Math.round(num);
 };
 
+const parseKmValue = (value: string) => {
+  const lower = value.toLowerCase();
+  const num = parseNumber(value);
+  if (!num) return null;
+  if (/\bk\b/.test(lower)) return Math.round(num * 1_000);
+  return Math.round(num);
+};
+
 const detectFuel = (text: string) => {
   const lower = text.toLowerCase();
   const fuel = FUEL_TYPES.find((item) => lower.includes(item));
@@ -97,8 +122,7 @@ const detectKm = (text: string) => {
     /\b(\d[\d,.\s]{1,12})\s*(km|kms|kilometer|kilometres|kilometers)\b/i
   );
   if (!match) return null;
-  const parsed = parseNumber(match[1]);
-  return parsed ? Math.round(parsed) : null;
+  return parseKmValue(match[1]);
 };
 
 const detectPrice = (text: string) => {
@@ -125,6 +149,13 @@ const detectLocation = (text: string) => {
   const softLabeled = text.match(/\b(city|location|loc)\s+([a-z][a-z ,.-]{1,60})/i);
   if (softLabeled?.[2]) return titleCase(softLabeled[2].trim());
   return null;
+};
+
+const detectColor = (text: string) => {
+  const lower = text.toLowerCase();
+  const color = COLORS.find((item) => lower.includes(item));
+  if (!color) return null;
+  return color === "gray" ? "Grey" : titleCase(color);
 };
 
 const detectType = (text: string): "used" | "new" => {
@@ -184,6 +215,48 @@ const detectMakeModelVariant = (text: string) => {
     model,
     variant,
   };
+};
+
+const detectLooseLocation = (
+  text: string,
+  parts: { make: string | null; model: string | null; variant: string | null }
+) => {
+  const strict = detectLocation(text);
+  if (strict) return strict;
+
+  let working = normalizeText(text).toLowerCase();
+  const phrases = [
+    parts.make,
+    parts.model,
+    parts.variant,
+    detectFuel(text),
+    detectTransmission(text),
+    detectColor(text),
+  ]
+    .filter(Boolean)
+    .map((item) => String(item).toLowerCase());
+
+  for (const phrase of phrases) {
+    working = working.replace(new RegExp(`\\b${phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi"), " ");
+  }
+
+  working = working
+    .replace(/\b(19\d{2}|20\d{2})\b/g, " ")
+    .replace(/\b\d[\d,.]*\s*(km|kms|kilometer|kilometres|kilometers)\b/gi, " ")
+    .replace(/\b(rs\.?|inr|₹)\s*\d[\d,.\s]*(lakh|lac|cr|k)?\b/gi, " ")
+    .replace(/\b\d[\d,.\s]*(lakh|lac|cr|k)\b/gi, " ")
+    .replace(/\b(price|asking|offer|owner|driven|sell|selling|car)\b/gi, " ")
+    .replace(/[^a-z\s-]/gi, " ");
+
+  const tokens = working
+    .split(/\s+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item) => item.length > 2 && !COLORS.includes(item));
+
+  if (tokens.length === 0) return null;
+  const candidate = tokens.slice(-2).join(" ");
+  return titleCase(candidate);
 };
 
 const isProbablyNameLine = (value: string) =>
@@ -291,6 +364,7 @@ export const parseListingText = (
   const lineParsed = parseLineFormat(rawText);
   const makeModel = detectMakeModelVariant(text);
   const parsedUrls = extractUrlsFromText(text);
+  const color = detectColor(text);
 
   return {
     type: detectType(text),
@@ -303,7 +377,8 @@ export const parseListingText = (
     km: lineParsed?.km ?? detectKm(text),
     fuel: lineParsed?.fuel ?? detectFuel(text),
     transmission: lineParsed?.transmission ?? detectTransmission(text),
-    location: lineParsed?.location ?? detectLocation(text),
+    location: lineParsed?.location ?? detectLooseLocation(text, makeModel),
+    color,
     description: text || null,
     photo_urls: dedupeUrls([...extraPhotoUrls, ...parsedUrls]),
   };
