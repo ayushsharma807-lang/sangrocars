@@ -158,6 +158,58 @@ const sendTelegramMessage = async (chatId: number | string, text: string) => {
   }
 };
 
+const sendTelegramMessageWithButtons = async (
+  chatId: number | string,
+  text: string,
+  buttons: Array<Array<{ text: string; callback_data: string }>>
+) => {
+  if (!TELEGRAM_BOT_TOKEN) {
+    console.log("Telegram bot token missing. Cannot send reply.");
+    return;
+  }
+  try {
+    const response = await fetch(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          reply_markup: {
+            inline_keyboard: buttons,
+          },
+        }),
+      }
+    );
+    if (!response.ok) {
+      const detail = await response.text();
+      console.log("Telegram sendMessage with buttons failed:", response.status, detail);
+    }
+  } catch (error) {
+    console.log("Telegram sendMessage with buttons error:", error);
+  }
+};
+
+const answerTelegramCallback = async (
+  callbackQueryId: string,
+  text?: string
+) => {
+  if (!TELEGRAM_BOT_TOKEN) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        callback_query_id: callbackQueryId,
+        text,
+      }),
+    });
+  } catch (error) {
+    console.log("Telegram answerCallbackQuery error:", error);
+  }
+};
+
 const broadcast = async (text: string) => {
   if (!TELEGRAM_BROADCAST_CHAT_ID) return;
   await sendTelegramMessage(TELEGRAM_BROADCAST_CHAT_ID, text);
@@ -314,9 +366,10 @@ const buildQuickPreview = (
 
   lines.push(
     "",
-    "Type confirm to continue.",
-    "Type edit field value to change anything.",
-    "Type cancel to stop."
+    "Use the buttons below or type:",
+    "confirm",
+    "edit field value",
+    "cancel"
   );
 
   return lines.join("\n");
@@ -605,7 +658,8 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const message = body?.message;
+  const callbackQuery = body?.callback_query;
+  const message = callbackQuery?.message ?? body?.message;
   if (!message) return NextResponse.json({ ok: true });
 
   const chat = message.chat;
@@ -615,7 +669,7 @@ export async function POST(req: Request) {
   }
 
   const chatId = chat.id as number;
-  const user = message.from;
+  const user = callbackQuery?.from ?? message.from;
   const userId = user?.id as number | undefined;
   const username = user?.username ?? null;
   const displayName =
@@ -625,7 +679,7 @@ export async function POST(req: Request) {
         `User ${userId}`;
   if (!userId) return NextResponse.json({ ok: true });
 
-  const text = message.text || message.caption || "";
+  const text = callbackQuery?.data || message.text || message.caption || "";
   const trimmedText = String(text || "").trim();
   const command = trimmedText.toLowerCase();
 
@@ -644,6 +698,10 @@ export async function POST(req: Request) {
     .select("*")
     .eq("user_id", userId)
     .single();
+
+  if (callbackQuery?.id) {
+    await answerTelegramCallback(callbackQuery.id);
+  }
 
   if (command === "/cancel") {
     await sb.from("telegram_sessions").delete().eq("user_id", userId);
@@ -835,9 +893,16 @@ export async function POST(req: Request) {
   ) => {
     const missing = getQuickMissingFields(nextData, nextPhotos.length);
     await updateSession("quick_preview", nextData, nextPhotos);
-    await sendTelegramMessage(
+    await sendTelegramMessageWithButtons(
       chatId,
-      buildQuickPreview(nextData, nextPhotos.length, missing)
+      buildQuickPreview(nextData, nextPhotos.length, missing),
+      [
+        [
+          { text: "Confirm", callback_data: "quick_confirm" },
+          { text: "Edit", callback_data: "quick_edit" },
+          { text: "Cancel", callback_data: "quick_cancel" },
+        ],
+      ]
     );
   };
 
@@ -858,11 +923,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  if (command === "quick_cancel") {
+    await sb.from("telegram_sessions").delete().eq("user_id", userId);
+    await sendTelegramMessage(chatId, "Cancelled. Send hi to start again.");
+    await broadcast(`${displayName} cancelled a listing flow.`);
+    return NextResponse.json({ ok: true });
+  }
+
+  if (command === "quick_edit") {
+    await sendTelegramMessage(
+      chatId,
+      "Type edit field value. Example: edit price 14 lakh"
+    );
+    return NextResponse.json({ ok: true });
+  }
+
   if (session.step === "quick_preview") {
     const mergedPhotos =
       photoIds.size > 0 ? [...existingPhotos, ...photoIds].slice(0, 8) : existingPhotos;
 
-    if (command === "confirm") {
+    if (command === "confirm" || command === "quick_confirm") {
       const missingText = getQuickMissingFields(data, mergedPhotos.length).filter(
         (field) => field !== "photos"
       );
