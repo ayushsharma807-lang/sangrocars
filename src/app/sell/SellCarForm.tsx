@@ -226,8 +226,7 @@ export default function SellCarForm() {
 
       {formError && <div className="simple-alert simple-alert--error">{formError}</div>}
 
-      {step === 1 && (
-        <section className="sell-step-panel">
+      <section className={`sell-step-panel${step === 1 ? "" : " is-hidden"}`}>
           <h3>Step 1 – Car details</h3>
           <div className="dealer-form__grid">
             <label>
@@ -358,11 +357,9 @@ export default function SellCarForm() {
             <div className="sell-hint">Enter make, model, and city for a suggested price range.</div>
           )}
         </section>
-      )}
 
-      {step === 2 && (
-        <section className="sell-step-panel">
-          <h3>Step 2 – Photos & description</h3>
+      <section className={`sell-step-panel${step === 2 ? "" : " is-hidden"}`}>
+          <h3>Step 2 – Photos</h3>
           <div className="sell-upload" onDrop={handleDrop} onDragOver={(event) => event.preventDefault()}>
             <p>Drag photos here or click to upload</p>
             <input
@@ -400,10 +397,8 @@ export default function SellCarForm() {
             </div>
           )}
         </section>
-      )}
 
-      {step === 3 && (
-        <section className="sell-step-panel">
+      <section className={`sell-step-panel${step === 3 ? "" : " is-hidden"}`}>
           <h3>Step 3 – Contact info</h3>
           <div className="dealer-form__grid">
             <label>
@@ -466,7 +461,6 @@ export default function SellCarForm() {
             Based on similar listings in {location || "your city"}: Expected views per week: {expectedViews}
           </div>
         </section>
-      )}
 
       <input type="hidden" name="description" value={compiledDescription} />
 

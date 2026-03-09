@@ -7239,3 +7239,6 @@ button.simple-link-btn:disabled {
 .sell-step-panel label:has(input[name="dealer_profile"]) {
   display: none !important;
 }
+.sell-step-panel.is-hidden {
+  display: none;
+}
