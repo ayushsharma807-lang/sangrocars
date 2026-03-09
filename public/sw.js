@@ -1,5 +1,5 @@
-const PRECACHE_NAME = "sangrocars-precache-v3";
-const RUNTIME_NAME = "sangrocars-runtime-v3";
+const PRECACHE_NAME = "sangrocars-precache-v4";
+const RUNTIME_NAME = "sangrocars-runtime-v4";
 const OFFLINE_URL = "/offline";
 
 self.addEventListener("install", (event) => {
@@ -60,6 +60,7 @@ self.addEventListener("fetch", (event) => {
   if (
     url.pathname.startsWith("/admin") ||
     url.pathname.startsWith("/dealer-admin") ||
+    url.pathname.startsWith("/sell") ||
     url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/_next/")
   ) {

@@ -191,8 +191,6 @@ export async function POST(req: Request) {
   const sellerPhone = String(form.get("seller_phone") ?? "").trim();
   const sellerType = String(form.get("seller_type") ?? "private").trim();
   const dealerName = String(form.get("dealer_name") ?? "").trim();
-  const dealerLogo = String(form.get("dealer_logo") ?? "").trim();
-  const dealerProfile = String(form.get("dealer_profile") ?? "").trim();
 
   if (!make || !model || !sellerPhone) {
     return NextResponse.redirect(
@@ -207,8 +205,8 @@ export async function POST(req: Request) {
       name: dealerName,
       phone: sellerPhone,
       location: String(form.get("location") ?? "").trim() || null,
-      logoUrl: dealerLogo || null,
-      profileUrl: dealerProfile || null,
+      logoUrl: null,
+      profileUrl: null,
     });
   }
 

@@ -7164,3 +7164,8 @@ button.simple-link-btn:disabled {
 .sell-otp__error {
   display: none !important;
 }
+
+.sell-step-panel label:has(input[name="dealer_logo"]),
+.sell-step-panel label:has(input[name="dealer_profile"]) {
+  display: none !important;
+}

@@ -49,8 +49,6 @@ export default function SellCarForm() {
 
   const [sellerType, setSellerType] = useState("private");
   const [dealerName, setDealerName] = useState("");
-  const [dealerLogo, setDealerLogo] = useState("");
-  const [dealerProfile, setDealerProfile] = useState("");
 
   const [sellerName, setSellerName] = useState("");
   const [sellerPhone, setSellerPhone] = useState("");
@@ -142,7 +140,6 @@ export default function SellCarForm() {
     `Accident history: ${accidentHistory}`,
     sellerType === "dealer" ? `Seller type: Dealer` : `Seller type: Private seller`,
     sellerType === "dealer" && dealerName ? `Dealership: ${dealerName}` : null,
-    sellerType === "dealer" && dealerProfile ? `Dealer profile: ${dealerProfile}` : null,
     notes ? `Notes: ${notes}` : null,
   ]
     .filter(Boolean)
@@ -511,22 +508,6 @@ export default function SellCarForm() {
                     name="dealer_name"
                     value={dealerName}
                     onChange={(event) => setDealerName(event.target.value)}
-                  />
-                </label>
-                <label>
-                  Dealer logo URL
-                  <input
-                    name="dealer_logo"
-                    value={dealerLogo}
-                    onChange={(event) => setDealerLogo(event.target.value)}
-                  />
-                </label>
-                <label>
-                  Dealer profile link
-                  <input
-                    name="dealer_profile"
-                    value={dealerProfile}
-                    onChange={(event) => setDealerProfile(event.target.value)}
                   />
                 </label>
               </>
