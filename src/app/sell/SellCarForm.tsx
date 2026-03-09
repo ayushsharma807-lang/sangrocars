@@ -47,7 +47,6 @@ export default function SellCarForm() {
   const [sellerName, setSellerName] = useState("");
   const [sellerPhone, setSellerPhone] = useState("");
   const [sellerEmail, setSellerEmail] = useState("");
-  const [showPreview, setShowPreview] = useState(false);
 
   const modelOptions = useMemo(() => getModelOptions(make), [make]);
   const variantOptions = useMemo(() => getVariantOptions(model), [model]);
@@ -466,42 +465,6 @@ export default function SellCarForm() {
           <div className="sell-hint">
             Based on similar listings in {location || "your city"}: Expected views per week: {expectedViews}
           </div>
-          <label className="sell-check">
-            <input type="checkbox" /> Boost your listing (Featured for 7 days • ₹299)
-          </label>
-          <div className="sell-preview-actions">
-            <button
-              type="button"
-              className="simple-button simple-button--secondary"
-              onClick={() => setShowPreview((prev) => !prev)}
-            >
-              {showPreview ? "Hide preview" : "Preview listing"}
-            </button>
-          </div>
-          {showPreview && (
-            <div className="sell-preview">
-              <h4>Preview</h4>
-              <div className="sell-preview__card">
-                {photoPreviews[0] ? (
-                  <img src={photoPreviews[0]} alt="Preview" />
-                ) : (
-                  <div className="sell-preview__placeholder">No photos yet</div>
-                )}
-                <div>
-                  <h3>{formattedTitle || "Your car"}</h3>
-                  <p>{location || "Location"}</p>
-                  <strong>
-                    {(() => {
-                      const parsedPrice = parseIndianMoney(price);
-                      return parsedPrice
-                        ? `₹${parsedPrice.toLocaleString("en-IN")}`
-                        : "Price";
-                    })()}
-                  </strong>
-                </div>
-              </div>
-            </div>
-          )}
         </section>
       )}
 
