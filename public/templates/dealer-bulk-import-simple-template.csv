@@ -1,0 +1,4 @@
+make,model,year,price,km,fuel,transmission,location,image_key
+Honda,City,2022,1500000,20000,Petrol,Automatic,Jalandhar,HONDA-CITY-01
+Hyundai,Creta,2021,1250000,35000,Diesel,Manual,Ludhiana,CRETA-02
+Toyota,Fortuner,2023,4200000,12000,Diesel,Automatic,Chandigarh,FORTUNER-03

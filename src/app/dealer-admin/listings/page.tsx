@@ -78,7 +78,11 @@ export default async function DealerListingsPage({
           </p>
           <p>
             <Link className="link" href="/templates/dealer-bulk-import-template.csv">
-              Download sample CSV template
+              Download full CSV template
+            </Link>
+            {" · "}
+            <Link className="link" href="/templates/dealer-bulk-import-simple-template.csv">
+              Download simple CSV template
             </Link>
           </p>
           <form
