@@ -7158,3 +7158,9 @@ button.simple-link-btn:disabled {
     bottom: 12px;
   }
 }
+.sell-otp,
+.sell-otp__row,
+.sell-otp__message,
+.sell-otp__error {
+  display: none !important;
+}
