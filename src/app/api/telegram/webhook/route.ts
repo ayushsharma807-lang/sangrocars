@@ -289,6 +289,19 @@ const FIELD_LABELS: Record<string, string> = {
   condition: "Condition",
 };
 
+const QUICK_EDIT_FIELDS = [
+  "price",
+  "location",
+  "km",
+  "fuel",
+  "transmission",
+  "year",
+  "model",
+  "variant",
+  "color",
+  "phone",
+] as const;
+
 const formatPrice = (value: unknown) => {
   const num = typeof value === "number" ? value : null;
   return num ? `₹${num.toLocaleString("en-IN")}` : null;
@@ -374,6 +387,29 @@ const buildQuickPreview = (
 
   return lines.join("\n");
 };
+
+const buildQuickEditButtons = () => [
+  [
+    { text: "Price", callback_data: "quick_edit_price" },
+    { text: "City", callback_data: "quick_edit_location" },
+    { text: "KM", callback_data: "quick_edit_km" },
+  ],
+  [
+    { text: "Fuel", callback_data: "quick_edit_fuel" },
+    { text: "Transmission", callback_data: "quick_edit_transmission" },
+    { text: "Year", callback_data: "quick_edit_year" },
+  ],
+  [
+    { text: "Model", callback_data: "quick_edit_model" },
+    { text: "Variant", callback_data: "quick_edit_variant" },
+    { text: "Color", callback_data: "quick_edit_color" },
+  ],
+  [
+    { text: "Phone", callback_data: "quick_edit_phone" },
+    { text: "Back", callback_data: "quick_edit_back" },
+    { text: "Cancel", callback_data: "quick_cancel" },
+  ],
+];
 
 const getQuickMissingFields = (
   data: Record<string, unknown>,
@@ -931,11 +967,37 @@ export async function POST(req: Request) {
   }
 
   if (command === "quick_edit") {
-    await sendTelegramMessage(
+    await sendTelegramMessageWithButtons(
       chatId,
-      "Type edit field value. Example: edit price 14 lakh"
+      "Choose which field you want to edit.",
+      buildQuickEditButtons()
     );
     return NextResponse.json({ ok: true });
+  }
+
+  if (command === "quick_edit_back") {
+    await sendQuickPreview(data, existingPhotos);
+    return NextResponse.json({ ok: true });
+  }
+
+  if (command.startsWith("quick_edit_")) {
+    const field = command.replace("quick_edit_", "").trim();
+    if (
+      field &&
+      field !== "back" &&
+      QUICK_EDIT_FIELDS.includes(field as (typeof QUICK_EDIT_FIELDS)[number])
+    ) {
+      const nextData = {
+        ...data,
+        quick_edit_field: field,
+      };
+      await updateSession("quick_edit_value", nextData, existingPhotos);
+      await sendTelegramMessage(
+        chatId,
+        `Send new ${FIELD_LABELS[field] ?? field}.`
+      );
+      return NextResponse.json({ ok: true });
+    }
   }
 
   if (session.step === "quick_preview") {
@@ -1080,6 +1142,42 @@ export async function POST(req: Request) {
     }
 
     await finalizeListing(mergedPhotos);
+    return NextResponse.json({ ok: true });
+  }
+
+  if (session.step === "quick_edit_value") {
+    const editField = typeof data.quick_edit_field === "string" ? data.quick_edit_field : null;
+    const mergedPhotos =
+      photoIds.size > 0 ? [...existingPhotos, ...photoIds].slice(0, 8) : existingPhotos;
+
+    if (!editField) {
+      await sendQuickPreview(data, mergedPhotos);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (!trimmedText) {
+      await sendTelegramMessage(
+        chatId,
+        `Send new ${FIELD_LABELS[editField] ?? editField}.`
+      );
+      return NextResponse.json({ ok: true });
+    }
+
+    const parsedValue = parseFieldValue(editField, trimmedText);
+    if (parsedValue === null || parsedValue === "") {
+      await sendTelegramMessage(
+        chatId,
+        `Could not understand ${FIELD_LABELS[editField] ?? editField}. Please try again.`
+      );
+      return NextResponse.json({ ok: true });
+    }
+
+    const nextData = {
+      ...data,
+      [editField]: parsedValue,
+    };
+    delete nextData.quick_edit_field;
+    await sendQuickPreview(nextData, mergedPhotos);
     return NextResponse.json({ ok: true });
   }
 
