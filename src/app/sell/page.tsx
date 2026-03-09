@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SellCarForm from "./SellCarForm";
+import SellSubmittedPopup from "./SellSubmittedPopup";
 
 const errorText = {
   missing_fields: "Please fill required fields (make, model, and phone).",
@@ -14,11 +15,12 @@ const statusText = {
 export default async function SellCarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; status?: string }>;
+  searchParams: Promise<{ error?: string; status?: string; id?: string }>;
 }) {
   const params = await searchParams;
   const errorKey = params.error as keyof typeof errorText | undefined;
   const statusKey = params.status as keyof typeof statusText | undefined;
+  const listingId = typeof params.id === "string" ? params.id : undefined;
 
   return (
     <main className="simple-page sell-page">
@@ -46,6 +48,7 @@ export default async function SellCarPage({
         {statusKey && (
           <div className="simple-alert simple-alert--success">{statusText[statusKey]}</div>
         )}
+        {statusKey === "submitted" && <SellSubmittedPopup listingId={listingId} />}
 
         <SellCarForm />
       </section>

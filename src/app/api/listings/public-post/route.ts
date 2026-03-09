@@ -8,6 +8,7 @@ import { phoneVariants } from "@/lib/phone";
 import { notifyPendingListing } from "@/lib/adminNotifications";
 import { markListingPendingApproval } from "@/lib/listingApproval";
 import { parseIndianMoney } from "@/lib/parseIndianMoney";
+import { sendSellerApprovalPendingEmail } from "@/lib/transactionalEmail";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
@@ -18,6 +19,11 @@ const parseNumber = (value: FormDataEntryValue | null) => {
 const parsePrice = (value: FormDataEntryValue | null) => {
   if (!value) return null;
   return parseIndianMoney(String(value));
+};
+
+const formatPrice = (value: number | null) => {
+  if (!value) return null;
+  return `₹${value.toLocaleString("en-IN")}`;
 };
 
 const parsePhotos = (value: FormDataEntryValue | null) => {
@@ -276,6 +282,15 @@ export async function POST(req: Request) {
     id: data.id,
     title: title || "New listing",
     source: "website",
+  });
+
+  await sendSellerApprovalPendingEmail({
+    to: String(form.get("seller_email") ?? "").trim() || null,
+    sellerName: String(form.get("seller_name") ?? "").trim() || null,
+    listingTitle: title || "Your car listing",
+    location: payload.location,
+    priceText: formatPrice(payload.price),
+    listingId: data.id,
   });
 
   return NextResponse.redirect(toRedirectUrl(req, `/sell?status=submitted&id=${data.id}`), {
