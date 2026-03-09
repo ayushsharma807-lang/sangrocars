@@ -14,6 +14,7 @@ export default function DealerNav({ dealerId, dealerName }: Props) {
       <div className="dealer-nav__links">
         <Link href="/dealer-admin">Dashboard</Link>
         <Link href="/dealer-admin/listings">Listings</Link>
+        <Link href="/dealer-admin/bulk-upload">Bulk Upload</Link>
         <Link href="/dealer-admin/whatsapp">WhatsApp Post</Link>
         <Link href="/dealer-admin/leads">Leads</Link>
         <Link href="/dealer-admin/profile">Profile</Link>

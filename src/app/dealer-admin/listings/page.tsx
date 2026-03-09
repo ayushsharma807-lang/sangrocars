@@ -50,6 +50,9 @@ export default async function DealerListingsPage({
                   auth.dealer.sitemap_url
               )}
             />
+            <Link className="btn btn--outline" href="/dealer-admin/bulk-upload">
+              Bulk upload from phone
+            </Link>
             <Link className="btn btn--outline" href="/dealer-admin/whatsapp">
               WhatsApp post
             </Link>

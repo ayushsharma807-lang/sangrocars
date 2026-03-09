@@ -7242,3 +7242,94 @@ button.simple-link-btn:disabled {
 .sell-step-panel.is-hidden {
   display: none;
 }
+
+.dealer-bulk-mobile {
+  display: grid;
+  gap: 20px;
+}
+
+.dealer-bulk-mobile__intro,
+.dealer-bulk-mobile__card,
+.dealer-bulk-mobile__results {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  background: rgba(4, 10, 24, 0.88);
+  padding: 18px;
+}
+
+.dealer-bulk-mobile__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.dealer-bulk-mobile__stats span {
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.06);
+}
+
+.dealer-bulk-mobile__list {
+  display: grid;
+  gap: 16px;
+}
+
+.dealer-bulk-mobile__card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dealer-bulk-mobile__grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dealer-bulk-mobile__full {
+  grid-column: 1 / -1;
+}
+
+.dealer-bulk-mobile__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dealer-bulk-mobile__results ul {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 10px;
+}
+
+.dealer-bulk-mobile__results li {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+}
+
+.dealer-bulk-mobile__results li.is-ok {
+  background: rgba(24, 128, 84, 0.16);
+}
+
+.dealer-bulk-mobile__results li.is-error {
+  background: rgba(180, 48, 64, 0.18);
+}
+
+@media (max-width: 720px) {
+  .dealer-bulk-mobile__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dealer-bulk-mobile__card-head,
+  .dealer-bulk-mobile__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
