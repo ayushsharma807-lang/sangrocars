@@ -104,16 +104,33 @@ export default function ListingWizard({ action, submitLabel }: Props) {
         method: "POST",
         body: formData,
         credentials: "same-origin",
+        headers: {
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
       });
 
+      const contentType = response.headers.get("content-type") ?? "";
+      const json = contentType.includes("application/json")
+        ? await response.json().catch(() => null)
+        : null;
+
       if (!response.ok) {
-        setError("Could not save listing. Please try again.");
+        setError(
+          typeof json?.error === "string" && json.error
+            ? json.error
+            : "Could not save listing. Please try again."
+        );
         setIsSubmitting(false);
         return;
       }
 
       if (typeof window !== "undefined") {
-        window.location.assign(response.url);
+        const redirectTo =
+          typeof json?.redirectTo === "string" && json.redirectTo
+            ? json.redirectTo
+            : response.url;
+        window.location.assign(redirectTo);
       }
     } catch {
       setError("Could not save listing. Please try again.");
