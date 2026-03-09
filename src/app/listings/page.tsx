@@ -1277,9 +1277,16 @@ export default async function Home({
                       : `/listings?${buildQuery(params, {
                           compare: nextCompareIds.length ? nextCompareIds.join(",") : null,
                         })}`;
-                  const listingHref = compareIds.length
-                    ? `/listing/${listing.id}?compare=${compareIds.join(",")}`
-                    : `/listing/${listing.id}`;
+                  const listingHref =
+                    compareIds.length > 0 && !isCompared
+                      ? compareHref
+                      : compareIds.length
+                        ? `/listing/${listing.id}?compare=${compareIds.join(",")}`
+                        : `/listing/${listing.id}`;
+                  const primaryActionLabel =
+                    compareIds.length > 0 && !isCompared
+                      ? "Compare with selected car"
+                      : "View details";
                   return (
                     <article className="simple-listing cw-listing" key={listing.id}>
                       <div className="simple-listing__media cw-listing__media">
@@ -1413,7 +1420,7 @@ export default async function Home({
                             className="simple-button simple-button--full"
                             href={listingHref}
                           >
-                            View details
+                            {primaryActionLabel}
                           </Link>
                           {canAddToCompare ? (
                             <Link className="simple-link-btn" href={compareHref}>
