@@ -62,8 +62,9 @@ export default function ListingWizard({ action, submitLabel }: Props) {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState<WizardState>(defaultState);
+  const [selectedUploadCount, setSelectedUploadCount] = useState(0);
 
-  const photoCount = useMemo(
+  const manualPhotoCount = useMemo(
     () =>
       form.photo_urls
         .split(/[\n,|]/)
@@ -71,6 +72,7 @@ export default function ListingWizard({ action, submitLabel }: Props) {
         .filter(Boolean).length,
     [form.photo_urls]
   );
+  const totalPhotoCount = manualPhotoCount + selectedUploadCount;
 
   const updateField = (key: keyof WizardState, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -100,6 +102,27 @@ export default function ListingWizard({ action, submitLabel }: Props) {
 
     try {
       const formData = new FormData(event.currentTarget);
+      const uploadedFiles = formData.getAll("photo_files").filter((entry) => {
+        return typeof entry !== "string" && entry.size > 0;
+      });
+      const manualPhotos = form.photo_urls
+        .split(/[\n,|]/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+      const totalPhotos = manualPhotos.length + uploadedFiles.length;
+
+      if (totalPhotos < 1) {
+        setError("Please add at least 1 photo.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (totalPhotos > 8) {
+        setError("You can upload maximum 8 photos.");
+        setIsSubmitting(false);
+        return;
+      }
+
       const response = await fetch(action, {
         method: "POST",
         body: formData,
@@ -347,20 +370,15 @@ export default function ListingWizard({ action, submitLabel }: Props) {
               accept="image/*"
               capture="environment"
               multiple
+              onChange={(event) =>
+                setSelectedUploadCount(event.currentTarget.files?.length ?? 0)
+              }
             />
             <span className="dealer-form__hint">
-              Tap to open gallery or camera on mobile.
+              Tap to open gallery or camera on mobile. Minimum 1 photo, maximum 8.
             </span>
           </label>
           <div className="dealer-wizard__grid">
-            <label>
-              360 tour link (optional)
-              <input
-                value={form.tour_360_url}
-                onChange={(event) => updateField("tour_360_url", event.target.value)}
-                placeholder="YouTube / Meta 360 link"
-              />
-            </label>
             <label>
               Walkthrough video link
               <input
@@ -369,30 +387,6 @@ export default function ListingWizard({ action, submitLabel }: Props) {
                   updateField("walkthrough_video_url", event.target.value)
                 }
                 placeholder="YouTube / MP4 link"
-              />
-            </label>
-            <label>
-              Interior VR link
-              <input
-                value={form.interior_vr_url}
-                onChange={(event) => updateField("interior_vr_url", event.target.value)}
-                placeholder="VR headset tour link"
-              />
-            </label>
-            <label>
-              AR model (.glb)
-              <input
-                value={form.ar_model_url}
-                onChange={(event) => updateField("ar_model_url", event.target.value)}
-                placeholder="https://.../model.glb"
-              />
-            </label>
-            <label>
-              AR iOS model (.usdz)
-              <input
-                value={form.ar_ios_model_url}
-                onChange={(event) => updateField("ar_ios_model_url", event.target.value)}
-                placeholder="https://.../model.usdz"
               />
             </label>
           </div>
@@ -409,7 +403,7 @@ export default function ListingWizard({ action, submitLabel }: Props) {
               <strong>Location:</strong> {form.location || "Not set"}
             </p>
             <p>
-              <strong>Photos:</strong> {photoCount}
+              <strong>Photos:</strong> {totalPhotoCount}
             </p>
           </div>
         </div>
