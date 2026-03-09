@@ -3,6 +3,7 @@ import { supabaseServer } from "@/lib/supabase";
 import { ensureListingPhotoBucket, LISTING_PHOTO_BUCKET } from "@/lib/listingPhotoBucket";
 import { buildPrivateSellerDescription } from "@/lib/privateSeller";
 import { notifyPendingListing } from "@/lib/adminNotifications";
+import { markListingPendingApproval } from "@/lib/listingApproval";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
 const TELEGRAM_BROADCAST_CHAT_ID =
@@ -328,7 +329,7 @@ export async function POST(req: Request) {
       source: "individual",
       dealer_id: null,
       type: "used",
-      status: "pending",
+      status: "sold",
       make: data.make ?? null,
       model: data.model ?? null,
       variant: data.variant ?? null,
@@ -338,7 +339,7 @@ export async function POST(req: Request) {
       fuel: data.fuel ?? null,
       transmission: data.transmission ?? null,
       location: data.location ?? null,
-      description,
+      description: markListingPendingApproval(description),
       photo_urls: photoUrls,
     };
 

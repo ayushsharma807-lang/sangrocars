@@ -6,6 +6,7 @@ import { buildListingExperienceDescription } from "@/lib/listingExperience";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
 import { notifyPendingListing } from "@/lib/adminNotifications";
 import { parseIndianMoney } from "@/lib/parseIndianMoney";
+import { markListingPendingApproval } from "@/lib/listingApproval";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
@@ -88,8 +89,8 @@ export async function POST(req: Request) {
       transmission: String(form.get("transmission") ?? "").trim() || null,
       price: parsePrice(form.get("price")),
       location: String(form.get("location") ?? "").trim() || null,
-      description,
-      status: "pending",
+      description: markListingPendingApproval(description),
+      status: "sold",
       photo_urls: photoUrls,
     };
 

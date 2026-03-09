@@ -5,8 +5,8 @@ import { buildListingExperienceDescription } from "@/lib/listingExperience";
 import { uploadListingPhotoFiles } from "@/lib/uploadListingPhotos";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
 import { phoneVariants } from "@/lib/phone";
-import { verifyPhoneCookie } from "@/lib/phoneVerification";
 import { notifyPendingListing } from "@/lib/adminNotifications";
+import { markListingPendingApproval } from "@/lib/listingApproval";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
@@ -195,13 +195,6 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!verifyPhoneCookie(req, sellerPhone)) {
-    return NextResponse.redirect(
-      toRedirectUrl(req, "/sell?error=phone_unverified"),
-      { status: 303 }
-    );
-  }
-
   let dealerId: string | null = null;
   if (sellerType.toLowerCase() === "dealer" && dealerName) {
     dealerId = await upsertDealer({
@@ -245,7 +238,7 @@ export async function POST(req: Request) {
     source: DEFAULT_LISTING_SOURCE,
     dealer_id: dealerId,
     type: toType(form.get("type")),
-    status: "pending",
+    status: "sold",
     make,
     model,
     variant: String(form.get("variant") ?? "").trim() || null,
@@ -255,7 +248,7 @@ export async function POST(req: Request) {
     fuel: String(form.get("fuel") ?? "").trim() || null,
     transmission: String(form.get("transmission") ?? "").trim() || null,
     location: String(form.get("location") ?? "").trim() || null,
-    description,
+    description: markListingPendingApproval(description),
     photo_urls: photoUrls,
   };
 

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/adminAuth";
+import { clearListingPendingApproval } from "@/lib/listingApproval";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
@@ -12,7 +13,7 @@ const parseNumber = (value: FormDataEntryValue | null) => {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   const auth = await requireAdmin();
   if (!auth.ok) {
@@ -20,15 +21,24 @@ export async function POST(
   }
 
   const form = await req.formData();
-  const { id } = await params;
+  const { id } = params;
   const returnPath = String(form.get("return") ?? "/admin/listings");
   const contactOnly = String(form.get("contact_for_price") ?? "") === "on";
   const price = contactOnly ? null : parseNumber(form.get("price"));
 
   const sb = supabaseServer();
+  const { data: listing } = await sb
+    .from("listings")
+    .select("description")
+    .eq("id", id)
+    .single();
   const { error } = await sb
     .from("listings")
-    .update({ status: "available", price })
+    .update({
+      status: "available",
+      price,
+      description: clearListingPendingApproval(listing?.description),
+    })
     .eq("id", id);
 
   if (error) {

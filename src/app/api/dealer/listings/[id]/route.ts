@@ -3,6 +3,7 @@ import { supabaseServer } from "@/lib/supabase";
 import { requireDealer } from "@/lib/dealerAuth";
 import { uploadListingPhotoFiles } from "@/lib/uploadListingPhotos";
 import { buildListingExperienceDescription } from "@/lib/listingExperience";
+import { markListingPendingApproval } from "@/lib/listingApproval";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
@@ -23,9 +24,9 @@ const mergePhotoUrls = (manualUrls: string[], uploadedUrls: string[]) =>
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
+  const { id } = params;
   const auth = await requireDealer();
   if (!auth.ok) {
     return NextResponse.redirect(new URL("/dealer-admin/login", req.url));
@@ -61,8 +62,8 @@ export async function POST(
     transmission: String(form.get("transmission") ?? "").trim() || null,
     price: parseNumber(form.get("price")),
     location: String(form.get("location") ?? "").trim() || null,
-    description,
-    status: "pending",
+    description: markListingPendingApproval(description),
+    status: "sold",
     photo_urls: photoUrls,
   };
 

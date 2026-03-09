@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/adminAuth";
+import {
+  clearListingPendingApproval,
+  isListingPendingApproval,
+} from "@/lib/listingApproval";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
@@ -29,11 +33,39 @@ export async function POST(req: Request) {
   }
 
   const sb = supabaseServer();
-  const { error } = await sb
+  const { data: rows, error: fetchError } = await sb
     .from("listings")
-    .update({ status: "available", price })
-    .in("id", ids)
-    .eq("status", "pending");
+    .select("id, description, status")
+    .in("id", ids);
+
+  if (fetchError) {
+    const url = new URL(returnPath, req.url);
+    url.searchParams.set("error", encodeURIComponent("Bulk approval failed."));
+    return NextResponse.redirect(url);
+  }
+
+  const pendingRows = ((rows ?? []) as { id: string; description?: string | null; status?: string | null }[])
+    .filter((row) => isListingPendingApproval(row));
+
+  if (!pendingRows.length) {
+    const url = new URL(returnPath, req.url);
+    url.searchParams.set("error", encodeURIComponent("No pending listings selected."));
+    return NextResponse.redirect(url);
+  }
+
+  const updates = await Promise.all(
+    pendingRows.map((row) =>
+      sb
+        .from("listings")
+        .update({
+          status: "available",
+          price,
+          description: clearListingPendingApproval(row.description),
+        })
+        .eq("id", row.id)
+    )
+  );
+  const error = updates.find((result) => result.error)?.error;
 
   if (error) {
     const url = new URL(returnPath, req.url);

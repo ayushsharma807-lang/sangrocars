@@ -11,6 +11,7 @@ import SaveToGarageButton from "@/app/components/SaveToGarageButton";
 import RecentViewTracker from "@/app/components/RecentViewTracker";
 import { getPrimaryPhoto, normalizePhotoUrls } from "@/lib/photoUrls";
 import { dealerSlug } from "@/lib/dealerSlug";
+import { isListingPendingApproval } from "@/lib/listingApproval";
 
 type Listing = {
   id: string;
@@ -314,18 +315,19 @@ export default async function ListingPage({
   }
 
   const listing = data as Listing;
-  if (listing.status && listing.status !== "available") {
+  const isPendingApproval = isListingPendingApproval(listing);
+  if ((listing.status && listing.status !== "available") || isPendingApproval) {
     return (
       <main className="simple-page simple-detail-page">
         <section className="simple-shell">
           <div className="simple-header">
             <h2>
-              {listing.status === "pending"
+              {isPendingApproval
                 ? "Listing awaiting approval"
                 : "Listing not available"}
             </h2>
             <p>
-              {listing.status === "pending"
+              {isPendingApproval
                 ? "Your car is submitted and will go live after admin approval."
                 : "This listing is not available right now."}
             </p>

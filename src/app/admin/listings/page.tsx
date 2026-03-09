@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/adminAuth";
 import { parsePrivateSellerDescription } from "@/lib/privateSeller";
+import { isListingPendingApproval } from "@/lib/listingApproval";
 
 type ListingRow = {
   id: string;
@@ -109,7 +110,9 @@ export default async function AdminListingsPage({
       `make.ilike.%${filters.q}%,model.ilike.%${filters.q}%,variant.ilike.%${filters.q}%,location.ilike.%${filters.q}%`
     );
   }
-  if (filters.status) query = query.eq("status", filters.status);
+  if (filters.status && filters.status !== "pending") {
+    query = query.eq("status", filters.status);
+  }
   if (filters.type) query = query.eq("type", filters.type);
   if (filters.dealerId) query = query.eq("dealer_id", filters.dealerId);
   if (filters.owner === "dealer") query = query.not("dealer_id", "is", null);
@@ -127,21 +130,28 @@ export default async function AdminListingsPage({
       break;
   }
 
-  const [{ data, error }, pendingCountResponse] = await Promise.all([
+  const [{ data, error }, pendingRowsResponse] = await Promise.all([
     query.limit(2000),
     sb
       .from("listings")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending"),
+      .select("id, status, description")
+      .order("created_at", { ascending: false })
+      .limit(2000),
   ]);
   const listings = (data ?? []) as ListingRow[];
-  const pendingCount = pendingCountResponse.count ?? 0;
-  const pendingVisibleCount = listings.filter(
-    (listing) => listing.status === "pending"
+  const pendingCount = ((pendingRowsResponse.data ?? []) as ListingRow[]).filter((listing) =>
+    isListingPendingApproval(listing)
+  ).length;
+  const visibleListings =
+    filters.status === "pending"
+      ? listings.filter((listing) => isListingPendingApproval(listing))
+      : listings;
+  const pendingVisibleCount = visibleListings.filter((listing) =>
+    isListingPendingApproval(listing)
   ).length;
 
   const dealerIds = Array.from(
-    new Set(listings.map((listing) => listing.dealer_id).filter(Boolean))
+    new Set(visibleListings.map((listing) => listing.dealer_id).filter(Boolean))
   ) as string[];
   const dealerMap = new Map<string, string>();
   if (dealerIds.length > 0) {
@@ -327,14 +337,14 @@ export default async function AdminListingsPage({
                 </tr>
               </thead>
               <tbody>
-                {listings.length === 0 ? (
+                {visibleListings.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="empty">
                       No listings found.
                     </td>
                   </tr>
                 ) : (
-                  listings.map((listing) => {
+                  visibleListings.map((listing) => {
                     const title = [
                       listing.year ?? undefined,
                       toTitle(listing.make),
@@ -350,7 +360,7 @@ export default async function AdminListingsPage({
                       ? dealerMap.get(listing.dealer_id) ?? "Dealer"
                       : privateSeller.seller.name || "Private seller";
                     const ownerType = listing.dealer_id ? "Dealer" : "Private";
-                    const isPending = listing.status === "pending";
+                    const isPending = isListingPendingApproval(listing);
 
                     return (
                       <tr key={listing.id}>
@@ -374,7 +384,9 @@ export default async function AdminListingsPage({
                         </td>
                         <td>{toTitle(listing.type)}</td>
                         <td>
-                          <span className="status-badge">{toTitle(listing.status)}</span>
+                          <span className="status-badge">
+                            {isPending ? "Pending" : toTitle(listing.status)}
+                          </span>
                         </td>
                         <td>{formatPrice(listing.price)}</td>
                         <td>{listing.location || "—"}</td>
