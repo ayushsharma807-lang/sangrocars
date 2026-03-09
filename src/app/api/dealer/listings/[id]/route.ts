@@ -24,9 +24,9 @@ const mergePhotoUrls = (manualUrls: string[], uploadedUrls: string[]) =>
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
   const auth = await requireDealer();
   if (!auth.ok) {
     return NextResponse.redirect(new URL("/dealer-admin/login", req.url));
