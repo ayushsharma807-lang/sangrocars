@@ -1,5 +1,5 @@
-const PRECACHE_NAME = "sangrocars-precache-v5";
-const RUNTIME_NAME = "sangrocars-runtime-v5";
+const PRECACHE_NAME = "sangrocars-precache-v6";
+const RUNTIME_NAME = "sangrocars-runtime-v6";
 const OFFLINE_URL = "/offline";
 
 self.addEventListener("install", (event) => {

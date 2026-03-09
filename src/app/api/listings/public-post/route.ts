@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { buildPrivateSellerDescription } from "@/lib/privateSeller";
-import { buildListingExperienceDescription } from "@/lib/listingExperience";
 import { uploadListingPhotoFiles } from "@/lib/uploadListingPhotos";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
 import { phoneVariants } from "@/lib/phone";
@@ -224,16 +223,10 @@ export async function POST(req: Request) {
     },
     String(form.get("description") ?? "").trim()
   );
-  const description = buildListingExperienceDescription(
-    {
-      tour360Url: String(form.get("tour_360_url") ?? "").trim(),
-      walkthroughVideoUrl: String(form.get("walkthrough_video_url") ?? "").trim(),
-      interiorVrUrl: String(form.get("interior_vr_url") ?? "").trim(),
-      arModelUrl: String(form.get("ar_model_url") ?? "").trim(),
-      arIosModelUrl: String(form.get("ar_ios_model_url") ?? "").trim(),
-    },
-    sellerDescription
-  );
+  const walkthroughVideoUrl = String(form.get("walkthrough_video_url") ?? "").trim();
+  const description = walkthroughVideoUrl
+    ? `${sellerDescription}\nWalkthrough video: ${walkthroughVideoUrl}`
+    : sellerDescription;
 
   const uploaded = await uploadListingPhotoFiles(
     form.getAll("photo_files"),

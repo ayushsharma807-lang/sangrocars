@@ -69,6 +69,37 @@ export default function SellCarForm() {
     };
   }, [photoFiles]);
 
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+
+    const staleTextLabels = new Set([
+      "Dealer logo URL",
+      "Dealer profile link",
+    ]);
+
+    form.querySelectorAll("label").forEach((label) => {
+      const text = label.textContent?.trim() ?? "";
+      if (staleTextLabels.has(text)) {
+        (label as HTMLElement).style.display = "none";
+      }
+    });
+
+    form.querySelectorAll("button").forEach((button) => {
+      const text = button.textContent?.trim().toLowerCase() ?? "";
+      if (text === "send otp" || text === "verify otp") {
+        (button as HTMLButtonElement).style.display = "none";
+      }
+    });
+
+    form.querySelectorAll("input").forEach((input) => {
+      const placeholder = input.getAttribute("placeholder")?.trim().toLowerCase() ?? "";
+      if (placeholder === "enter otp") {
+        (input as HTMLInputElement).style.display = "none";
+      }
+    });
+  }, []);
+
   const updateFiles = (files: File[]) => {
     setPhotoFiles(files);
     const dt = new DataTransfer();
@@ -463,24 +494,6 @@ export default function SellCarForm() {
             >
               Polish description
             </button>
-          </div>
-          <div className="dealer-form__grid">
-            <label>
-              360 tour URL (optional)
-              <input name="tour_360_url" placeholder="YouTube 360 or virtual tour URL" />
-            </label>
-            <label>
-              AR model URL (.glb, optional)
-              <input name="ar_model_url" placeholder="https://.../model.glb" />
-            </label>
-            <label>
-              AR iOS model URL (.usdz, optional)
-              <input name="ar_ios_model_url" placeholder="https://.../model.usdz" />
-            </label>
-            <label>
-              Interior VR URL (optional)
-              <input name="interior_vr_url" placeholder="VR headset tour URL" />
-            </label>
           </div>
         </section>
       )}
