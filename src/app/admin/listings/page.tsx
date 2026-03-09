@@ -324,7 +324,11 @@ export default async function AdminListingsPage({
               <thead>
                 <tr>
                   <th>
-                    <BulkSelectAll formId={bulkFormId} name="ids" />
+                    <BulkSelectAll
+                      formId={bulkFormId}
+                      name="ids"
+                      disabled={pendingVisibleCount === 0}
+                    />
                   </th>
                   <th>Car</th>
                   <th>Owner</th>
@@ -365,17 +369,21 @@ export default async function AdminListingsPage({
                     return (
                       <tr key={listing.id}>
                         <td>
-                          <input
-                            type="checkbox"
-                            name="ids"
-                            value={listing.id}
-                            disabled={!isPending}
-                            title={
-                              isPending
-                                ? "Select listing"
-                                : "Only pending listings can be selected"
-                            }
-                          />
+                          {isPending ? (
+                            <input
+                              type="checkbox"
+                              name="ids"
+                              value={listing.id}
+                              title="Select pending listing"
+                            />
+                          ) : (
+                            <span
+                              className="notification-meta"
+                              title="Only pending listings can be selected"
+                            >
+                              —
+                            </span>
+                          )}
                         </td>
                         <td>{title || "Listing"}</td>
                         <td>

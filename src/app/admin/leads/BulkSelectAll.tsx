@@ -5,9 +5,14 @@ import { useEffect, useRef } from "react";
 type Props = {
   formId: string;
   name?: string;
+  disabled?: boolean;
 };
 
-export default function BulkSelectAll({ formId, name = "ids" }: Props) {
+export default function BulkSelectAll({
+  formId,
+  name = "ids",
+  disabled = false,
+}: Props) {
   const checkboxRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -51,10 +56,11 @@ export default function BulkSelectAll({ formId, name = "ids" }: Props) {
   };
 
   return (
-    <input
+      <input
       ref={checkboxRef}
       type="checkbox"
       aria-label="Select all leads"
+      disabled={disabled}
       onChange={(event) => toggleAll(event.target.checked)}
     />
   );
