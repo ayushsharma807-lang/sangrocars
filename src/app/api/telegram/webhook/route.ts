@@ -14,6 +14,8 @@ const TELEGRAM_BROADCAST_CHAT_ID =
 const TELEGRAM_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET ?? "";
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sangrocars.in";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY ?? "";
+const OPENAI_PARSER_MODEL = process.env.OPENAI_PARSER_MODEL ?? "gpt-4o-mini";
 
 const getLargestPhotoId = (photos: Array<{ file_id: string }> = []) =>
   photos.length ? photos[photos.length - 1]?.file_id : null;
@@ -204,6 +206,21 @@ const QUICK_REQUIRED_TEXT_FIELDS = [
   "phone",
 ] as const;
 
+type AiQuickParse = {
+  make?: string | null;
+  model?: string | null;
+  variant?: string | null;
+  year?: number | null;
+  transmission?: string | null;
+  fuel?: string | null;
+  km?: number | null;
+  price?: number | null;
+  location?: string | null;
+  color?: string | null;
+  phone?: string | null;
+  condition?: string | null;
+};
+
 const FIELD_LABELS: Record<string, string> = {
   make: "Make",
   model: "Model",
@@ -244,6 +261,18 @@ const parseKm = (value: string) => {
   if (/\bk\b/i.test(value)) return Math.round(num * 1_000);
   return Math.round(num);
 };
+
+const getQuickParseScore = (data: Record<string, unknown>) =>
+  [
+    data.make,
+    data.model,
+    data.year,
+    data.price,
+    data.km,
+    data.fuel,
+    data.transmission,
+    data.location,
+  ].filter(Boolean).length;
 
 const toText = (value: unknown) =>
   typeof value === "string" && value.trim() ? value.trim() : null;
@@ -338,6 +367,105 @@ const parseFieldValue = (field: string, rawValue: string) => {
   }
 };
 
+const safeJsonParse = (value: string) => {
+  try {
+    return JSON.parse(value) as AiQuickParse;
+  } catch {
+    return null;
+  }
+};
+
+const normalizeAiParse = (raw: AiQuickParse | null): Partial<AiQuickParse> | null => {
+  if (!raw) return null;
+
+  const normalized: Partial<AiQuickParse> = {};
+
+  if (raw.make) normalized.make = titleCase(String(raw.make));
+  if (raw.model) normalized.model = titleCase(String(raw.model));
+  if (raw.variant) normalized.variant = titleCase(String(raw.variant));
+  if (raw.location) normalized.location = titleCase(String(raw.location));
+  if (raw.color) normalized.color = normalizeColor(String(raw.color)) ?? null;
+  if (raw.transmission) {
+    normalized.transmission = normalizeTransmission(String(raw.transmission));
+  }
+  if (raw.fuel) {
+    normalized.fuel = normalizeFuel(String(raw.fuel));
+  }
+  if (raw.condition) {
+    normalized.condition = normalizeCondition(String(raw.condition));
+  }
+
+  const year =
+    typeof raw.year === "number"
+      ? raw.year
+      : Number(String(raw.year ?? "").replace(/[^0-9]/g, ""));
+  if (year >= 1990 && year <= 2100) normalized.year = year;
+
+  const km =
+    typeof raw.km === "number" ? raw.km : parseKm(String(raw.km ?? ""));
+  if (typeof km === "number" && Number.isFinite(km) && km > 0) normalized.km = km;
+
+  const price =
+    typeof raw.price === "number"
+      ? Math.round(raw.price)
+      : parseIndianMoney(String(raw.price ?? ""));
+  if (typeof price === "number" && Number.isFinite(price) && price > 0) {
+    normalized.price = price;
+  }
+
+  const phoneDigits = String(raw.phone ?? "").replace(/\D/g, "");
+  if (phoneDigits.length >= 10) normalized.phone = phoneDigits;
+
+  return normalized;
+};
+
+const parseListingWithAi = async (
+  text: string
+): Promise<Partial<AiQuickParse> | null> => {
+  if (!OPENAI_API_KEY) return null;
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: OPENAI_PARSER_MODEL,
+        temperature: 0,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content:
+              "Extract used car listing details from one user message. Return only valid JSON with keys: make, model, variant, year, transmission, fuel, km, price, location, color, phone, condition. Use null for anything missing. Convert price and km to plain numbers in INR and KM.",
+          },
+          {
+            role: "user",
+            content: text,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      console.log("Telegram AI parser failed:", response.status, await response.text());
+      return null;
+    }
+
+    const payload = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string | null } }>;
+    };
+    const content = payload.choices?.[0]?.message?.content?.trim();
+    if (!content) return null;
+    return normalizeAiParse(safeJsonParse(content));
+  } catch (error) {
+    console.log("Telegram AI parser error:", error);
+    return null;
+  }
+};
+
 const applyEditCommand = (
   commandText: string,
   data: Record<string, unknown>
@@ -384,7 +512,7 @@ const applyEditCommand = (
   };
 };
 
-const mergeQuickParsedData = (
+const mergeQuickParsedData = async (
   existingData: Record<string, unknown>,
   text: string
 ) => {
@@ -423,6 +551,29 @@ const mergeQuickParsedData = (
     nextData.condition = condition;
   }
 
+  const score = getQuickParseScore(nextData);
+  const shouldUseAi =
+    score < 6 ||
+    !nextData.make ||
+    !nextData.model ||
+    !nextData.location ||
+    (!nextData.price && /\b(lakh|lac|cr|k|₹|rs|inr)\b/i.test(text));
+
+  if (shouldUseAi) {
+    const aiParsed = await parseListingWithAi(text);
+    if (aiParsed) {
+      for (const [field, value] of Object.entries(aiParsed)) {
+        if (
+          value !== null &&
+          value !== undefined &&
+          !(typeof value === "string" && !value.trim())
+        ) {
+          nextData[field] = value;
+        }
+      }
+    }
+  }
+
   return nextData;
 };
 
@@ -439,7 +590,10 @@ const shouldUseQuickMode = (text: string) => {
     parsed.location,
   ].filter(Boolean).length;
 
-  return Boolean(parsed.make && parsed.model && score >= 5);
+  return Boolean(
+    (parsed.make && parsed.model && score >= 5) ||
+      (text.trim().split(/\s+/).length >= 5 && /\d/.test(text))
+  );
 };
 
 export async function POST(req: Request) {
@@ -536,7 +690,7 @@ export async function POST(req: Request) {
           ? [...freshSession.photo_file_ids]
           : [];
         const freshData = (freshSession.data ?? {}) as Record<string, unknown>;
-        const nextData = mergeQuickParsedData(freshData, trimmedText);
+        const nextData = await mergeQuickParsedData(freshData, trimmedText);
         if (!nextData.condition) nextData.condition = "Good";
         await sb
           .from("telegram_sessions")
@@ -691,7 +845,7 @@ export async function POST(req: Request) {
     textValue: string,
     seedPhotos: string[] = existingPhotos
   ) => {
-    const nextData = mergeQuickParsedData({}, textValue);
+    const nextData = await mergeQuickParsedData({}, textValue);
     if (!nextData.condition) {
       nextData.condition = "Good";
     }
@@ -749,7 +903,7 @@ export async function POST(req: Request) {
     }
 
     if (trimmedText) {
-      const nextData = mergeQuickParsedData(data, trimmedText);
+      const nextData = await mergeQuickParsedData(data, trimmedText);
       await sendQuickPreview(nextData, mergedPhotos);
       return NextResponse.json({ ok: true });
     }
