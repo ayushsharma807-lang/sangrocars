@@ -1,8 +1,8 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import VoicePostHelper from "./VoicePostHelper";
 import { buildPolishedDescription } from "@/lib/descriptionPolisher";
+import { parseIndianMoney } from "@/lib/parseIndianMoney";
 
 type Props = {
   action: string;
@@ -52,8 +52,8 @@ const defaultState: WizardState = {
 };
 
 const formatPrice = (value: string) => {
-  const num = Number(value);
-  if (!Number.isFinite(num) || num <= 0) return "Price not set";
+  const num = parseIndianMoney(value);
+  if (num == null || num <= 0) return "Price not set";
   return `Rs ${num.toLocaleString("en-IN")}`;
 };
 
@@ -74,18 +74,6 @@ export default function ListingWizard({ action, submitLabel }: Props) {
 
   const updateField = (key: keyof WizardState, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-    if (error) setError("");
-  };
-
-  const applyVoicePatch = (patch: Partial<Record<keyof WizardState, string>>) => {
-    setForm((prev) => {
-      const next = { ...prev };
-      for (const [key, value] of Object.entries(patch)) {
-        if (!value) continue;
-        next[key as keyof WizardState] = value;
-      }
-      return next;
-    });
     if (error) setError("");
   };
 
@@ -172,7 +160,6 @@ export default function ListingWizard({ action, submitLabel }: Props) {
         <div className="dealer-wizard__card">
           <h3>Step 1: Basic info</h3>
           <p>Fill easy basics first.</p>
-          <VoicePostHelper onApply={applyVoicePatch} />
           <div className="dealer-wizard__grid">
             <label>
               Type
@@ -233,11 +220,10 @@ export default function ListingWizard({ action, submitLabel }: Props) {
             <label>
               Price
               <input
-                type="number"
-                inputMode="numeric"
+                type="text"
                 value={form.price}
                 onChange={(event) => updateField("price", event.target.value)}
-                placeholder="e.g., 950000"
+                placeholder="e.g., 1.3 lakh"
               />
             </label>
             <label>

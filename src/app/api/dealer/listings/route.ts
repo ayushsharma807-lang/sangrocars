@@ -5,11 +5,17 @@ import { uploadListingPhotoFiles } from "@/lib/uploadListingPhotos";
 import { buildListingExperienceDescription } from "@/lib/listingExperience";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
 import { notifyPendingListing } from "@/lib/adminNotifications";
+import { parseIndianMoney } from "@/lib/parseIndianMoney";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
   const num = Number(String(value));
   return Number.isFinite(num) ? num : null;
+};
+
+const parsePrice = (value: FormDataEntryValue | null) => {
+  if (!value) return null;
+  return parseIndianMoney(String(value));
 };
 
 const parsePhotos = (value: FormDataEntryValue | null) => {
@@ -59,7 +65,7 @@ export async function POST(req: Request) {
     km: parseNumber(form.get("km")),
     fuel: String(form.get("fuel") ?? "").trim() || null,
     transmission: String(form.get("transmission") ?? "").trim() || null,
-    price: parseNumber(form.get("price")),
+    price: parsePrice(form.get("price")),
     location: String(form.get("location") ?? "").trim() || null,
     description,
     status: "pending",
