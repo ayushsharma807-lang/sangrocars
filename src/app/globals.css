@@ -2309,6 +2309,60 @@ body:has(main.home .section.admin) .section.admin .dealer__actions .btn--outline
   background: #f8fafc;
 }
 
+body:has(main.home .section.admin) .section.admin .admin-filter label,
+body:has(main.home .section.admin) .section.admin .admin-form label,
+body:has(main.home .section.admin) .section.admin .notification-meta,
+body:has(main.home .section.admin) .section.admin .leads-table th,
+body:has(main.home .section.admin) .section.admin .admin-row-approve__check,
+body:has(main.home .section.admin) .section.admin .admin-bulk-actions p {
+  color: #475569;
+}
+
+body:has(main.home .section.admin) .section.admin .admin-filter input,
+body:has(main.home .section.admin) .section.admin .admin-filter select,
+body:has(main.home .section.admin) .section.admin .admin-form input,
+body:has(main.home .section.admin) .section.admin .admin-form textarea,
+body:has(main.home .section.admin) .section.admin .admin-form select,
+body:has(main.home .section.admin) .section.admin .admin-bulk-actions input[name="price"],
+body:has(main.home .section.admin) .section.admin .admin-row-approve input[name="price"],
+body:has(main.home .section.admin) .section.admin .bulk-actions select,
+body:has(main.home .section.admin) .section.admin .bulk-actions textarea,
+body:has(main.home .section.admin) .section.admin .import-options input,
+body:has(main.home .section.admin) .section.admin .import-options select {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.18);
+}
+
+body:has(main.home .section.admin) .section.admin .admin-filter input::placeholder,
+body:has(main.home .section.admin) .section.admin .admin-form input::placeholder,
+body:has(main.home .section.admin) .section.admin .admin-form textarea::placeholder,
+body:has(main.home .section.admin) .section.admin .admin-bulk-actions input[name="price"]::placeholder,
+body:has(main.home .section.admin) .section.admin .admin-row-approve input[name="price"]::placeholder {
+  color: #64748b;
+}
+
+body:has(main.home .section.admin) .section.admin .table-wrapper,
+body:has(main.home .section.admin) .section.admin .notification-card,
+body:has(main.home .section.admin) .section.admin .lead-detail__card,
+body:has(main.home .section.admin) .section.admin .exclusive-admin__create,
+body:has(main.home .section.admin) .section.admin .exclusive-admin__card,
+body:has(main.home .section.admin) .section.admin .export-form,
+body:has(main.home .section.admin) .section.admin .import-form,
+body:has(main.home .section.admin) .section.admin .admin-bulk-actions {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+body:has(main.home .section.admin) .section.admin .leads-table td,
+body:has(main.home .section.admin) .section.admin .link,
+body:has(main.home .section.admin) .section.admin strong,
+body:has(main.home .section.admin) .section.admin .admin-bulk-actions,
+body:has(main.home .section.admin) .section.admin .notification-card h3,
+body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
+  color: #0f172a;
+}
+
 .dealer-form {
   display: grid;
   gap: 16px;
