@@ -2297,6 +2297,18 @@ body:has(main.home.dealer-admin) .dealer-nav__links a {
   color: #0f172a;
 }
 
+body:has(main.home .section.admin) .section.admin .dealer__actions .btn--ghost,
+body:has(main.home .section.admin) .section.admin .dealer__actions .btn--outline {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+body:has(main.home .section.admin) .section.admin .dealer__actions .btn--ghost:hover,
+body:has(main.home .section.admin) .section.admin .dealer__actions .btn--outline:hover {
+  background: #f8fafc;
+}
+
 .dealer-form {
   display: grid;
   gap: 16px;

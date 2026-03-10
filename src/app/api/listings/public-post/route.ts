@@ -5,7 +5,10 @@ import { uploadListingPhotoFiles } from "@/lib/uploadListingPhotos";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
 import { phoneVariants } from "@/lib/phone";
 import { notifyPendingListing } from "@/lib/adminNotifications";
-import { markListingPendingApproval } from "@/lib/listingApproval";
+import {
+  markListingPendingApproval,
+  withDealerSubmittedPrice,
+} from "@/lib/listingApproval";
 import { parseIndianMoney } from "@/lib/parseIndianMoney";
 import { sendSellerApprovalPendingEmail } from "@/lib/transactionalEmail";
 
@@ -227,6 +230,7 @@ export async function POST(req: Request) {
   const description = walkthroughVideoUrl
     ? `${sellerDescription}\nWalkthrough video: ${walkthroughVideoUrl}`
     : sellerDescription;
+  const parsedPrice = parsePrice(form.get("price"));
 
   const uploaded = await uploadListingPhotoFiles(
     form.getAll("photo_files"),
@@ -246,12 +250,14 @@ export async function POST(req: Request) {
     model,
     variant: String(form.get("variant") ?? "").trim() || null,
     year: parseNumber(form.get("year")),
-    price: parsePrice(form.get("price")),
+    price: parsedPrice,
     km: parseNumber(form.get("km")),
     fuel: String(form.get("fuel") ?? "").trim() || null,
     transmission: String(form.get("transmission") ?? "").trim() || null,
     location: String(form.get("location") ?? "").trim() || null,
-    description: markListingPendingApproval(description),
+    description: markListingPendingApproval(
+      withDealerSubmittedPrice(description, parsedPrice)
+    ),
     photo_urls: photoUrls,
   };
 

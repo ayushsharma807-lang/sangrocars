@@ -308,7 +308,7 @@ export default async function AdminListingsPage({
               )}
             </div>
             <div className="admin-bulk-actions__controls">
-              <input name="price" placeholder="Set one price (optional)" />
+              <input name="price" placeholder="Set one selling price (optional)" />
               <label className="admin-row-approve__check">
                 <input type="checkbox" name="contact_for_price" />
                 Contact for price
@@ -335,9 +335,9 @@ export default async function AdminListingsPage({
                   </th>
                   <th>Car</th>
                   <th>Owner</th>
-                  <th>Type</th>
+                  <th>Net price</th>
                   <th>Status</th>
-                  <th>Price</th>
+                  <th>Selling price</th>
                   <th>Location</th>
                   <th>Created</th>
                   <th>Actions</th>
@@ -368,9 +368,11 @@ export default async function AdminListingsPage({
                       : privateSeller.seller.name || "Private seller";
                     const ownerType = listing.dealer_id ? "Dealer" : "Private";
                     const isPending = isListingPendingApproval(listing);
-                    const dealerSubmittedPrice = listing.dealer_id
-                      ? extractDealerSubmittedPrice(listing.description)
-                      : null;
+                    const netPrice = extractDealerSubmittedPrice(listing.description);
+                    const profit =
+                      netPrice && listing.price && listing.price > netPrice
+                        ? listing.price - netPrice
+                        : null;
 
                     return (
                       <tr key={listing.id}>
@@ -391,12 +393,20 @@ export default async function AdminListingsPage({
                             </span>
                           )}
                         </td>
-                        <td>{title || "Listing"}</td>
+                        <td>
+                          <div>{title || "Listing"}</div>
+                          <div className="notification-meta">{toTitle(listing.type)}</div>
+                        </td>
                         <td>
                           <div>{ownerLabel}</div>
                           <div className="notification-meta">{ownerType}</div>
                         </td>
-                        <td>{toTitle(listing.type)}</td>
+                        <td>
+                          <div>{formatPrice(netPrice)}</div>
+                          <div className="notification-meta">
+                            {listing.dealer_id ? "Dealer price" : "Seller price"}
+                          </div>
+                        </td>
                         <td>
                           <span className="status-badge">
                             {isPending ? "Pending" : toTitle(listing.status)}
@@ -404,9 +414,9 @@ export default async function AdminListingsPage({
                         </td>
                         <td>
                           <div>{formatPrice(listing.price)}</div>
-                          {dealerSubmittedPrice ? (
+                          {netPrice ? (
                             <div className="notification-meta">
-                              Dealer asked: {formatPrice(dealerSubmittedPrice)}
+                              {profit ? `Profit: ${formatPrice(profit)}` : "Selling price"}
                             </div>
                           ) : null}
                         </td>
@@ -426,7 +436,7 @@ export default async function AdminListingsPage({
                                 <input type="hidden" name="return" value={returnPath} />
                                 <input
                                   name="price"
-                                  placeholder="Set price"
+                                  placeholder="Set selling price"
                                   defaultValue={listing.price ?? ""}
                                 />
                                 <label className="admin-row-approve__check">
