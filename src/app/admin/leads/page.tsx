@@ -10,6 +10,11 @@ type LeadFilters = {
   source?: string;
 };
 
+type DealerLite = {
+  id: string;
+  name: string | null;
+};
+
 const STATUS_OPTIONS = [
   "new",
   "contacted",
@@ -68,8 +73,12 @@ const matchesQuery = (value: unknown, query: string) => {
   return String(value).toLowerCase().includes(query);
 };
 
+const normalizePhoneSearch = (value?: string | null) =>
+  String(value ?? "").replace(/\D/g, "");
+
 const filterLeadsLocal = (leads: LeadRow[], filters: LeadFilters) => {
   const q = filters.q?.trim().toLowerCase() ?? "";
+  const qDigits = normalizePhoneSearch(filters.q);
   const status = filters.status?.trim().toLowerCase();
   const source = filters.source?.trim().toLowerCase();
 
@@ -84,6 +93,8 @@ const filterLeadsLocal = (leads: LeadRow[], filters: LeadFilters) => {
     return (
       matchesQuery(lead?.name, q) ||
       matchesQuery(lead?.phone, q) ||
+      (qDigits.length >= 4 &&
+        normalizePhoneSearch(String(lead?.phone ?? "")).includes(qDigits)) ||
       matchesQuery(lead?.email, q) ||
       matchesQuery(lead?.listing_title, q)
     );
@@ -97,11 +108,19 @@ const getLeads = async (filters: LeadFilters) => {
 
   let query = sb.from("leads").select("*");
   const q = filters.q?.trim();
+  const qDigits = normalizePhoneSearch(q);
   if (q) {
     const term = `%${q}%`;
-    query = query.or(
-      `name.ilike.${term},phone.ilike.${term},email.ilike.${term},listing_title.ilike.${term}`
-    );
+    const searchParts = [
+      `name.ilike.${term}`,
+      `phone.ilike.${term}`,
+      `email.ilike.${term}`,
+      `listing_title.ilike.${term}`,
+    ];
+    if (qDigits.length >= 4 && qDigits !== q) {
+      searchParts.push(`phone.ilike.%${qDigits}%`);
+    }
+    query = query.or(searchParts.join(","));
   }
   if (filters.status) {
     query = query.eq("status", filters.status);
@@ -240,6 +259,25 @@ export default async function LeadsPage({
   const staffMap = new Map(
     staffOptions.map((staff) => [staff.id, staff.name])
   );
+  const dealerIds = Array.from(
+    new Set(
+      leads
+        .map((lead) => getLeadField(lead, ["dealer_id", "dealerId"]))
+        .filter(Boolean)
+        .map((value) => String(value))
+    )
+  );
+  const dealerMap = new Map<string, string>();
+  if (dealerIds.length > 0) {
+    const sb = supabaseServer();
+    const { data: dealerRows } = await sb
+      .from("dealers")
+      .select("id, name")
+      .in("id", dealerIds);
+    for (const dealer of (dealerRows ?? []) as DealerLite[]) {
+      dealerMap.set(dealer.id, dealer.name ?? "Dealer");
+    }
+  }
   const sources = Array.from(
     new Set(
       leads
@@ -640,6 +678,9 @@ export default async function LeadsPage({
                         ? String(listingTitle)
                         : null;
                       const dealerIdText = dealerId ? String(dealerId) : null;
+                      const dealerName = dealerIdText
+                        ? dealerMap.get(dealerIdText) ?? "Dealer"
+                        : null;
                       const leadId = lead.id ? String(lead.id) : null;
                       const createdAtText = createdAt ? String(createdAt) : null;
 
@@ -677,7 +718,7 @@ export default async function LeadsPage({
                                 className="link"
                                 href={`/dealer/${dealerIdText}`}
                               >
-                                {dealerIdText.slice(0, 8)}
+                                {dealerName}
                               </Link>
                             ) : (
                               "—"

@@ -4,6 +4,10 @@ import LeadUpdateForm from "./LeadUpdateForm";
 import { getStaffOptions } from "@/lib/staff";
 
 type LeadRow = Record<string, unknown>;
+type DealerLite = {
+  id: string;
+  name: string | null;
+};
 
 const getLeadField = (lead: LeadRow, keys: string[]) => {
   for (const key of keys) {
@@ -78,6 +82,15 @@ export default async function LeadDetailPage({
   const assignedTo = getLeadField(lead, ["assigned_to", "assignedTo"]);
   const createdAt = getLeadField(lead, ["created_at"]);
   const staffOptions = await getStaffOptions();
+  let dealerName: string | null = null;
+  if (dealerId) {
+    const { data: dealer } = await sb
+      .from("dealers")
+      .select("id, name")
+      .eq("id", String(dealerId))
+      .maybeSingle();
+    dealerName = (dealer as DealerLite | null)?.name ?? "Dealer";
+  }
   const assignedName =
     staffOptions.find((staff) => staff.id === String(assignedTo ?? ""))?.name ??
     null;
@@ -154,7 +167,7 @@ export default async function LeadDetailPage({
               <span>Dealer</span>
               {dealerIdText ? (
                 <Link className="link" href={`/dealer/${dealerIdText}`}>
-                  {dealerIdText.slice(0, 8)}
+                  {dealerName ?? dealerIdText.slice(0, 8)}
                 </Link>
               ) : (
                 <strong>—</strong>
