@@ -2,6 +2,9 @@
 
 import { useMemo, useState } from "react";
 
+const FUEL_OPTIONS = ["Petrol", "Diesel", "CNG", "Electric", "Hybrid"];
+const TRANSMISSION_OPTIONS = ["Manual", "Automatic"];
+
 type BulkItem = {
   id: string;
   make: string;
@@ -323,21 +326,41 @@ export default function MobileBulkUploader() {
               </label>
               <label>
                 Fuel
-                <input
-                  name={`fuel-${item.id}`}
-                  value={item.fuel}
-                  onChange={(event) => updateItem(item.id, "fuel", event.target.value)}
-                  placeholder="Petrol"
-                />
+                <div className="dealer-bulk-mobile__choice-group">
+                  {FUEL_OPTIONS.map((option) => (
+                    <button
+                      key={option}
+                      className={
+                        item.fuel === option
+                          ? "dealer-bulk-mobile__choice is-active"
+                          : "dealer-bulk-mobile__choice"
+                      }
+                      type="button"
+                      onClick={() => updateItem(item.id, "fuel", option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
               </label>
               <label>
                 Transmission
-                <input
-                  name={`transmission-${item.id}`}
-                  value={item.transmission}
-                  onChange={(event) => updateItem(item.id, "transmission", event.target.value)}
-                  placeholder="Manual"
-                />
+                <div className="dealer-bulk-mobile__choice-group">
+                  {TRANSMISSION_OPTIONS.map((option) => (
+                    <button
+                      key={option}
+                      className={
+                        item.transmission === option
+                          ? "dealer-bulk-mobile__choice is-active"
+                          : "dealer-bulk-mobile__choice"
+                      }
+                      type="button"
+                      onClick={() => updateItem(item.id, "transmission", option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
               </label>
               <label className="dealer-bulk-mobile__full">
                 City / location *
