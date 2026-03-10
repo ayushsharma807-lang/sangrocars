@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/adminAuth";
 import { parsePrivateSellerDescription } from "@/lib/privateSeller";
-import { isListingPendingApproval } from "@/lib/listingApproval";
+import {
+  extractDealerSubmittedPrice,
+  isListingPendingApproval,
+} from "@/lib/listingApproval";
 
 type ListingRow = {
   id: string;
@@ -365,6 +368,9 @@ export default async function AdminListingsPage({
                       : privateSeller.seller.name || "Private seller";
                     const ownerType = listing.dealer_id ? "Dealer" : "Private";
                     const isPending = isListingPendingApproval(listing);
+                    const dealerSubmittedPrice = listing.dealer_id
+                      ? extractDealerSubmittedPrice(listing.description)
+                      : null;
 
                     return (
                       <tr key={listing.id}>
@@ -396,7 +402,14 @@ export default async function AdminListingsPage({
                             {isPending ? "Pending" : toTitle(listing.status)}
                           </span>
                         </td>
-                        <td>{formatPrice(listing.price)}</td>
+                        <td>
+                          <div>{formatPrice(listing.price)}</div>
+                          {dealerSubmittedPrice ? (
+                            <div className="notification-meta">
+                              Dealer asked: {formatPrice(dealerSubmittedPrice)}
+                            </div>
+                          ) : null}
+                        </td>
                         <td>{listing.location || "—"}</td>
                         <td>{formatDate(listing.created_at || listing.last_seen_at)}</td>
                         <td>

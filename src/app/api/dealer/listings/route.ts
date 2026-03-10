@@ -6,7 +6,10 @@ import { buildListingExperienceDescription } from "@/lib/listingExperience";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
 import { notifyPendingListing } from "@/lib/adminNotifications";
 import { parseIndianMoney } from "@/lib/parseIndianMoney";
-import { markListingPendingApproval } from "@/lib/listingApproval";
+import {
+  markListingPendingApproval,
+  withDealerSubmittedPrice,
+} from "@/lib/listingApproval";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
@@ -58,6 +61,7 @@ export async function POST(req: Request) {
     }
 
     const form = await req.formData();
+    const submittedPrice = parsePrice(form.get("price"));
     const uploaded = await uploadListingPhotoFiles(
       form.getAll("photo_files"),
       `dealer/${auth.dealer.id}`
@@ -87,9 +91,11 @@ export async function POST(req: Request) {
       km: parseNumber(form.get("km")),
       fuel: String(form.get("fuel") ?? "").trim() || null,
       transmission: String(form.get("transmission") ?? "").trim() || null,
-      price: parsePrice(form.get("price")),
+      price: submittedPrice,
       location: String(form.get("location") ?? "").trim() || null,
-      description: markListingPendingApproval(description),
+      description: markListingPendingApproval(
+        withDealerSubmittedPrice(description, submittedPrice)
+      ),
       status: "sold",
       photo_urls: photoUrls,
     };

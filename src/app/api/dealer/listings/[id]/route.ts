@@ -3,12 +3,21 @@ import { supabaseServer } from "@/lib/supabase";
 import { requireDealer } from "@/lib/dealerAuth";
 import { uploadListingPhotoFiles } from "@/lib/uploadListingPhotos";
 import { buildListingExperienceDescription } from "@/lib/listingExperience";
-import { markListingPendingApproval } from "@/lib/listingApproval";
+import { parseIndianMoney } from "@/lib/parseIndianMoney";
+import {
+  markListingPendingApproval,
+  withDealerSubmittedPrice,
+} from "@/lib/listingApproval";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
   const num = Number(String(value));
   return Number.isFinite(num) ? num : null;
+};
+
+const parsePrice = (value: FormDataEntryValue | null) => {
+  if (!value) return null;
+  return parseIndianMoney(String(value));
 };
 
 const parsePhotos = (value: FormDataEntryValue | null) => {
@@ -33,6 +42,7 @@ export async function POST(
   }
 
   const form = await req.formData();
+  const submittedPrice = parsePrice(form.get("price"));
   const uploaded = await uploadListingPhotoFiles(
     form.getAll("photo_files"),
     `dealer/${auth.dealer.id}`
@@ -60,9 +70,11 @@ export async function POST(
     km: parseNumber(form.get("km")),
     fuel: String(form.get("fuel") ?? "").trim() || null,
     transmission: String(form.get("transmission") ?? "").trim() || null,
-    price: parseNumber(form.get("price")),
+    price: submittedPrice,
     location: String(form.get("location") ?? "").trim() || null,
-    description: markListingPendingApproval(description),
+    description: markListingPendingApproval(
+      withDealerSubmittedPrice(description, submittedPrice)
+    ),
     status: "sold",
     photo_urls: photoUrls,
   };

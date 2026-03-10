@@ -6,7 +6,10 @@ import { supabaseServer } from "@/lib/supabase";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
 import { notifyPendingBatch } from "@/lib/adminNotifications";
 import { ensureListingPhotoBucket, LISTING_PHOTO_BUCKET } from "@/lib/listingPhotoBucket";
-import { markListingPendingApproval } from "@/lib/listingApproval";
+import {
+  markListingPendingApproval,
+  withDealerSubmittedPrice,
+} from "@/lib/listingApproval";
 
 const HEADER_MAP: Record<string, string> = {
   make: "make",
@@ -237,6 +240,7 @@ export async function POST(req: Request) {
       const imageKey =
         String(record.image_key ?? "").trim() ||
         [make, model, record.variant, record.year].filter(Boolean).join(" ");
+      const price = parseNumber(String(record.price ?? ""));
       const zipPhotoUrls = imageKey
         ? await uploadMatchedZipPhotos(
             zipImageMap,
@@ -254,14 +258,14 @@ export async function POST(req: Request) {
         model,
         variant: String(record.variant ?? "").trim() || null,
         year: parseNumber(String(record.year ?? "")),
-        price: parseNumber(String(record.price ?? "")),
+        price,
         km: parseNumber(String(record.km ?? "")),
         fuel: String(record.fuel ?? "").trim() || null,
         transmission: String(record.transmission ?? "").trim() || null,
         location: String(record.location ?? "").trim() || null,
         description: shouldMarkPending
-          ? markListingPendingApproval(descriptionText)
-          : descriptionText,
+          ? markListingPendingApproval(withDealerSubmittedPrice(descriptionText, price))
+          : withDealerSubmittedPrice(descriptionText, price),
         photo_urls: mergePhotoUrls(
           parsePhotoUrls(String(record.photo_urls ?? "")),
           zipPhotoUrls

@@ -1,3 +1,5 @@
+import { stripListingInternalMeta } from "@/lib/listingApproval";
+
 type ListingExperienceInput = {
   tour360Url?: string | null;
   interiorVrUrl?: string | null;
@@ -67,7 +69,10 @@ export const parseListingExperienceDescription = (description?: string | null) =
 
   if (!description) return empty;
 
-  const lines = description
+  const normalizedDescription = stripListingInternalMeta(description);
+  if (!normalizedDescription) return empty;
+
+  const lines = normalizedDescription
     .split("\n")
     .map((line) => line.trimEnd())
     .filter((line) => line.length > 0);
