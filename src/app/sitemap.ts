@@ -14,20 +14,58 @@ type ListingRow = {
   created_at?: string | null;
 };
 
+type ExclusiveDealRow = {
+  id: string;
+  updated_at?: string | null;
+  created_at?: string | null;
+};
+
 const slugify = (name: string, id: string) =>
   `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}--${id}`;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sangrocars.in";
-  const now = new Date().toISOString();
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+    "https://sangrocars.in";
+  const now = new Date();
 
   const urls: MetadataRoute.Sitemap = [
-    { url: `${siteUrl}/`, lastModified: now },
-    { url: `${siteUrl}/listings`, lastModified: now },
-    { url: `${siteUrl}/sell`, lastModified: now },
-    { url: `${siteUrl}/dealers`, lastModified: now },
-    { url: `${siteUrl}/dealers/register`, lastModified: now },
-    { url: `${siteUrl}/dealer-admin/login`, lastModified: now },
+    {
+      url: `${siteUrl}/`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 1,
+    },
+    {
+      url: `${siteUrl}/listings`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.95,
+    },
+    {
+      url: `${siteUrl}/sell`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
+      url: `${siteUrl}/deals-of-the-week`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.85,
+    },
+    {
+      url: `${siteUrl}/dealers`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/compare`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
   ];
 
   if (!hasSupabaseConfig()) return urls;
@@ -45,6 +83,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     urls.push({
       url: `${siteUrl}/listing/${listing.id}`,
       lastModified: listing.updated_at ?? listing.created_at ?? now,
+      changeFrequency: "daily",
+      priority: 0.8,
     });
   });
 
@@ -60,6 +100,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     urls.push({
       url: `${siteUrl}/dealers/${slugify(name, dealer.id)}`,
       lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    });
+  });
+
+  const { data: exclusiveDeals } = await sb
+    .from("exclusive_deals")
+    .select("id, updated_at, created_at")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  (exclusiveDeals as ExclusiveDealRow[] | null)?.forEach((deal) => {
+    urls.push({
+      url: `${siteUrl}/exclusive-deals/${deal.id}`,
+      lastModified: deal.updated_at ?? deal.created_at ?? now,
+      changeFrequency: "weekly",
+      priority: 0.75,
     });
   });
 
