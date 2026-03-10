@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 
 const FUEL_OPTIONS = ["Petrol", "Diesel", "CNG", "Electric", "Hybrid"];
 const TRANSMISSION_OPTIONS = ["Manual", "Automatic"];
+const OWNER_TYPE_OPTIONS = ["1st owner", "2nd owner", "3rd owner", "Dealer"];
+const YEAR_OPTIONS = ["2026", "2025", "2024", "2023", "2022", "2021", "2020"];
 
 type BulkItem = {
   id: string;
@@ -15,6 +17,7 @@ type BulkItem = {
   km: string;
   fuel: string;
   transmission: string;
+  ownerType: string;
   location: string;
   description: string;
   photos: File[];
@@ -35,8 +38,9 @@ const createItem = (): BulkItem => ({
   year: "",
   price: "",
   km: "",
-  fuel: "",
-  transmission: "",
+  fuel: "Petrol",
+  transmission: "Manual",
+  ownerType: "1st owner",
   location: "",
   description: "",
   photos: [],
@@ -151,7 +155,13 @@ export default function MobileBulkUploader() {
       formData.set("fuel", item.fuel.trim());
       formData.set("transmission", item.transmission.trim());
       formData.set("location", item.location.trim());
-      formData.set("description", item.description.trim());
+      formData.set(
+        "description",
+        [`Owner type: ${item.ownerType}`, item.description.trim()]
+          .filter(Boolean)
+          .join("\n")
+      );
+      formData.set("owner_type", item.ownerType);
       item.photos.forEach((file) => {
         formData.append("photo_files", file);
       });
@@ -297,12 +307,28 @@ export default function MobileBulkUploader() {
               </label>
               <label>
                 Year
+                <div className="dealer-bulk-mobile__choice-group">
+                  {YEAR_OPTIONS.map((option) => (
+                    <button
+                      key={option}
+                      className={
+                        item.year === option
+                          ? "dealer-bulk-mobile__choice is-active"
+                          : "dealer-bulk-mobile__choice"
+                      }
+                      type="button"
+                      onClick={() => updateItem(item.id, "year", option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
                 <input
                   name={`year-${item.id}`}
                   value={item.year}
                   onChange={(event) => updateItem(item.id, "year", event.target.value)}
                   inputMode="numeric"
-                  placeholder="2022"
+                  placeholder="Or type year"
                 />
               </label>
               <label>
@@ -356,6 +382,25 @@ export default function MobileBulkUploader() {
                       }
                       type="button"
                       onClick={() => updateItem(item.id, "transmission", option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </label>
+              <label>
+                Owner type
+                <div className="dealer-bulk-mobile__choice-group">
+                  {OWNER_TYPE_OPTIONS.map((option) => (
+                    <button
+                      key={option}
+                      className={
+                        item.ownerType === option
+                          ? "dealer-bulk-mobile__choice is-active"
+                          : "dealer-bulk-mobile__choice"
+                      }
+                      type="button"
+                      onClick={() => updateItem(item.id, "ownerType", option)}
                     >
                       {option}
                     </button>
