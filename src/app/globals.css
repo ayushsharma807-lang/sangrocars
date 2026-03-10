@@ -2256,6 +2256,47 @@ body {
   font-size: 14px;
 }
 
+body:has(main.home.dealer-admin),
+body:has(main.home.admin),
+body:has(main.home .section.admin) {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+main.home.dealer-admin,
+main.home.admin,
+main.home:has(.section.admin) {
+  background: #ffffff;
+  color: #0f172a;
+  min-height: 100vh;
+  padding-top: 32px;
+}
+
+main.home.dealer-admin .section__header h2,
+main.home.dealer-admin .section__header p,
+main.home.admin .section__header h2,
+main.home.admin .section__header p,
+main.home:has(.section.admin) .section__header h2,
+main.home:has(.section.admin) .section__header p {
+  color: #334155;
+}
+
+main.home.dealer-admin .section__header h2,
+main.home.admin .section__header h2,
+main.home:has(.section.admin) .section__header h2 {
+  color: #0f172a;
+}
+
+body:has(main.home.dealer-admin) .dealer-nav {
+  background: #ffffff;
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+body:has(main.home.dealer-admin) .dealer-nav__brand,
+body:has(main.home.dealer-admin) .dealer-nav__links a {
+  color: #0f172a;
+}
+
 .dealer-form {
   display: grid;
   gap: 16px;
