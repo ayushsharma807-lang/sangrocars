@@ -6,6 +6,7 @@ import { getStaffOptions } from "@/lib/staff";
 type LeadRow = Record<string, unknown>;
 type LeadFilters = {
   q?: string;
+  phone?: string;
   status?: string;
   source?: string;
 };
@@ -78,7 +79,7 @@ const normalizePhoneSearch = (value?: string | null) =>
 
 const filterLeadsLocal = (leads: LeadRow[], filters: LeadFilters) => {
   const q = filters.q?.trim().toLowerCase() ?? "";
-  const qDigits = normalizePhoneSearch(filters.q);
+  const phoneDigits = normalizePhoneSearch(filters.phone);
   const status = filters.status?.trim().toLowerCase();
   const source = filters.source?.trim().toLowerCase();
 
@@ -89,12 +90,16 @@ const filterLeadsLocal = (leads: LeadRow[], filters: LeadFilters) => {
     if (source && String(lead?.source ?? "").toLowerCase() !== source) {
       return false;
     }
+    if (
+      phoneDigits &&
+      !normalizePhoneSearch(String(lead?.phone ?? "")).includes(phoneDigits)
+    ) {
+      return false;
+    }
     if (!q) return true;
     return (
       matchesQuery(lead?.name, q) ||
       matchesQuery(lead?.phone, q) ||
-      (qDigits.length >= 4 &&
-        normalizePhoneSearch(String(lead?.phone ?? "")).includes(qDigits)) ||
       matchesQuery(lead?.email, q) ||
       matchesQuery(lead?.listing_title, q)
     );
@@ -108,19 +113,20 @@ const getLeads = async (filters: LeadFilters) => {
 
   let query = sb.from("leads").select("*");
   const q = filters.q?.trim();
-  const qDigits = normalizePhoneSearch(q);
+  const phoneDigits = normalizePhoneSearch(filters.phone);
   if (q) {
     const term = `%${q}%`;
-    const searchParts = [
-      `name.ilike.${term}`,
-      `phone.ilike.${term}`,
-      `email.ilike.${term}`,
-      `listing_title.ilike.${term}`,
-    ];
-    if (qDigits.length >= 4 && qDigits !== q) {
-      searchParts.push(`phone.ilike.%${qDigits}%`);
-    }
-    query = query.or(searchParts.join(","));
+    query = query.or(
+      [
+        `name.ilike.${term}`,
+        `email.ilike.${term}`,
+        `listing_title.ilike.${term}`,
+        `phone.ilike.${term}`,
+      ].join(",")
+    );
+  }
+  if (phoneDigits) {
+    query = query.ilike("phone", `%${phoneDigits}%`);
   }
   if (filters.status) {
     query = query.eq("status", filters.status);
@@ -235,6 +241,7 @@ export default async function LeadsPage({
 }: {
   searchParams: Promise<{
     q?: string | string[];
+    phone?: string | string[];
     status?: string | string[];
     source?: string | string[];
     bulkError?: string | string[];
@@ -246,6 +253,7 @@ export default async function LeadsPage({
   const params = await searchParams;
   const filters = {
     q: getParam(params.q),
+    phone: getParam(params.phone),
     status: getParam(params.status),
     source: getParam(params.source),
   };
@@ -288,6 +296,7 @@ export default async function LeadsPage({
   );
   const returnParams = new URLSearchParams();
   if (filters.q) returnParams.set("q", filters.q);
+  if (filters.phone) returnParams.set("phone", filters.phone);
   if (filters.status) returnParams.set("status", filters.status);
   if (filters.source) returnParams.set("source", filters.source);
   const returnPath = `/admin/leads${
@@ -432,8 +441,17 @@ export default async function LeadsPage({
             Search
             <input
               name="q"
-              placeholder="Name, phone, email, listing"
+              placeholder="Name, email, listing"
               defaultValue={filters.q}
+            />
+          </label>
+          <label>
+            Phone
+            <input
+              name="phone"
+              placeholder="Search phone number"
+              defaultValue={filters.phone}
+              inputMode="numeric"
             />
           </label>
           <label>
