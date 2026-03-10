@@ -1,7 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/adminAuth";
-import { clearListingPendingApproval } from "@/lib/listingApproval";
+import {
+  clearListingPendingApproval,
+  withDealerSubmittedPrice,
+} from "@/lib/listingApproval";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
@@ -29,15 +32,19 @@ export async function POST(
   const sb = supabaseServer();
   const { data: listing } = await sb
     .from("listings")
-    .select("description")
+    .select("description, price")
     .eq("id", id)
     .single();
+  const preservedDescription = withDealerSubmittedPrice(
+    clearListingPendingApproval(listing?.description),
+    listing?.price ?? null
+  );
   const { error } = await sb
     .from("listings")
     .update({
       status: "available",
       price,
-      description: clearListingPendingApproval(listing?.description),
+      description: preservedDescription,
     })
     .eq("id", id);
 

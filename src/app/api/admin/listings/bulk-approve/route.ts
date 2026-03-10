@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/adminAuth";
 import {
   clearListingPendingApproval,
   isListingPendingApproval,
+  withDealerSubmittedPrice,
 } from "@/lib/listingApproval";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
   const sb = supabaseServer();
   const { data: rows, error: fetchError } = await sb
     .from("listings")
-    .select("id, description, status")
+    .select("id, description, status, price")
     .in("id", ids);
 
   if (fetchError) {
@@ -44,7 +45,12 @@ export async function POST(req: Request) {
     return NextResponse.redirect(url);
   }
 
-  const pendingRows = ((rows ?? []) as { id: string; description?: string | null; status?: string | null }[])
+  const pendingRows = ((rows ?? []) as {
+    id: string;
+    description?: string | null;
+    status?: string | null;
+    price?: number | null;
+  }[])
     .filter((row) => isListingPendingApproval(row));
 
   if (!pendingRows.length) {
@@ -60,7 +66,10 @@ export async function POST(req: Request) {
         .update({
           status: "available",
           price,
-          description: clearListingPendingApproval(row.description),
+          description: withDealerSubmittedPrice(
+            clearListingPendingApproval(row.description),
+            row.price ?? null
+          ),
         })
         .eq("id", row.id)
     )
