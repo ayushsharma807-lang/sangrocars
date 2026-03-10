@@ -53,6 +53,7 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q")?.trim() ?? "";
+  const phone = searchParams.get("phone")?.trim() ?? "";
   const status = searchParams.get("status")?.trim() ?? "";
   const source = searchParams.get("source")?.trim() ?? "";
   const requestedColumns = searchParams.getAll("columns");
@@ -69,6 +70,10 @@ export async function GET(req: Request) {
     query = query.or(
       `name.ilike.${term},phone.ilike.${term},email.ilike.${term},listing_title.ilike.${term}`
     );
+  }
+  if (phone) {
+    const digits = phone.replace(/\D/g, "");
+    query = query.ilike("phone", `%${digits || phone}%`);
   }
   if (status) {
     query = query.eq("status", status);

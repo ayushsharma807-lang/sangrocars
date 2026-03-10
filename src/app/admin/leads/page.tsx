@@ -489,6 +489,7 @@ export default async function LeadsPage({
           id="export"
         >
           {filters.q && <input type="hidden" name="q" value={filters.q} />}
+          {filters.phone && <input type="hidden" name="phone" value={filters.phone} />}
           {filters.status && (
             <input type="hidden" name="status" value={filters.status} />
           )}
