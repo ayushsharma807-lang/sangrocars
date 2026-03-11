@@ -6564,6 +6564,257 @@ button.simple-link-btn:disabled {
   display: none;
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+video,
+iframe {
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  .home {
+    gap: 48px;
+    padding-bottom: 48px;
+  }
+
+  .section {
+    padding: 0 16px;
+    gap: 20px;
+  }
+
+  .hero {
+    padding: 20px 16px 40px;
+  }
+
+  .nav,
+  .carwale-listings-page .cw-nav,
+  .dealer-nav {
+    padding: 12px 14px;
+    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nav__links,
+  .nav__cta,
+  .hero__actions,
+  .cw-header__actions,
+  .carwale-listings-page .cw-nav__links {
+    width: 100%;
+    justify-content: flex-start;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nav__links a,
+  .nav__cta .btn,
+  .hero__actions .btn,
+  .cw-header__btn,
+  .carwale-listings-page .cw-nav__links a,
+  .dealer-nav__links a {
+    width: 100%;
+    text-align: center;
+  }
+
+  .dealer-nav__links {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .hero__content,
+  .split,
+  .detail,
+  .listings-layout,
+  .simple-detail__layout,
+  .experience-builder__grid,
+  .experience-ai__cards,
+  .chatbot__cards,
+  .dealer-stats,
+  .exclusive-hero__content,
+  .exclusive-hero__search,
+  .cw-top-bar,
+  .cw-search-bar,
+  .simple-filters,
+  .admin-filter,
+  .export-options,
+  .import-options {
+    grid-template-columns: 1fr;
+  }
+
+  .cards,
+  .stats,
+  .listings,
+  .simple-listings,
+  .cw-featured__grid,
+  .cw-trust,
+  .cw-stats-row,
+  .experience-grid-3,
+  .brand-panel__grid,
+  .cw-footer__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .listings-layout__filters {
+    position: static;
+    top: auto;
+  }
+
+  .simple-results,
+  .cw-header,
+  .listing-hero,
+  .panel,
+  .card,
+  .simple-card,
+  .experience-card,
+  .finance-assist__card {
+    padding: 16px;
+  }
+
+  .hero__text h1,
+  .exclusive-hero h1,
+  .listing-hero h1,
+  .cw-header__branding h1 {
+    font-size: clamp(1.85rem, 8vw, 2.4rem);
+    line-height: 1.1;
+  }
+
+  .section__header h2,
+  .simple-results__header h2,
+  .cw-bodytype h2 {
+    font-size: clamp(1.5rem, 6vw, 1.9rem);
+  }
+
+  .subhead,
+  .cw-header__branding p,
+  .exclusive-hero p,
+  .simple-results__header p {
+    font-size: 14px;
+  }
+
+  .btn,
+  .simple-button,
+  .simple-link-btn,
+  .cw-header__btn,
+  .cw-filter-btn,
+  .cw-filter-close {
+    min-height: 48px;
+    padding: 12px 16px;
+  }
+
+  .cw-top-search__field {
+    min-height: 54px;
+  }
+
+  .cw-top-search__input {
+    padding: 14px 44px 14px 86px;
+    font-size: 14px;
+  }
+
+  .simple-listing,
+  .cw-listing,
+  .listing,
+  .card {
+    width: 100%;
+  }
+
+  .simple-listing__body,
+  .cw-listing__body {
+    padding: 14px;
+  }
+
+  .simple-listing__body h3,
+  .cw-listing__body h3,
+  .cw-listing__price-line,
+  .simple-price {
+    font-size: 18px;
+  }
+
+  .cw-listing__facts,
+  .simple-listing__footer,
+  .price-slider__values,
+  .simple-compare-bar,
+  .simple-compare-bar__actions,
+  .sort-form,
+  .cw-filters__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cw-bodytype__tabs {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .cw-bodytype__card {
+    min-width: calc(100vw - 40px);
+    max-width: calc(100vw - 40px);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .cards,
+  .stats,
+  .listings,
+  .simple-listings,
+  .cw-featured__grid,
+  .cw-trust,
+  .experience-grid-3,
+  .experience-ai__cards,
+  .chatbot__cards,
+  .dealer-stats,
+  .brand-panel__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cw-footer__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero,
+  .exclusive-hero {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .section {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .nav,
+  .carwale-listings-page .cw-nav {
+    flex-wrap: wrap;
+  }
+
+  .nav__links,
+  .nav__cta,
+  .carwale-listings-page .cw-nav__links {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cards,
+  .stats,
+  .listings,
+  .simple-listings,
+  .cw-featured__grid,
+  .experience-grid-3,
+  .experience-ai__cards,
+  .chatbot__cards,
+  .dealer-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
