@@ -6528,6 +6528,34 @@ button.simple-link-btn:disabled {
     padding: 28px 22px;
   }
 
+  .carwale-listings-page .cw-nav {
+    padding: 10px 12px;
+    border-radius: 14px;
+    gap: 10px;
+  }
+
+  .carwale-listings-page .cw-nav__brand {
+    font-size: 15px;
+  }
+
+  .carwale-listings-page .cw-nav__links {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 2px;
+  }
+
+  .carwale-listings-page .cw-nav__links a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 9px 12px;
+    border-radius: 999px;
+    border: 1px solid #dbe1ea;
+    background: #ffffff;
+    color: #0f172a;
+  }
+
   .carwale-listings-page .cw-header__logo {
     width: 64px;
     height: 64px;
@@ -6543,10 +6571,49 @@ button.simple-link-btn:disabled {
     padding: 12px;
   }
 
-  .carwale-listings-page .cw-nav__links {
-    overflow-x: auto;
+  .cw-header__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
     width: 100%;
-    padding-bottom: 6px;
+  }
+
+  .cw-header__btn {
+    width: 100%;
+    min-height: 46px;
+    padding: 11px 12px;
+    font-size: 13px;
+  }
+
+  .cw-header__btn--whatsapp {
+    grid-column: 1 / -1;
+  }
+
+  .cw-header__trust {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .dealer-nav {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .dealer-nav__links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .dealer-nav__links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 12px;
+    background: #ffffff;
+    padding: 10px 12px;
   }
 }
 
@@ -6557,6 +6624,24 @@ button.simple-link-btn:disabled {
 
   .gallery__hero {
     height: 260px;
+  }
+
+  .carwale-listings-page .cw-nav__links a,
+  .dealer-nav__links a {
+    font-size: 13px;
+    padding: 9px 10px;
+  }
+
+  .cw-header__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .cw-header__btn--whatsapp {
+    grid-column: auto;
+  }
+
+  .dealer-nav__links {
+    grid-template-columns: 1fr;
   }
 }
 
