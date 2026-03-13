@@ -61,6 +61,11 @@ const formatPrice = (value?: number | null) => {
   return `₹${value.toLocaleString("en-IN")}`;
 };
 
+const formatPercent = (value?: number | null) => {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  return `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
+};
+
 const toTitle = (value?: string | null) => {
   if (!value) return "—";
   return value
@@ -343,6 +348,7 @@ export default async function AdminListingsPage({
                   <th>Net price</th>
                   <th>Status</th>
                   <th>Selling price</th>
+                  <th>Profit %</th>
                   <th>Location</th>
                   <th>Created</th>
                   <th>Actions</th>
@@ -351,7 +357,7 @@ export default async function AdminListingsPage({
               <tbody>
                 {visibleListings.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="empty">
+                    <td colSpan={10} className="empty">
                       No listings found.
                     </td>
                   </tr>
@@ -383,8 +389,12 @@ export default async function AdminListingsPage({
                       extractDealerSubmittedPrice(listing.description) ??
                       (isPending ? listing.price : null);
                     const profit =
-                      netPrice && listing.price && listing.price > netPrice
+                      netPrice && listing.price
                         ? listing.price - netPrice
+                        : null;
+                    const profitPercent =
+                      netPrice && listing.price && netPrice > 0
+                        ? ((listing.price - netPrice) / netPrice) * 100
                         : null;
 
                     return (
@@ -434,6 +444,12 @@ export default async function AdminListingsPage({
                             <div className="notification-meta">
                               {profit ? `Profit: ${formatPrice(profit)}` : "Selling price"}
                             </div>
+                          ) : null}
+                        </td>
+                        <td>
+                          <div>{formatPercent(profitPercent)}</div>
+                          {profit !== null ? (
+                            <div className="notification-meta">{formatPrice(profit)}</div>
                           ) : null}
                         </td>
                         <td>{listing.location || "—"}</td>
