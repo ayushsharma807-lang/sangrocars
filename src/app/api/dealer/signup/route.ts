@@ -60,6 +60,53 @@ const createDealerRecord = async ({
   city: string;
 }) => {
   const sb = supabaseServer();
+  const syncExistingDealer = async (dealerId: string) => {
+    const payloads: Record<string, unknown>[] = [
+      {
+        auth_user_id: userId,
+        name,
+        email,
+        phone: phone || null,
+        whatsapp: phone || null,
+        address: city || null,
+        city: city || null,
+      },
+      {
+        auth_user_id: userId,
+        name,
+        email,
+        phone: phone || null,
+        whatsapp: phone || null,
+        address: city || null,
+      },
+      {
+        auth_user_id: userId,
+        name,
+        email,
+        phone: phone || null,
+      },
+      {
+        name,
+        email,
+        phone: phone || null,
+      },
+    ];
+
+    for (const payload of payloads) {
+      const { error } = await sb.from("dealers").update(payload).eq("id", dealerId);
+      if (!error || isMissingSchema(error.message)) {
+        return dealerId;
+      }
+    }
+
+    return dealerId;
+  };
+
+  const existingDealerId = await findExistingDealerId(userId, email);
+  if (existingDealerId) {
+    return syncExistingDealer(existingDealerId);
+  }
+
   const payloads: Record<string, unknown>[] = [
     {
       auth_user_id: userId,
@@ -104,7 +151,7 @@ const createDealerRecord = async ({
 
     if (error && isDuplicate(error.message)) {
       const existingId = await findExistingDealerId(userId, email);
-      if (existingId) return existingId;
+      if (existingId) return syncExistingDealer(existingId);
     }
 
     if (error && !isMissingSchema(error.message) && !isDuplicate(error.message)) {
