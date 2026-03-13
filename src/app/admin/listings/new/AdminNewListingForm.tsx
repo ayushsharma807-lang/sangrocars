@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   FUEL_OPTIONS,
   MAKE_OPTIONS,
@@ -19,9 +20,12 @@ export default function AdminNewListingForm({
 }: {
   dealers: DealerOption[];
 }) {
+  const router = useRouter();
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
   const [variant, setVariant] = useState("");
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const modelOptions = useMemo(() => getModelOptions(make), [make]);
   const variantOptions = useMemo(() => getVariantOptions(model), [model]);
@@ -45,12 +49,45 @@ export default function AdminNewListingForm({
     }
   }, [model, variant, variantOptions]);
 
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitError(null);
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData(event.currentTarget);
+      const response = await fetch("/api/admin/listings", {
+        method: "POST",
+        body: formData,
+        headers: {
+          "x-admin-form": "1",
+        },
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | { ok?: boolean; error?: string; redirectTo?: string }
+        | null;
+
+      if (!response.ok || !payload?.ok || !payload.redirectTo) {
+        const errorCode = payload?.error ?? "create_failed";
+        router.replace(`/admin/listings/new?error=${errorCode}`);
+        router.refresh();
+        return;
+      }
+
+      window.location.assign(payload.redirectTo);
+    } catch {
+      setSubmitError("Could not create listing. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <form
       className="dealer-form"
-      method="post"
-      action="/api/admin/listings"
       encType="multipart/form-data"
+      onSubmit={handleSubmit}
     >
       <div className="dealer-form__grid">
         <label>
@@ -227,8 +264,11 @@ export default function AdminNewListingForm({
           Works with gallery upload and live camera on mobile.
         </span>
       </label>
-      <button className="btn btn--solid" type="submit">
-        Create listing
+      {submitError ? (
+        <div className="admin-banner admin-banner--error">{submitError}</div>
+      ) : null}
+      <button className="btn btn--solid" type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Creating..." : "Create listing"}
       </button>
     </form>
   );

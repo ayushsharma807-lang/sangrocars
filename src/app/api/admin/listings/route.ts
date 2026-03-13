@@ -40,9 +40,16 @@ export async function POST(req: Request) {
   }
 
   const form = await req.formData();
+  const wantsJson = req.headers.get("x-admin-form") === "1";
   const make = String(form.get("make") ?? "").trim();
   const model = String(form.get("model") ?? "").trim();
   if (!make || !model) {
+    if (wantsJson) {
+      return NextResponse.json(
+        { ok: false, error: "missing_fields" },
+        { status: 400 }
+      );
+    }
     return NextResponse.redirect(
       new URL("/admin/listings/new?error=missing_fields", req.url)
     );
@@ -104,9 +111,23 @@ export async function POST(req: Request) {
     .single();
 
   if (error || !data?.id) {
+    if (wantsJson) {
+      return NextResponse.json(
+        { ok: false, error: "create_failed" },
+        { status: 500 }
+      );
+    }
     return NextResponse.redirect(
       new URL("/admin/listings/new?error=create_failed", req.url)
     );
+  }
+
+  if (wantsJson) {
+    return NextResponse.json({
+      ok: true,
+      id: data.id,
+      redirectTo: `/admin/listings/new?status=created&id=${data.id}`,
+    });
   }
 
   return NextResponse.redirect(
