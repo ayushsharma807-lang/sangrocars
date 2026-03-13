@@ -4,7 +4,6 @@ import SortForm from "@/app/components/SortForm";
 import PriceRangeSlider from "@/app/components/PriceRangeSlider";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { getPrimaryPhoto } from "@/lib/photoUrls";
-import BodyTypeSection from "@/app/components/BodyTypeSection";
 import { extractDealerCode } from "@/lib/dealerCode";
 
 type SearchParams = {
@@ -817,20 +816,6 @@ export default async function Home({
             </div>
           ))}
         </div>
-
-        <BodyTypeSection
-          activeTab={
-            transmissionValue === "automatic"
-              ? "Automatic"
-              : priceModeValue === "custom" && (parseNumber(minPriceValue ?? undefined) ?? 0) >= 4500000
-                ? "Luxury"
-                : qValue?.toLowerCase().includes("hatchback")
-                  ? "Hatchback"
-                  : qValue?.toLowerCase().includes("sedan")
-                    ? "Sedan"
-                    : "SUV"
-          }
-        />
 
         <div className="cw-stats-row">
           {[
