@@ -49,6 +49,15 @@ export default async function DealerSignupPage({
           <input type="hidden" name="next" value={nextPath} />
           <div className="simple-form__grid">
             <label>
+              Dealer name
+              <input
+                name="name"
+                placeholder="e.g., Sharma Cars"
+                required
+                minLength={2}
+              />
+            </label>
+            <label>
               Email
               <input
                 name="email"
