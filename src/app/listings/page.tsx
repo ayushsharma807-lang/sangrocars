@@ -625,7 +625,10 @@ export default async function Home({
           <span className="cw-filter-backdrop__sr">Close filters</span>
         </label>
         <nav className="cw-nav">
-          <div className="cw-nav__brand">SangroCars</div>
+          <div className="cw-nav__brand">
+            <img src="/images/sangrocars-logo.png" alt="SangroCars" />
+            <span>SangroCars</span>
+          </div>
           <div className="cw-nav__links">
             <Link href="/sell">Sell Car</Link>
             <Link href="/dealer-admin/login">Dealer Login</Link>

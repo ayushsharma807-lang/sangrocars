@@ -5991,7 +5991,7 @@ button.simple-link-btn:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 18px;
+  padding: 14px 18px;
   border-radius: 18px;
   border: 1px solid rgba(17, 24, 39, 0.08);
   background: #ffffff;
@@ -6000,9 +6000,19 @@ button.simple-link-btn:disabled {
 }
 
 .carwale-listings-page .cw-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-weight: 800;
   font-size: 16px;
   color: #0f172a;
+}
+
+.carwale-listings-page .cw-nav__brand img {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 
 .carwale-listings-page .cw-nav__links {
@@ -6621,7 +6631,12 @@ button.simple-link-btn:disabled {
   }
 
   .carwale-listings-page .cw-nav__brand {
+    gap: 10px;
     font-size: 15px;
+  }
+
+  .carwale-listings-page .cw-nav__brand img {
+    height: 40px;
   }
 
   .carwale-listings-page .cw-nav__links {
