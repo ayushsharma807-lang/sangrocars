@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { uploadCarImagesFromClient } from "@/lib/clientCarImageUpload";
 import { buildPolishedDescription } from "@/lib/descriptionPolisher";
 import { parseIndianMoney } from "@/lib/parseIndianMoney";
 
@@ -63,6 +64,7 @@ export default function ListingWizard({ action, submitLabel }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState<WizardState>(defaultState);
   const [selectedUploadCount, setSelectedUploadCount] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
 
   const manualPhotoCount = useMemo(
     () =>
@@ -99,12 +101,13 @@ export default function ListingWizard({ action, submitLabel }: Props) {
 
     setError("");
     setIsSubmitting(true);
+    setUploadProgress(null);
 
     try {
       const formData = new FormData(event.currentTarget);
-      const uploadedFiles = formData.getAll("photo_files").filter((entry) => {
-        return typeof entry !== "string" && entry.size > 0;
-      });
+      const uploadedFiles = formData
+        .getAll("photo_files")
+        .filter((entry): entry is File => typeof entry !== "string" && entry.size > 0);
       const manualPhotos = form.photo_urls
         .split(/[\n,|]/)
         .map((item) => item.trim())
@@ -122,6 +125,14 @@ export default function ListingWizard({ action, submitLabel }: Props) {
         setIsSubmitting(false);
         return;
       }
+
+      const uploadedUrls = await uploadCarImagesFromClient(
+        uploadedFiles,
+        `dealer/${Date.now()}`,
+        (progress) => setUploadProgress(progress)
+      );
+      formData.delete("photo_files");
+      formData.set("photo_urls", [...manualPhotos, ...uploadedUrls].join("\n"));
 
       const response = await fetch(action, {
         method: "POST",
@@ -145,6 +156,7 @@ export default function ListingWizard({ action, submitLabel }: Props) {
             : "Could not save listing. Please try again."
         );
         setIsSubmitting(false);
+        setUploadProgress(null);
         return;
       }
 
@@ -155,9 +167,12 @@ export default function ListingWizard({ action, submitLabel }: Props) {
             : response.url;
         window.location.assign(redirectTo);
       }
-    } catch {
-      setError("Could not save listing. Please try again.");
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Could not save listing. Please try again."
+      );
       setIsSubmitting(false);
+      setUploadProgress(null);
     }
   };
 
@@ -391,7 +406,15 @@ export default function ListingWizard({ action, submitLabel }: Props) {
             </label>
           </div>
 
-          <div className="dealer-wizard__summary">
+          {uploadProgress ? (
+          <p className="dealer-form__hint">Uploading photos: {uploadProgress.done}/{uploadProgress.total}</p>
+        ) : null}
+
+        {uploadProgress ? (
+          <p className="dealer-form__hint">Uploading photos: {uploadProgress.done}/{uploadProgress.total}</p>
+        ) : null}
+
+        <div className="dealer-wizard__summary">
             <p>
               <strong>Car:</strong> {form.year || "--"} {form.make || "--"}{" "}
               {form.model || "--"} {form.variant || ""}
@@ -423,7 +446,7 @@ export default function ListingWizard({ action, submitLabel }: Props) {
           </button>
         ) : (
           <button className="btn btn--solid" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : submitLabel}
+            {isSubmitting ? "Uploading photos..." : submitLabel}
           </button>
         )}
       </div>

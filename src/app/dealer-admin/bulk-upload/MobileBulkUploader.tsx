@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { uploadCarImagesFromClient } from "@/lib/clientCarImageUpload";
 
 const FUEL_OPTIONS = ["Petrol", "Diesel", "CNG", "Electric", "Hybrid"];
 const TRANSMISSION_OPTIONS = ["Manual", "Automatic"];
@@ -71,6 +72,7 @@ export default function MobileBulkUploader() {
   const [results, setResults] = useState<SubmitResult[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [uploadingTitle, setUploadingTitle] = useState<string | null>(null);
 
   const totalPhotos = useMemo(
     () => items.reduce((count, item) => count + item.photos.length, 0),
@@ -162,11 +164,15 @@ export default function MobileBulkUploader() {
           .join("\n")
       );
       formData.set("owner_type", item.ownerType);
-      item.photos.forEach((file) => {
-        formData.append("photo_files", file);
-      });
 
       try {
+        setUploadingTitle(buildTitle(item));
+        const uploadedUrls = await uploadCarImagesFromClient(
+          item.photos,
+          `dealer/bulk/${Date.now()}-${item.id}`
+        );
+        formData.set("photo_urls", uploadedUrls.join("\n"));
+
         const response = await fetch("/api/dealer/listings", {
           method: "POST",
           headers: {
@@ -206,6 +212,7 @@ export default function MobileBulkUploader() {
     }
 
     setIsSubmitting(false);
+    setUploadingTitle(null);
   };
 
   return (
@@ -248,6 +255,9 @@ export default function MobileBulkUploader() {
       </section>
 
       {submitError ? <div className="simple-alert">{submitError}</div> : null}
+      {isSubmitting && uploadingTitle ? (
+        <div className="simple-alert">Uploading photos for {uploadingTitle}...</div>
+      ) : null}
 
       <div className="dealer-bulk-mobile__list">
         {items.map((item, index) => (

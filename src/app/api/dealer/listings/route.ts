@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { requireDealer } from "@/lib/dealerAuth";
-import { uploadListingPhotoFiles } from "@/lib/uploadListingPhotos";
 import { buildListingExperienceDescription } from "@/lib/listingExperience";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
 import { notifyPendingListing } from "@/lib/adminNotifications";
@@ -30,8 +29,7 @@ const parsePhotos = (value: FormDataEntryValue | null) => {
     .filter(Boolean);
 };
 
-const mergePhotoUrls = (manualUrls: string[], uploadedUrls: string[]) =>
-  Array.from(new Set([...manualUrls, ...uploadedUrls]));
+const dedupePhotoUrls = (urls: string[]) => Array.from(new Set(urls));
 
 export async function POST(req: Request) {
   const wantsJson =
@@ -62,14 +60,7 @@ export async function POST(req: Request) {
 
     const form = await req.formData();
     const submittedPrice = parsePrice(form.get("price"));
-    const uploaded = await uploadListingPhotoFiles(
-      form.getAll("photo_files"),
-      `dealer/${auth.dealer.id}`
-    );
-    const photoUrls = mergePhotoUrls(
-      parsePhotos(form.get("photo_urls")),
-      uploaded.urls
-    );
+    const photoUrls = dedupePhotoUrls(parsePhotos(form.get("photo_urls")));
     const description = buildListingExperienceDescription(
       {
         tour360Url: String(form.get("tour_360_url") ?? "").trim(),
@@ -117,15 +108,11 @@ export async function POST(req: Request) {
         code: error.code,
         details: error.details,
         hint: error.hint,
-        uploadErrors: uploaded.errors,
         payload,
       });
       return respondError(error.message || "Could not save listing.", 500);
     }
 
-    if (uploaded.errors.length > 0) {
-      console.error("Dealer listing photo upload issues:", uploaded.errors);
-    }
 
     if (data?.id) {
       const title = [payload.year, payload.make, payload.model, payload.variant]

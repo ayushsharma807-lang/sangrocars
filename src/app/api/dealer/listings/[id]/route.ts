@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { requireDealer } from "@/lib/dealerAuth";
-import { uploadListingPhotoFiles } from "@/lib/uploadListingPhotos";
 import { buildListingExperienceDescription } from "@/lib/listingExperience";
 import { parseIndianMoney } from "@/lib/parseIndianMoney";
 import {
@@ -28,8 +27,25 @@ const parsePhotos = (value: FormDataEntryValue | null) => {
     .filter(Boolean);
 };
 
-const mergePhotoUrls = (manualUrls: string[], uploadedUrls: string[]) =>
-  Array.from(new Set([...manualUrls, ...uploadedUrls]));
+const dedupePhotoUrls = (urls: string[]) => Array.from(new Set(urls));
+
+const wantsJson = (req: Request) =>
+  req.headers.get("x-requested-with") === "XMLHttpRequest" ||
+  req.headers.get("accept")?.includes("application/json");
+
+const respondError = (req: Request, path: string, error: string, status = 400) => {
+  if (wantsJson(req)) {
+    return NextResponse.json({ ok: false, error }, { status });
+  }
+  return NextResponse.redirect(new URL(path, req.url));
+};
+
+const respondSuccess = (req: Request, path: string) => {
+  if (wantsJson(req)) {
+    return NextResponse.json({ ok: true, redirectTo: new URL(path, req.url).toString() });
+  }
+  return NextResponse.redirect(new URL(path, req.url));
+};
 
 export async function POST(
   req: Request,
@@ -38,19 +54,12 @@ export async function POST(
   const { id } = await params;
   const auth = await requireDealer();
   if (!auth.ok) {
-    return NextResponse.redirect(new URL("/dealer-admin/login", req.url));
+    return respondError(req, "/dealer-admin/login", "Please sign in again.", 401);
   }
 
   const form = await req.formData();
   const submittedPrice = parsePrice(form.get("price"));
-  const uploaded = await uploadListingPhotoFiles(
-    form.getAll("photo_files"),
-    `dealer/${auth.dealer.id}`
-  );
-  const photoUrls = mergePhotoUrls(
-    parsePhotos(form.get("photo_urls")),
-    uploaded.urls
-  );
+  const photoUrls = dedupePhotoUrls(parsePhotos(form.get("photo_urls")));
   const description = buildListingExperienceDescription(
     {
       tour360Url: String(form.get("tour_360_url") ?? "").trim(),
@@ -87,9 +96,13 @@ export async function POST(
     .single();
 
   if (!listing || listing.dealer_id !== auth.dealer.id) {
-    return NextResponse.redirect(new URL("/dealer-admin/listings", req.url));
+    return respondError(req, "/dealer-admin/listings", "Listing not found.", 404);
   }
 
-  await sb.from("listings").update(payload).eq("id", id);
-  return NextResponse.redirect(new URL(`/dealer-admin/listings/${id}`, req.url));
+  const { error } = await sb.from("listings").update(payload).eq("id", id);
+  if (error) {
+    return respondError(req, `/dealer-admin/listings/${id}`, error.message || "Could not save listing.", 500);
+  }
+
+  return respondSuccess(req, `/dealer-admin/listings/${id}`);
 }

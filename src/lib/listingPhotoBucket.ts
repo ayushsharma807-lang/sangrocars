@@ -1,7 +1,8 @@
+import { CAR_IMAGE_BUCKET } from "@/lib/carImageBucket";
 import { supabaseServer } from "@/lib/supabase";
 
 export const LISTING_PHOTO_BUCKET =
-  process.env.LISTING_PHOTO_BUCKET ?? "listing-photos";
+  process.env.LISTING_PHOTO_BUCKET ?? CAR_IMAGE_BUCKET;
 
 const isNotFound = (error: unknown) => {
   if (!error || typeof error !== "object") return false;

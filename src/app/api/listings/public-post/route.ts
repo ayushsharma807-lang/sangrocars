@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { buildPrivateSellerDescription } from "@/lib/privateSeller";
-import { uploadListingPhotoFiles } from "@/lib/uploadListingPhotos";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
 import { phoneVariants } from "@/lib/phone";
 import { notifyPendingListing } from "@/lib/adminNotifications";
@@ -36,8 +35,7 @@ const parsePhotos = (value: FormDataEntryValue | null) => {
     .filter(Boolean);
 };
 
-const mergePhotoUrls = (manualUrls: string[], uploadedUrls: string[]) =>
-  Array.from(new Set([...manualUrls, ...uploadedUrls]));
+const dedupePhotoUrls = (urls: string[]) => Array.from(new Set(urls));
 
 const toType = (value: FormDataEntryValue | null) => {
   const normalized = String(value ?? "used").trim().toLowerCase();
@@ -181,6 +179,24 @@ const upsertDealer = async ({
   return null;
 };
 
+const wantsJson = (req: Request) =>
+  req.headers.get("x-requested-with") === "XMLHttpRequest" ||
+  req.headers.get("accept")?.includes("application/json");
+
+const respondError = (req: Request, path: string, error: string, status = 400) => {
+  if (wantsJson(req)) {
+    return NextResponse.json({ ok: false, error }, { status });
+  }
+  return NextResponse.redirect(toRedirectUrl(req, path), { status: 303 });
+};
+
+const respondSuccess = (req: Request, path: string) => {
+  if (wantsJson(req)) {
+    return NextResponse.json({ ok: true, redirectTo: toRedirectUrl(req, path).toString() });
+  }
+  return NextResponse.redirect(toRedirectUrl(req, path), { status: 303 });
+};
+
 const toRedirectUrl = (req: Request, path: string) => {
   const forwardedHost = pickForwarded(req.headers.get("x-forwarded-host"));
   const forwardedProto = pickForwarded(req.headers.get("x-forwarded-proto"));
@@ -201,10 +217,7 @@ export async function POST(req: Request) {
   const dealerName = String(form.get("dealer_name") ?? "").trim();
 
   if (!make || !model || !sellerPhone) {
-    return NextResponse.redirect(
-      toRedirectUrl(req, "/sell?error=missing_fields"),
-      { status: 303 }
-    );
+    return respondError(req, "/sell?error=missing_fields", "Please fill required fields (make, model, and phone).", 400);
   }
 
   let dealerId: string | null = null;
@@ -232,14 +245,7 @@ export async function POST(req: Request) {
     : sellerDescription;
   const parsedPrice = parsePrice(form.get("price"));
 
-  const uploaded = await uploadListingPhotoFiles(
-    form.getAll("photo_files"),
-    `public/${Date.now()}`
-  );
-  const photoUrls = mergePhotoUrls(
-    parsePhotos(form.get("photo_urls")),
-    uploaded.urls
-  );
+  const photoUrls = dedupePhotoUrls(parsePhotos(form.get("photo_urls")));
 
   const payload = {
     source: DEFAULT_LISTING_SOURCE,
@@ -269,9 +275,12 @@ export async function POST(req: Request) {
     .single();
 
   if (error || !data?.id) {
-    return NextResponse.redirect(toRedirectUrl(req, "/sell?error=create_failed"), {
-      status: 303,
-    });
+    return respondError(
+      req,
+      "/sell?error=create_failed",
+      error?.message || "Could not create your ad right now. Please try again.",
+      500
+    );
   }
 
   const title = [payload.year, payload.make, payload.model, payload.variant]
@@ -292,7 +301,5 @@ export async function POST(req: Request) {
     listingId: data.id,
   });
 
-  return NextResponse.redirect(toRedirectUrl(req, `/sell?status=submitted&id=${data.id}`), {
-    status: 303,
-  });
+  return respondSuccess(req, `/sell?status=submitted&id=${data.id}`);
 }

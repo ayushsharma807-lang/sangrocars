@@ -9,6 +9,7 @@ import {
   getModelOptions,
   getVariantOptions,
 } from "@/lib/carOptions";
+import { uploadCarImagesFromClient } from "@/lib/clientCarImageUpload";
 import { parseIndianMoney } from "@/lib/parseIndianMoney";
 
 const MIN_PHOTOS = 1;
@@ -40,6 +41,8 @@ export default function SellCarForm() {
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
 
   const [sellerType, setSellerType] = useState("private");
   const [dealerName, setDealerName] = useState("");
@@ -184,13 +187,70 @@ export default function SellCarForm() {
     setStep(Math.max(1, step - 1));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
     if (!step1Ready || !step2Ready || !step3Ready) {
-      event.preventDefault();
       setFormError("Please complete all steps before publishing.");
       return;
     }
+
+    if (isSubmitting) {
+      return;
+    }
+
     setFormError(null);
+    setIsSubmitting(true);
+    setUploadProgress(null);
+
+    try {
+      const formData = new FormData(event.currentTarget);
+      const uploadedUrls = await uploadCarImagesFromClient(
+        photoFiles,
+        `public/${Date.now()}`,
+        (progress) => setUploadProgress(progress)
+      );
+      formData.delete("photo_files");
+      formData.set("photo_urls", uploadedUrls.join("\n"));
+
+      const response = await fetch("/api/listings/public-post", {
+        method: "POST",
+        body: formData,
+        credentials: "same-origin",
+        headers: {
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
+
+      const contentType = response.headers.get("content-type") ?? "";
+      const payload = contentType.includes("application/json")
+        ? await response.json().catch(() => null)
+        : null;
+
+      if (!response.ok || !payload?.ok) {
+        setFormError(
+          typeof payload?.error === "string" && payload.error
+            ? payload.error
+            : "Could not create your ad right now. Please try again."
+        );
+        setIsSubmitting(false);
+        setUploadProgress(null);
+        return;
+      }
+
+      if (typeof window !== "undefined") {
+        window.location.assign(payload.redirectTo || "/sell?status=submitted");
+      }
+    } catch (error) {
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : "Could not create your ad right now. Please try again."
+      );
+      setIsSubmitting(false);
+      setUploadProgress(null);
+    }
   };
 
   return (
@@ -377,6 +437,9 @@ export default function SellCarForm() {
           <div className="sell-hint">
             Add at least {MIN_PHOTOS} photos to attract buyers. Listings with photos sell 4x faster.
           </div>
+          {uploadProgress && (
+            <div className="sell-hint">Uploading photos: {uploadProgress.done}/{uploadProgress.total}</div>
+          )}
           {photoPreviews.length > 0 && (
             <div className="sell-photo-grid">
               {photoPreviews.map((url, index) => (
@@ -479,8 +542,8 @@ export default function SellCarForm() {
           </button>
         )}
         {step === 3 && (
-          <button className="simple-button sell-form__submit" type="submit">
-            List my car for sale
+          <button className="simple-button sell-form__submit" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Uploading photos..." : "List my car for sale"}
           </button>
         )}
       </div>
