@@ -164,18 +164,22 @@ const createDealerRecord = async ({
 
 export async function POST(req: Request) {
   const form = await req.formData();
-  const name = String(form.get("name") ?? "").trim();
+  const rawName = String(form.get("name") ?? "").trim();
   const phone = String(form.get("phone") ?? "").trim();
   const city = String(form.get("city") ?? "").trim();
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   const password = String(form.get("password") ?? "");
   const nextPath = String(form.get("next") ?? "/dealer-admin/profile");
+  const name =
+    rawName ||
+    (email.includes("@") ? email.split("@")[0]?.replace(/[._-]+/g, " ") : "") ||
+    "Dealer";
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!name || !email || !password || password.length < 8) {
+  if (!email || !password || password.length < 8) {
     const url = new URL("/dealer-admin/signup", req.url);
     url.searchParams.set("error", "invalid_input");
     url.searchParams.set("next", nextPath);
