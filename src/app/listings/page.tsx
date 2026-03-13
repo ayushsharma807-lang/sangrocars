@@ -711,16 +711,6 @@ export default async function Home({
                 />
               </div>
               <div className="cw-search-bar__select">
-                <select name="city" defaultValue={cityValue ?? ""} aria-label="City">
-                  <option value="">All cities</option>
-                  {cities.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="cw-search-bar__select">
                 <select
                   name="budget"
                   defaultValue={budgetValue ?? ""}
@@ -786,7 +776,7 @@ export default async function Home({
               ),
             },
             {
-              label: "No Dealer Spam",
+              label: "Dealer Listings",
               icon: (
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path
