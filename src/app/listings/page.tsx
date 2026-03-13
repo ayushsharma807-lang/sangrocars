@@ -1352,8 +1352,6 @@ export default async function Home({
                           </div>
                           {listing.dealer_id && (
                             <div className="cw-dealer-row">
-                              <span className="cw-dealer-badge">Finance available</span>
-                              <span className="cw-dealer-badge">Insurance support</span>
                               <span className="cw-dealer-response">
                                 Usually responds in 10 mins
                               </span>
