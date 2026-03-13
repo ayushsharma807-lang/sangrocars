@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/adminAuth";
+import { extractDealerCode } from "@/lib/dealerCode";
 
 type DealerRow = Record<string, unknown>;
 type ListingRow = {
@@ -22,6 +23,7 @@ type SearchParams = {
 
 type DealerSummary = {
   id: string;
+  dealerCode: string | null;
   name: string;
   email: string | null;
   phone: string | null;
@@ -111,6 +113,7 @@ const buildDealerSummaries = (dealers: DealerRow[], listings: ListingRow[]) => {
     const name =
       getDealerField(dealer, ["name", "dealer_name", "company_name"]) ??
       "Dealer";
+    const dealerCode = extractDealerCode(getDealerField(dealer, ["description"]));
     const email = getDealerField(dealer, ["email", "owner_email", "contact_email"]);
     const phone = getDealerField(dealer, ["phone", "whatsapp", "mobile"]);
     const address = getDealerField(dealer, ["address", "location"]);
@@ -130,6 +133,7 @@ const buildDealerSummaries = (dealers: DealerRow[], listings: ListingRow[]) => {
 
     return {
       id,
+      dealerCode,
       name,
       email,
       phone,
@@ -155,7 +159,14 @@ const filterSummaries = (
   const q = filters.q.trim().toLowerCase();
   if (q) {
     filtered = filtered.filter((dealer) =>
-      [dealer.name, dealer.email, dealer.phone, dealer.city, dealer.address]
+      [
+        dealer.name,
+        dealer.dealerCode,
+        dealer.email,
+        dealer.phone,
+        dealer.city,
+        dealer.address,
+      ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
@@ -296,6 +307,9 @@ export default async function AdminDealersPage({
         {action === "dealer_deleted" && (
           <div className="admin-banner">Dealer account deleted successfully.</div>
         )}
+        {action === "dealer_created" && (
+          <div className="admin-banner">Dealer account created successfully.</div>
+        )}
         {errorText && (
           <div className="admin-banner admin-banner--error">
             {decodeURIComponent(errorText)}
@@ -325,12 +339,39 @@ export default async function AdminDealersPage({
           </div>
         </div>
 
+        <form className="dealer-form" method="post" action="/api/admin/dealers">
+          <div className="export-header">
+            <div>
+              <h3>Add dealer manually</h3>
+              <p>Create a dealer with only a name and a 6 digit dealer ID.</p>
+            </div>
+          </div>
+          <div className="dealer-form__grid">
+            <label>
+              Dealer name
+              <input name="name" placeholder="e.g., Sharma Cars" required />
+            </label>
+            <label>
+              Dealer ID (6 digits)
+              <input
+                name="dealer_code"
+                inputMode="numeric"
+                pattern="[0-9]{6}"
+                placeholder="Leave blank to auto-generate"
+              />
+            </label>
+          </div>
+          <button className="btn btn--solid" type="submit">
+            Add dealer
+          </button>
+        </form>
+
         <form className="admin-filter" method="get">
           <label>
             Search
             <input
               name="q"
-              placeholder="Dealer name, email, phone, city"
+              placeholder="Dealer name, 6 digit ID, email, phone, city"
               defaultValue={filters.q}
             />
           </label>
@@ -394,6 +435,7 @@ export default async function AdminDealersPage({
             <thead>
               <tr>
                 <th>Dealer</th>
+                <th>Dealer ID</th>
                 <th>Contact</th>
                 <th>City</th>
                 <th>Live cars</th>
@@ -407,7 +449,7 @@ export default async function AdminDealersPage({
             <tbody>
               {visibleDealers.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="empty">
+                  <td colSpan={10} className="empty">
                     No dealers found for these filters.
                   </td>
                 </tr>
@@ -419,6 +461,9 @@ export default async function AdminDealersPage({
                       <div className="notification-meta">
                         ID: {dealer.id.slice(0, 8)}
                       </div>
+                    </td>
+                    <td>
+                      <strong>{dealer.dealerCode || "—"}</strong>
                     </td>
                     <td>
                       <div>{dealer.email || "—"}</div>

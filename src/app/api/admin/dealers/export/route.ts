@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/adminAuth";
+import { extractDealerCode } from "@/lib/dealerCode";
 
 type DealerRow = Record<string, unknown>;
 type ListingRow = {
@@ -12,6 +13,7 @@ type ListingRow = {
 
 type DealerSummary = {
   id: string;
+  dealerCode: string | null;
   name: string;
   email: string | null;
   phone: string | null;
@@ -93,6 +95,7 @@ const buildDealerSummaries = (dealers: DealerRow[], listings: ListingRow[]) => {
     const name =
       getDealerField(dealer, ["name", "dealer_name", "company_name"]) ??
       "Dealer";
+    const dealerCode = extractDealerCode(getDealerField(dealer, ["description"]));
     const email = getDealerField(dealer, ["email", "owner_email", "contact_email"]);
     const phone = getDealerField(dealer, ["phone", "whatsapp", "mobile"]);
     const address = getDealerField(dealer, ["address", "location"]);
@@ -112,6 +115,7 @@ const buildDealerSummaries = (dealers: DealerRow[], listings: ListingRow[]) => {
 
     return {
       id,
+      dealerCode,
       name,
       email,
       phone,
@@ -137,7 +141,14 @@ const filterSummaries = (
   const q = filters.q.trim().toLowerCase();
   if (q) {
     filtered = filtered.filter((dealer) =>
-      [dealer.name, dealer.email, dealer.phone, dealer.city, dealer.address]
+      [
+        dealer.name,
+        dealer.dealerCode,
+        dealer.email,
+        dealer.phone,
+        dealer.city,
+        dealer.address,
+      ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
@@ -212,6 +223,7 @@ export async function GET(req: Request) {
   );
   const rows = filterSummaries(summaries, filters).map((dealer) => ({
     id: dealer.id,
+    dealer_code: dealer.dealerCode,
     name: dealer.name,
     email: dealer.email,
     phone: dealer.phone,
@@ -227,6 +239,7 @@ export async function GET(req: Request) {
 
   const columns = [
     "id",
+    "dealer_code",
     "name",
     "email",
     "phone",

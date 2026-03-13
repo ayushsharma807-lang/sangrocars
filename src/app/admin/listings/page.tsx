@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/adminAuth";
 import { parsePrivateSellerDescription } from "@/lib/privateSeller";
+import { extractDealerCode } from "@/lib/dealerCode";
 import {
   extractDealerSubmittedPrice,
   isListingPendingApproval,
@@ -28,6 +29,7 @@ type ListingRow = {
 type DealerLite = {
   id: string;
   name: string | null;
+  description?: string | null;
 };
 
 type SearchParams = {
@@ -156,14 +158,17 @@ export default async function AdminListingsPage({
   const dealerIds = Array.from(
     new Set(visibleListings.map((listing) => listing.dealer_id).filter(Boolean))
   ) as string[];
-  const dealerMap = new Map<string, string>();
+  const dealerMap = new Map<string, { name: string; code: string | null }>();
   if (dealerIds.length > 0) {
     const { data: dealerRows } = await sb
       .from("dealers")
-      .select("id, name")
+      .select("id, name, description")
       .in("id", dealerIds);
     for (const dealer of (dealerRows ?? []) as DealerLite[]) {
-      dealerMap.set(dealer.id, dealer.name ?? "Dealer");
+      dealerMap.set(dealer.id, {
+        name: dealer.name ?? "Dealer",
+        code: extractDealerCode(dealer.description),
+      });
     }
   }
 
@@ -363,8 +368,14 @@ export default async function AdminListingsPage({
                     const privateSeller = parsePrivateSellerDescription(
                       listing.description
                     );
+                    const dealerInfo = listing.dealer_id
+                      ? dealerMap.get(listing.dealer_id) ?? {
+                          name: "Dealer",
+                          code: null,
+                        }
+                      : null;
                     const ownerLabel = listing.dealer_id
-                      ? dealerMap.get(listing.dealer_id) ?? "Dealer"
+                      ? dealerInfo?.name ?? "Dealer"
                       : privateSeller.seller.name || "Private seller";
                     const ownerType = listing.dealer_id ? "Dealer" : "Private";
                     const isPending = isListingPendingApproval(listing);
@@ -399,7 +410,10 @@ export default async function AdminListingsPage({
                         </td>
                         <td>
                           <div>{ownerLabel}</div>
-                          <div className="notification-meta">{ownerType}</div>
+                          <div className="notification-meta">
+                            {ownerType}
+                            {dealerInfo?.code ? ` • ID ${dealerInfo.code}` : ""}
+                          </div>
                         </td>
                         <td>
                           <div>{formatPrice(netPrice)}</div>
