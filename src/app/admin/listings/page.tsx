@@ -443,6 +443,9 @@ export default async function AdminListingsPage({
                             <Link className="link" href={`/listing/${listing.id}`}>
                               View
                             </Link>
+                            <Link className="link" href={`/admin/listings/${listing.id}`}>
+                              Edit
+                            </Link>
                             {isPending && (
                               <form
                                 method="post"
