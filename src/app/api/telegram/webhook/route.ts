@@ -3,7 +3,10 @@ import { supabaseServer } from "@/lib/supabase";
 import { ensureListingPhotoBucket, LISTING_PHOTO_BUCKET } from "@/lib/listingPhotoBucket";
 import { buildPrivateSellerDescription } from "@/lib/privateSeller";
 import { notifyPendingListing } from "@/lib/adminNotifications";
-import { markListingPendingApproval } from "@/lib/listingApproval";
+import {
+  markListingPendingApproval,
+  withDealerSubmittedPrice,
+} from "@/lib/listingApproval";
 import { parseListingText } from "@/lib/listingTextParser";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
@@ -863,6 +866,10 @@ export async function POST(req: Request) {
       },
       details
     );
+    const originalPrice =
+      typeof data.price === "number" && Number.isFinite(data.price)
+        ? data.price
+        : null;
 
     const payload = {
       source: "individual",
@@ -873,12 +880,14 @@ export async function POST(req: Request) {
       model: data.model ?? null,
       variant: data.variant ?? null,
       year: data.year ?? null,
-      price: data.price ?? null,
+      price: originalPrice,
       km: data.km ?? null,
       fuel: data.fuel ?? null,
       transmission: data.transmission ?? null,
       location: data.location ?? null,
-      description: markListingPendingApproval(description),
+      description: markListingPendingApproval(
+        withDealerSubmittedPrice(description, originalPrice)
+      ),
       photo_urls: photoUrls,
     };
 
