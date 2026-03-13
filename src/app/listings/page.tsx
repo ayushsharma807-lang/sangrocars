@@ -4,8 +4,8 @@ import SortForm from "@/app/components/SortForm";
 import PriceRangeSlider from "@/app/components/PriceRangeSlider";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { getPrimaryPhoto } from "@/lib/photoUrls";
-import { dealerSlug } from "@/lib/dealerSlug";
 import BodyTypeSection from "@/app/components/BodyTypeSection";
+import { extractDealerCode } from "@/lib/dealerCode";
 
 type SearchParams = {
   q?: string | string[];
@@ -74,8 +74,7 @@ type Listing = {
 
 type DealerOption = {
   id: string;
-  name: string;
-  logo?: string | null;
+  code: string | null;
 };
 
 const PAGE_SIZE = 9;
@@ -91,6 +90,9 @@ const BUDGET_OPTIONS = [
   { value: "5000000-20000000", label: "₹50L+" },
 ];
 const POPULAR_SEARCHES = ["Swift", "Thar", "Creta", "Fortuner"];
+
+const publicDealerLabel = (code?: string | null) =>
+  code ? `Dealer ID ${code}` : "Verified dealer";
 
 const parseMoney = (value?: string) => {
   if (!value) return null;
@@ -251,21 +253,16 @@ const getDealerOptions = async () => {
   if (!sb) return [] as DealerOption[];
   const { data, error } = await sb
     .from("dealers")
-    .select("id, name, dealer_name, company_name, logo_url, logo")
+    .select("id, description")
     .limit(4000);
   if (error || !data) return [] as DealerOption[];
   return (data as Record<string, unknown>[])
     .map((row) => ({
       id: String(row.id ?? ""),
-      name:
-        String(row.name ?? "") ||
-        String(row.dealer_name ?? "") ||
-        String(row.company_name ?? "") ||
-        "Dealer",
-      logo: (row.logo_url ?? row.logo ?? null) as string | null,
+      code: extractDealerCode((row.description ?? null) as string | null),
     }))
     .filter((dealer) => dealer.id)
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => (a.code ?? "").localeCompare(b.code ?? ""));
 };
 
 const getPriceBounds = async () => {
@@ -450,20 +447,14 @@ export default async function Home({
     if (sb) {
       const { data: dealerRows } = await sb
         .from("dealers")
-        .select("id, name, dealer_name, company_name, logo_url, logo")
+        .select("id, description")
         .in("id", dealerIds);
       for (const row of (dealerRows ?? []) as Record<string, unknown>[]) {
         const id = String(row.id ?? "");
         if (!id) continue;
-        const name =
-          String(row.name ?? "") ||
-          String(row.dealer_name ?? "") ||
-          String(row.company_name ?? "") ||
-          "Dealer";
         dealerMap.set(id, {
           id,
-          name,
-          logo: (row.logo_url ?? row.logo ?? null) as string | null,
+          code: extractDealerCode((row.description ?? null) as string | null),
         });
       }
 
@@ -524,7 +515,7 @@ export default async function Home({
     .filter(([, value]) => value)
     .map(([key, value]) => ({ key, value: String(value) }));
   const dealerLabel = dealerIdValue
-    ? dealers.find((dealer) => dealer.id === dealerIdValue)?.name ?? "Dealer"
+    ? publicDealerLabel(dealers.find((dealer) => dealer.id === dealerIdValue)?.code)
     : null;
   type RawFilterChip = {
     key: string;
@@ -594,7 +585,7 @@ export default async function Home({
     dealerIdValue
       ? {
           key: "dealer_id",
-          label: `Dealer: ${dealerLabel ?? "Dealer"}`,
+          label: dealerLabel ?? "Dealer",
           overrides: { dealer_id: null },
         }
       : null,
@@ -1088,7 +1079,7 @@ export default async function Home({
                   <option value="">All dealers</option>
                   {dealers.map((dealer) => (
                     <option key={dealer.id} value={dealer.id}>
-                      {dealer.name}
+                      {publicDealerLabel(dealer.code)}
                     </option>
                   ))}
                 </select>
@@ -1257,8 +1248,9 @@ export default async function Home({
                   const dealerInfo = listing.dealer_id
                     ? dealerMap.get(listing.dealer_id)
                     : null;
-                  const dealerName =
-                    dealerInfo?.name ?? (listing.dealer_id ? "Dealer" : "Private seller");
+                  const dealerName = listing.dealer_id
+                    ? publicDealerLabel(dealerInfo?.code)
+                    : "Private seller";
                   const dealerCount = listing.dealer_id
                     ? dealerCounts.get(listing.dealer_id) ?? 0
                     : null;
@@ -1361,29 +1353,11 @@ export default async function Home({
                         )}
                         <div className="cw-listing__dealer">
                           <div className="cw-listing__dealer-head">
-                            {dealerInfo?.logo ? (
-                              <img
-                                className="cw-dealer-logo"
-                                src={dealerInfo.logo}
-                                alt={`${dealerName} logo`}
-                                loading="lazy"
-                              />
-                            ) : (
-                              <span className="cw-dealer-logo cw-dealer-logo--fallback">
-                                {dealerName.charAt(0)}
-                              </span>
-                            )}
+                            <span className="cw-dealer-logo cw-dealer-logo--fallback">
+                              {listing.dealer_id ? "#" : "P"}
+                            </span>
                             <div>
-                              {listing.dealer_id ? (
-                                <Link
-                                  className="cw-dealer-name"
-                                  href={`/dealers/${dealerSlug(dealerName, listing.dealer_id)}`}
-                                >
-                                  {dealerName}
-                                </Link>
-                              ) : (
-                                <span className="cw-dealer-name">{dealerName}</span>
-                              )}
+                              <span className="cw-dealer-name">{dealerName}</span>
                               <div className="cw-dealer-meta">
                                 {listing.dealer_id
                                   ? `Verified dealer · ${dealerCount} active cars`
@@ -1399,14 +1373,6 @@ export default async function Home({
                                 Usually responds in 10 mins
                               </span>
                             </div>
-                          )}
-                          {listing.dealer_id && (
-                            <Link
-                              className="cw-dealer-link"
-                              href={`/dealers/${dealerSlug(dealerName, listing.dealer_id)}`}
-                            >
-                              View dealer profile
-                            </Link>
                           )}
                         </div>
                         {emi && <span className="cw-listing__emi">{emi}</span>}

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { getPrimaryPhoto } from "@/lib/photoUrls";
+import { extractDealerCode } from "@/lib/dealerCode";
 
 type Listing = {
   id: string;
@@ -28,6 +29,9 @@ const toTitle = (value: string | null) => {
 
 const formatPrice = (value: number | null) =>
   value ? `₹${value.toLocaleString("en-IN")}` : "Price on request";
+
+const publicDealerLabel = (code?: string | null) =>
+  code ? `Dealer ID ${code}` : "Verified dealer";
 
 const parseIds = (raw?: string) => {
   if (!raw) return [] as string[];
@@ -123,10 +127,15 @@ export default async function ComparePage({
   if (dealerIds.length > 0) {
     const { data: dealerRows } = await sb
       .from("dealers")
-      .select("id, name")
+      .select("id, description")
       .in("id", dealerIds);
     for (const dealer of dealerRows ?? []) {
-      if (dealer.id) dealerMap.set(String(dealer.id), String(dealer.name ?? "Dealer"));
+      if (dealer.id) {
+        dealerMap.set(
+          String(dealer.id),
+          publicDealerLabel(extractDealerCode(String(dealer.description ?? "")))
+        );
+      }
     }
   }
 

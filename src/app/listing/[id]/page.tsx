@@ -10,8 +10,8 @@ import NearbyDealersMap from "./NearbyDealersMap";
 import SaveToGarageButton from "@/app/components/SaveToGarageButton";
 import RecentViewTracker from "@/app/components/RecentViewTracker";
 import { getPrimaryPhoto, normalizePhotoUrls } from "@/lib/photoUrls";
-import { dealerSlug } from "@/lib/dealerSlug";
 import { isListingPendingApproval } from "@/lib/listingApproval";
+import { extractDealerCode } from "@/lib/dealerCode";
 
 type Listing = {
   id: string;
@@ -38,6 +38,7 @@ type Dealer = {
   whatsapp: string | null;
   email: string | null;
   address: string | null;
+  description: string | null;
 };
 
 type PredictivePricing = {
@@ -47,6 +48,9 @@ type PredictivePricing = {
 };
 
 type SupabaseClient = NonNullable<ReturnType<typeof supabaseServerOptional>>;
+
+const publicDealerLabel = (code?: string | null) =>
+  code ? `Dealer ID ${code}` : "Verified dealer";
 
 export async function generateMetadata({
   params,
@@ -399,13 +403,15 @@ export default async function ListingPage({
   if (listing.dealer_id) {
     const { data: dealerData, error: dealerError } = await sb
       .from("dealers")
-      .select("id, name, phone, whatsapp, email, address")
+      .select("id, name, phone, whatsapp, email, address, description")
       .eq("id", listing.dealer_id)
       .single();
     if (!dealerError && dealerData) {
       dealer = dealerData as Dealer;
     }
   }
+  const dealerCode = extractDealerCode(dealer?.description);
+  const publicDealerName = publicDealerLabel(dealerCode);
   let moreFromDealer: Listing[] = [];
   if (listing.dealer_id) {
     const { data: moreRows } = await sb
@@ -438,9 +444,6 @@ export default async function ListingPage({
     similarListings = (similarRows ?? []) as Listing[];
   }
 
-  const privateSellerName = sanitizeSellerName(privateSeller.seller.name);
-  const dealerName =
-    dealer?.name ?? privateSellerName ?? "Private seller";
   const dealerAddress = dealer?.address ?? listing.location ?? "Address on request";
   const supportLinks = buildSupportLinks(listingTitle, listingUrl, listing.id);
   const estimatedEmi = estimateEmi(listing.price);
@@ -624,18 +627,10 @@ export default async function ListingPage({
             </div>
             <div className="detail-sidebar__listed">
               <p className="detail-sidebar__label">LISTED BY</p>
-              <strong>{dealer?.id ? `Dealer: ${dealerName}` : "Private seller"}</strong>
+              <strong>{dealer?.id ? publicDealerName : "Private seller"}</strong>
               <span>📍 {dealerAddress}</span>
               <span>✓ Verified by SangroCars</span>
               <span>Usually responds within 10 minutes</span>
-              {dealer?.id && (
-                <Link
-                  className="simple-link"
-                  href={`/dealers/${dealerSlug(dealerName, dealer.id)}`}
-                >
-                  View dealer profile
-                </Link>
-              )}
             </div>
             <div className="detail-sidebar__assist">
               <p>Buy with SangroCars assistance</p>
@@ -691,7 +686,7 @@ export default async function ListingPage({
         </div>
         {moreFromDealer.length > 0 && (
           <div className="simple-detail__section">
-            <h3>More from {dealerName}</h3>
+            <h3>More from {publicDealerName}</h3>
             <div className="listings">
               {moreFromDealer.map((item) => {
                 const photo = getPrimaryPhoto(item.photo_urls);
