@@ -364,17 +364,6 @@ export default async function DealsOfTheWeekPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
-      <section className="simple-shell">
-        <nav className="cw-nav">
-          <div className="cw-nav__brand">SangroCars</div>
-          <div className="cw-nav__links">
-            <Link href="/">Main Home</Link>
-            <Link href="/listings">Browse Cars</Link>
-            <Link href="/sell">Sell Car</Link>
-            <Link href="/dealer-admin/login">Dealer Login</Link>
-          </div>
-        </nav>
-      </section>
       <section className="exclusive-hero">
         <div className="exclusive-hero__media" aria-hidden="true">
           <video
