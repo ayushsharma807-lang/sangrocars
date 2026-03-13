@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import DealerNav from "../DealerNav";
+import { extractDealerCode, stripDealerCodeMeta } from "@/lib/dealerCode";
 import { requireDealer } from "@/lib/dealerAuth";
 
 export default async function DealerProfilePage() {
@@ -16,7 +17,7 @@ export default async function DealerProfilePage() {
 
   return (
     <main className="home dealer-admin">
-      <DealerNav dealerId={dealer.id} dealerName={dealer.name} />
+      <DealerNav dealerId={dealer.id} dealerName={dealer.name} dealerCode={extractDealerCode(dealer.description)} />
       <section className="section">
         <div className="section__header">
           <div>
@@ -161,7 +162,7 @@ export default async function DealerProfilePage() {
             <textarea
               name="description"
               rows={4}
-              defaultValue={dealer.description ?? ""}
+              defaultValue={stripDealerCodeMeta(dealer.description)}
             />
           </label>
           <button className="btn btn--solid" type="submit">

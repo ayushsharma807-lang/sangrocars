@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
+import { extractDealerCode, generateDealerCode, withDealerCode } from "@/lib/dealerCode";
 
 const isMissingSchema = (message?: string | null) => {
   if (!message) return false;
@@ -60,7 +61,27 @@ const createDealerRecord = async ({
   city: string;
 }) => {
   const sb = supabaseServer();
+  const { data: codeRows } = await sb.from("dealers").select("description").limit(5000);
+  const usedCodes = new Set(
+    ((codeRows ?? []) as { description?: string | null }[])
+      .map((row) => extractDealerCode(row.description))
+      .filter((value): value is string => Boolean(value))
+  );
+  const fallbackCode = generateDealerCode(name, usedCodes);
+
   const syncExistingDealer = async (dealerId: string) => {
+    const existingDealer = await sb
+      .from("dealers")
+      .select("description")
+      .eq("id", dealerId)
+      .maybeSingle();
+    const existingCode = extractDealerCode(existingDealer.data?.description);
+    const finalDescription = withDealerCode(
+      typeof existingDealer.data?.description === "string"
+        ? existingDealer.data.description
+        : null,
+      existingCode ?? fallbackCode
+    );
     const payloads: Record<string, unknown>[] = [
       {
         auth_user_id: userId,
@@ -70,6 +91,7 @@ const createDealerRecord = async ({
         whatsapp: phone || null,
         address: city || null,
         city: city || null,
+        description: finalDescription,
       },
       {
         auth_user_id: userId,
@@ -78,12 +100,20 @@ const createDealerRecord = async ({
         phone: phone || null,
         whatsapp: phone || null,
         address: city || null,
+        description: finalDescription,
       },
       {
         auth_user_id: userId,
         name,
         email,
         phone: phone || null,
+        description: finalDescription,
+      },
+      {
+        name,
+        email,
+        phone: phone || null,
+        description: finalDescription,
       },
       {
         name,
@@ -115,6 +145,7 @@ const createDealerRecord = async ({
       phone: phone || null,
       whatsapp: phone || null,
       address: city || null,
+      description: withDealerCode(null, fallbackCode),
     },
     {
       name,
@@ -122,17 +153,25 @@ const createDealerRecord = async ({
       phone: phone || null,
       whatsapp: phone || null,
       address: city || null,
+      description: withDealerCode(null, fallbackCode),
     },
     {
       name,
       email,
       phone: phone || null,
       address: city || null,
+      description: withDealerCode(null, fallbackCode),
     },
     {
       name,
       email,
       phone: phone || null,
+      description: withDealerCode(null, fallbackCode),
+    },
+    {
+      name,
+      email,
+      description: withDealerCode(null, fallbackCode),
     },
     {
       name,

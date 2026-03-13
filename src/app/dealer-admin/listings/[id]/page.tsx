@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import DealerNav from "../../DealerNav";
+import { extractDealerCode } from "@/lib/dealerCode";
 import ListingForm from "../ListingForm";
 import { requireDealer } from "@/lib/dealerAuth";
 import { supabaseServer } from "@/lib/supabase";
@@ -44,7 +45,7 @@ export default async function EditListingPage({
 
   return (
     <main className="home dealer-admin">
-      <DealerNav dealerId={auth.dealer.id} dealerName={auth.dealer.name} />
+      <DealerNav dealerId={auth.dealer.id} dealerName={auth.dealer.name} dealerCode={extractDealerCode(auth.dealer.description)} />
       <section className="section">
         <div className="section__header">
           <div>

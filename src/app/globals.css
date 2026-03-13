@@ -2241,7 +2241,18 @@ body {
 }
 
 .dealer-nav__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   font-weight: 700;
+}
+
+.dealer-nav__code {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .dealer-nav__links {

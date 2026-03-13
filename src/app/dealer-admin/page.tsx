@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import DealerNav from "./DealerNav";
+import { extractDealerCode } from "@/lib/dealerCode";
 import { requireDealer } from "@/lib/dealerAuth";
 import { supabaseServer } from "@/lib/supabase";
 
@@ -104,7 +105,7 @@ export default async function DealerDashboard() {
 
   return (
     <main className="home dealer-admin">
-      <DealerNav dealerId={dealer.id} dealerName={dealer.name} />
+      <DealerNav dealerId={dealer.id} dealerName={dealer.name} dealerCode={extractDealerCode(dealer.description)} />
       <section className="section">
         <div className="section__header">
           <div>

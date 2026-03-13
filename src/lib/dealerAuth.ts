@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { supabaseServer } from "@/lib/supabase";
+import { extractDealerCode, generateDealerCode, withDealerCode } from "@/lib/dealerCode";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -188,6 +189,13 @@ const createDealerForUser = async (user: SupabaseUser) => {
     (user.user_metadata?.whatsapp as string | undefined) ??
     "";
   const city = (user.user_metadata?.city as string | undefined) ?? "";
+  const { data: codeRows } = await sb.from("dealers").select("description").limit(5000);
+  const usedCodes = new Set(
+    ((codeRows ?? []) as { description?: string | null }[])
+      .map((row) => extractDealerCode(row.description))
+      .filter((value): value is string => Boolean(value))
+  );
+  const dealerCode = generateDealerCode(name, usedCodes);
 
   const payloads: Record<string, unknown>[] = [
     {
@@ -198,6 +206,7 @@ const createDealerForUser = async (user: SupabaseUser) => {
       whatsapp: phone || null,
       address: city || null,
       city: city || null,
+      description: withDealerCode(null, dealerCode),
     },
     {
       auth_user_id: user.id,
@@ -206,17 +215,25 @@ const createDealerForUser = async (user: SupabaseUser) => {
       phone: phone || null,
       whatsapp: phone || null,
       address: city || null,
+      description: withDealerCode(null, dealerCode),
     },
     {
       auth_user_id: user.id,
       name,
       email,
       phone: phone || null,
+      description: withDealerCode(null, dealerCode),
     },
     {
       name,
       email,
       phone: phone || null,
+      description: withDealerCode(null, dealerCode),
+    },
+    {
+      name,
+      email,
+      description: withDealerCode(null, dealerCode),
     },
     {
       name,

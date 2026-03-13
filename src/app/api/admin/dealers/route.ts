@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { supabaseServer } from "@/lib/supabase";
-import { extractDealerCode, isValidDealerCode, withDealerCode } from "@/lib/dealerCode";
-
-const randomSixDigit = () =>
-  String(Math.floor(100000 + Math.random() * 900000));
+import {
+  extractDealerCode,
+  generateDealerCode,
+  isValidDealerCode,
+  withDealerCode,
+} from "@/lib/dealerCode";
 
 const buildReturnUrl = (
   req: Request,
@@ -26,7 +28,8 @@ export async function POST(req: Request) {
   const form = await req.formData();
   const name = String(form.get("name") ?? "").trim();
   const requestedCode = String(form.get("dealer_code") ?? "")
-    .replace(/\D/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
     .slice(0, 6);
 
   if (!name) {
@@ -50,16 +53,16 @@ export async function POST(req: Request) {
   const usedCodes = new Set(
     ((existingRows ?? []) as { description?: string | null }[])
       .map((row) => extractDealerCode(row.description))
-      .filter(Boolean)
+      .filter((value): value is string => Boolean(value))
   );
 
-  let dealerCode = requestedCode;
+  let dealerCode: string | null = requestedCode || null;
   if (dealerCode && !isValidDealerCode(dealerCode)) {
     return NextResponse.redirect(
       buildReturnUrl(
         req,
         "error",
-        encodeURIComponent("Dealer ID must be exactly 6 digits.")
+        encodeURIComponent("Dealer ID must be 3 letters and 3 numbers, like SHA123.")
       )
     );
   }
@@ -75,13 +78,7 @@ export async function POST(req: Request) {
   }
 
   if (!dealerCode) {
-    for (let tries = 0; tries < 20; tries += 1) {
-      const candidate = randomSixDigit();
-      if (!usedCodes.has(candidate)) {
-        dealerCode = candidate;
-        break;
-      }
-    }
+    dealerCode = generateDealerCode(name, usedCodes);
   }
 
   if (!dealerCode) {
@@ -89,7 +86,7 @@ export async function POST(req: Request) {
       buildReturnUrl(
         req,
         "error",
-        encodeURIComponent("Could not generate a unique 6 digit dealer ID.")
+        encodeURIComponent("Could not generate a unique dealer ID.")
       )
     );
   }

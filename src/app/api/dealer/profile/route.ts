@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { requireDealer } from "@/lib/dealerAuth";
+import { extractDealerCode, withDealerCode } from "@/lib/dealerCode";
 
 const LOGO_BUCKET = process.env.DEALER_LOGO_BUCKET ?? "dealer-logos";
 const BANNER_BUCKET = process.env.DEALER_BANNER_BUCKET ?? "dealer-banners";
@@ -80,7 +81,11 @@ export async function POST(req: Request) {
     address: sanitize(form.get("address")) || null,
     city: sanitize(form.get("city")) || null,
     website: sanitize(form.get("website")) || null,
-    description: sanitize(form.get("description")) || null,
+    description:
+      withDealerCode(
+        sanitize(form.get("description")) || null,
+        extractDealerCode(auth.dealer.description)
+      ) || null,
     logo_url: logoUrl,
     banner_url: bannerUrl,
     feed_url: sanitize(form.get("feed_url")) || null,
@@ -98,7 +103,11 @@ export async function POST(req: Request) {
       whatsapp: sanitize(form.get("whatsapp")) || null,
       email: sanitize(form.get("email")) || null,
       address: sanitize(form.get("address")) || null,
-      description: sanitize(form.get("description")) || null,
+      description:
+        withDealerCode(
+          sanitize(form.get("description")) || null,
+          extractDealerCode(auth.dealer.description)
+        ) || null,
       logo_url: logoUrl,
       feed_url: sanitize(form.get("feed_url")) || null,
       inventory_url: sanitize(form.get("inventory_url")) || null,

@@ -343,7 +343,7 @@ export default async function AdminDealersPage({
           <div className="export-header">
             <div>
               <h3>Add dealer manually</h3>
-              <p>Create a dealer with only a name and a 6 digit dealer ID.</p>
+              <p>Create a dealer with only a name and a dealer ID like SHA123.</p>
             </div>
           </div>
           <div className="dealer-form__grid">
@@ -352,12 +352,11 @@ export default async function AdminDealersPage({
               <input name="name" placeholder="e.g., Sharma Cars" required />
             </label>
             <label>
-              Dealer ID (6 digits)
+              Dealer ID (3 letters + 3 numbers)
               <input
                 name="dealer_code"
-                inputMode="numeric"
-                pattern="[0-9]{6}"
-                placeholder="Leave blank to auto-generate"
+                pattern="[A-Za-z]{3}[0-9]{3}"
+                placeholder="e.g., SHA123 or leave blank"
               />
             </label>
           </div>
@@ -371,7 +370,7 @@ export default async function AdminDealersPage({
             Search
             <input
               name="q"
-              placeholder="Dealer name, 6 digit ID, email, phone, city"
+              placeholder="Dealer name, dealer ID, email, phone, city"
               defaultValue={filters.q}
             />
           </label>

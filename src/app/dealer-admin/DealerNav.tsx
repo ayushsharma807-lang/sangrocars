@@ -3,13 +3,15 @@ import Link from "next/link";
 type Props = {
   dealerId: string;
   dealerName?: string | null;
+  dealerCode?: string | null;
 };
 
-export default function DealerNav({ dealerId, dealerName }: Props) {
+export default function DealerNav({ dealerId, dealerName, dealerCode }: Props) {
   return (
     <nav className="dealer-nav">
       <div className="dealer-nav__brand">
         <span>{dealerName ?? "Dealer Portal"}</span>
+        {dealerCode ? <small className="dealer-nav__code">ID {dealerCode}</small> : null}
       </div>
       <div className="dealer-nav__links">
         <Link href="/dealer-admin">Dashboard</Link>
