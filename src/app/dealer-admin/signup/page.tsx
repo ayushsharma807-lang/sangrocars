@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 
 export default async function DealerSignupPage({
@@ -19,7 +21,7 @@ export default async function DealerSignupPage({
         <div className="simple-header">
           <div>
             <h1>Dealer signup</h1>
-            <p>Create your dealer account and start posting cars.</p>
+            <p>Create your dealer account with email and password, then start posting cars.</p>
           </div>
           <Link className="simple-link" href="/">
             Back to home
@@ -38,7 +40,9 @@ export default async function DealerSignupPage({
                 ? "Please fill all required fields correctly."
                 : params.error === "profile_setup"
                   ? "Account created, but dealer profile setup failed. Please contact support."
-                  : "Signup failed. Try again with a different email."}
+                  : params.error === "email_exists"
+                    ? "This email is already registered. Try signing in instead."
+                    : "Signup failed. Please try again."}
           </div>
         )}
         <form className="simple-form" method="post" action="/api/dealer/signup">
