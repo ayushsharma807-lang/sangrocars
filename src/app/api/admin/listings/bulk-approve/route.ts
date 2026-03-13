@@ -3,6 +3,7 @@ import { supabaseServer } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/adminAuth";
 import {
   clearListingPendingApproval,
+  extractDealerSubmittedPrice,
   isListingPendingApproval,
   withDealerSubmittedPrice,
 } from "@/lib/listingApproval";
@@ -68,7 +69,7 @@ export async function POST(req: Request) {
           price,
           description: withDealerSubmittedPrice(
             clearListingPendingApproval(row.description),
-            row.price ?? null
+            extractDealerSubmittedPrice(row.description) ?? row.price ?? null
           ),
         })
         .eq("id", row.id)

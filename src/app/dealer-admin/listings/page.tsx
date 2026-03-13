@@ -5,6 +5,7 @@ import { extractDealerCode } from "@/lib/dealerCode";
 import { requireDealer } from "@/lib/dealerAuth";
 import { supabaseServer } from "@/lib/supabase";
 import SyncButton from "./SyncButton";
+import { isListingPendingApproval } from "@/lib/listingApproval";
 
 export default async function DealerListingsPage({
   searchParams,
@@ -22,7 +23,7 @@ export default async function DealerListingsPage({
   const { data: listings } = await sb
     .from("listings")
     .select(
-      "id, make, model, variant, year, price, status, created_at"
+      "id, make, model, variant, year, price, status, description, created_at"
     )
     .eq("dealer_id", auth.dealer.id)
     .order("created_at", { ascending: false });
@@ -157,7 +158,7 @@ export default async function DealerListingsPage({
                       <td>{listing.price ? `₹${listing.price}` : "—"}</td>
                       <td>
                         <span className="status-badge">
-                          {listing.status ?? "available"}
+                          {isListingPendingApproval(listing) ? "pending approval" : listing.status ?? "available"}
                         </span>
                       </td>
                       <td>

@@ -3,6 +3,7 @@ import { supabaseServer } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/adminAuth";
 import {
   clearListingPendingApproval,
+  extractDealerSubmittedPrice,
   withDealerSubmittedPrice,
 } from "@/lib/listingApproval";
 
@@ -35,9 +36,11 @@ export async function POST(
     .select("description, price")
     .eq("id", id)
     .single();
+  const netPrice =
+    extractDealerSubmittedPrice(listing?.description) ?? listing?.price ?? null;
   const preservedDescription = withDealerSubmittedPrice(
     clearListingPendingApproval(listing?.description),
-    listing?.price ?? null
+    netPrice
   );
   const { error } = await sb
     .from("listings")

@@ -379,7 +379,9 @@ export default async function AdminListingsPage({
                       : privateSeller.seller.name || "Private seller";
                     const ownerType = listing.dealer_id ? "Dealer" : "Private";
                     const isPending = isListingPendingApproval(listing);
-                    const netPrice = extractDealerSubmittedPrice(listing.description);
+                    const netPrice =
+                      extractDealerSubmittedPrice(listing.description) ??
+                      (isPending ? listing.price : null);
                     const profit =
                       netPrice && listing.price && listing.price > netPrice
                         ? listing.price - netPrice
@@ -458,7 +460,7 @@ export default async function AdminListingsPage({
                                   Contact for price
                                 </label>
                                 <button className="btn btn--solid" type="submit">
-                                  Approve
+                                  Approve & set selling price
                                 </button>
                               </form>
                             )}
