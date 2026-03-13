@@ -12,6 +12,13 @@ import RecentViewTracker from "@/app/components/RecentViewTracker";
 import { getPrimaryPhoto, normalizePhotoUrls } from "@/lib/photoUrls";
 import { isListingPendingApproval } from "@/lib/listingApproval";
 import { extractDealerCode } from "@/lib/dealerCode";
+import {
+  formatLocationTitle,
+  formatPriceCompact,
+  formatKm,
+  isNewArrival,
+  titleCase,
+} from "@/lib/listingDisplay";
 
 type Listing = {
   id: string;
@@ -29,6 +36,7 @@ type Listing = {
   photo_urls: string[] | null;
   type: string | null;
   status: string | null;
+  created_at: string | null;
 };
 
 type Dealer = {
@@ -114,18 +122,8 @@ export async function generateMetadata({
   };
 }
 
-const formatPrice = (value: number | null) => {
-  if (!value) return "Price on request";
-  return `₹${value.toLocaleString("en-IN")}`;
-};
-
-const toTitle = (value: string | null) => {
-  if (!value) return null;
-  return value
-    .split(" ")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-};
+const formatPrice = formatPriceCompact;
+const toTitle = titleCase;
 
 const normalizePhone = (value?: string | null) => {
   if (!value) return null;
@@ -297,7 +295,7 @@ export default async function ListingPage({
   const { data, error } = await sb
     .from("listings")
     .select(
-      "id, dealer_id, make, model, variant, year, price, km, fuel, transmission, location, description, photo_urls, type, status"
+      "id, dealer_id, make, model, variant, year, price, km, fuel, transmission, location, description, photo_urls, type, status, created_at"
     )
     .eq("id", id)
     .single();
@@ -417,7 +415,7 @@ export default async function ListingPage({
     const { data: moreRows } = await sb
       .from("listings")
       .select(
-        "id, make, model, variant, year, price, km, fuel, transmission, location, photo_urls"
+        "id, make, model, variant, year, price, km, fuel, transmission, location, photo_urls, created_at"
       )
       .eq("dealer_id", listing.dealer_id)
       .eq("status", "available")
@@ -433,7 +431,7 @@ export default async function ListingPage({
     let query = sb
       .from("listings")
       .select(
-        "id, make, model, variant, year, price, km, fuel, transmission, location, photo_urls"
+        "id, make, model, variant, year, price, km, fuel, transmission, location, photo_urls, created_at"
       )
       .eq("status", "available")
       .neq("id", listing.id);
@@ -444,7 +442,8 @@ export default async function ListingPage({
     similarListings = (similarRows ?? []) as Listing[];
   }
 
-  const dealerAddress = dealer?.address ?? listing.location ?? "Address on request";
+  const dealerAddress =
+    formatLocationTitle(dealer?.address ?? listing.location) ?? "Address on request";
   const supportLinks = buildSupportLinks(listingTitle, listingUrl, listing.id);
   const estimatedEmi = estimateEmi(listing.price);
   const quickMeta = [
@@ -486,7 +485,7 @@ export default async function ListingPage({
             </div>
             <div>
               <h1>{titleParts.join(" ")}</h1>
-              <p>{listing.location || "Location on request"}</p>
+              <p>{formatLocationTitle(listing.location) || "Location on request"}</p>
               {quickMeta.length > 0 && (
                 <p className="listing-hero__meta">{quickMeta.join(" · ")}</p>
               )}
@@ -521,7 +520,7 @@ export default async function ListingPage({
           )}
           {listing.km && (
             <span className="simple-pill">
-              {listing.km.toLocaleString("en-IN")} km
+              {formatKm(listing.km)}
             </span>
           )}
         </div>
@@ -663,15 +662,15 @@ export default async function ListingPage({
             </div>
             <div>
               <span>Mileage</span>
-              <strong>{listing.km ? `${listing.km.toLocaleString("en-IN")} km` : "—"}</strong>
+              <strong>{listing.km ? formatKm(listing.km) : "—"}</strong>
             </div>
             <div>
               <span>Location</span>
-              <strong>{listing.location ?? "—"}</strong>
+              <strong>{formatLocationTitle(listing.location) ?? "—"}</strong>
             </div>
             <div>
               <span>Registration</span>
-              <strong>{listing.location?.split(",")[0] ?? "—"}</strong>
+              <strong>{formatLocationTitle(listing.location?.split(",")[0] ?? null) ?? "—"}</strong>
             </div>
           </div>
           {highlights.length > 0 && (
@@ -686,10 +685,11 @@ export default async function ListingPage({
         </div>
         {moreFromDealer.length > 0 && (
           <div className="simple-detail__section">
-            <h3>More from {publicDealerName}</h3>
+            <h3>Similar Cars You May Like</h3>
             <div className="listings">
               {moreFromDealer.map((item) => {
                 const photo = getPrimaryPhoto(item.photo_urls);
+                const isFresh = isNewArrival(item.created_at);
                 const title = [
                   item.year ?? undefined,
                   toTitle(item.make),
@@ -699,8 +699,9 @@ export default async function ListingPage({
                   .filter(Boolean)
                   .join(" ");
                 return (
-                  <article className="listing" key={item.id}>
+                  <article className="listing listing--suggested" key={item.id}>
                     <div className="listing__media">
+                      {isFresh && <span className="listing__tag">Just Added</span>}
                       {photo ? (
                         <img src={photo} alt={title} />
                       ) : (
@@ -710,25 +711,25 @@ export default async function ListingPage({
                     <div className="listing__body">
                       <h3>{title}</h3>
                       <p className="listing__location">
-                        {item.location || "Location on request"}
+                        {[toTitle(item.fuel), toTitle(item.transmission)]
+                          .filter(Boolean)
+                          .join(" • ") || "Specs on request"}
                       </p>
-                      <div className="listing__meta">
-                        {item.fuel && (
-                          <span className="chip">{toTitle(item.fuel)}</span>
-                        )}
-                        {item.transmission && (
-                          <span className="chip">
-                            {toTitle(item.transmission)}
-                          </span>
-                        )}
+                      <div className="listing__meta listing__meta--stacked">
+                        <span className="listing__detail-line">
+                          {formatKm(item.km)}
+                        </span>
+                        <span className="listing__detail-city">
+                          {formatLocationTitle(item.location) ?? "Location on request"}
+                        </span>
                       </div>
                       <div className="listing__footer">
                         <strong>{formatPrice(item.price)}</strong>
                         <Link
-                          className="btn btn--ghost btn--tight"
+                          className="btn btn--ghost btn--tight listing__cta"
                           href={`/listing/${item.id}`}
                         >
-                          View details
+                          View Details →
                         </Link>
                       </div>
                     </div>
@@ -740,10 +741,13 @@ export default async function ListingPage({
         )}
         {similarListings.length > 0 && (
           <div className="simple-detail__section">
-            <h3>Similar cars near {listing.location?.split(",")[0] ?? "you"}</h3>
+            <h3>
+              More cars near {formatLocationTitle(listing.location?.split(",")[0] ?? null) ?? "you"}
+            </h3>
             <div className="listings">
               {similarListings.map((item) => {
                 const photo = getPrimaryPhoto(item.photo_urls);
+                const isFresh = isNewArrival(item.created_at);
                 const title = [
                   item.year ?? undefined,
                   toTitle(item.make),
@@ -753,8 +757,9 @@ export default async function ListingPage({
                   .filter(Boolean)
                   .join(" ");
                 return (
-                  <article className="listing" key={item.id}>
+                  <article className="listing listing--suggested" key={item.id}>
                     <div className="listing__media">
+                      {isFresh && <span className="listing__tag">Just Added</span>}
                       {photo ? (
                         <img src={photo} alt={title} />
                       ) : (
@@ -764,25 +769,25 @@ export default async function ListingPage({
                     <div className="listing__body">
                       <h3>{title}</h3>
                       <p className="listing__location">
-                        {item.location || "Location on request"}
+                        {[toTitle(item.fuel), toTitle(item.transmission)]
+                          .filter(Boolean)
+                          .join(" • ") || "Specs on request"}
                       </p>
-                      <div className="listing__meta">
-                        {item.fuel && (
-                          <span className="chip">{toTitle(item.fuel)}</span>
-                        )}
-                        {item.transmission && (
-                          <span className="chip">
-                            {toTitle(item.transmission)}
-                          </span>
-                        )}
+                      <div className="listing__meta listing__meta--stacked">
+                        <span className="listing__detail-line">
+                          {formatKm(item.km)}
+                        </span>
+                        <span className="listing__detail-city">
+                          {formatLocationTitle(item.location) ?? "Location on request"}
+                        </span>
                       </div>
                       <div className="listing__footer">
                         <strong>{formatPrice(item.price)}</strong>
                         <Link
-                          className="btn btn--ghost btn--tight"
+                          className="btn btn--ghost btn--tight listing__cta"
                           href={`/listing/${item.id}`}
                         >
-                          View details
+                          View Details →
                         </Link>
                       </div>
                     </div>

@@ -5,6 +5,14 @@ import PriceRangeSlider from "@/app/components/PriceRangeSlider";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { getPrimaryPhoto } from "@/lib/photoUrls";
 import { extractDealerCode } from "@/lib/dealerCode";
+import {
+  formatCityTitle,
+  formatKm,
+  formatLocationTitle,
+  formatPriceCompact,
+  isNewArrival,
+  titleCase,
+} from "@/lib/listingDisplay";
 
 type SearchParams = {
   q?: string | string[];
@@ -69,6 +77,7 @@ type Listing = {
   description: string | null;
   photo_urls: string[] | null;
   stock_id: string | null;
+  created_at: string | null;
 };
 
 type DealerOption = {
@@ -180,11 +189,6 @@ const buildQuery = (
   return params.toString();
 };
 
-const formatPrice = (value: number | null) => {
-  if (!value) return "Price on request";
-  return `₹${value.toLocaleString("en-IN")}`;
-};
-
 const isLuxuryListing = (price?: number | null) => (price ?? 0) >= 4_500_000;
 
 const estimateEmi = (value: number | null) => {
@@ -210,19 +214,9 @@ const getSortLabel = (value?: string | null) => {
   }
 };
 
-const toTitle = (value: string | null) => {
-  if (!value) return null;
-  return value
-    .split(" ")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-};
-
-const getCityFromLocation = (value?: string | null) => {
-  if (!value) return null;
-  const city = value.split(",")[0]?.trim();
-  return city || null;
-};
+const formatPrice = formatPriceCompact;
+const toTitle = titleCase;
+const getCityFromLocation = formatCityTitle;
 
 const getCityOptions = async () => {
   if (!hasSupabaseConfig()) return [] as string[];
@@ -314,7 +308,7 @@ const getListings = async (searchParams: SearchParams) => {
   let query = sb
     .from("listings")
     .select(
-      "id, dealer_id, make, model, variant, year, price, km, fuel, transmission, location, description, photo_urls, stock_id",
+      "id, dealer_id, make, model, variant, year, price, km, fuel, transmission, location, description, photo_urls, stock_id, created_at",
       { count: "exact" }
     )
     .eq("status", "available");
@@ -874,9 +868,8 @@ export default async function Home({
                 toTitle(listing.model),
                 toTitle(listing.variant),
               ].filter(Boolean);
-              const kmText = listing.km
-                ? `${listing.km.toLocaleString("en-IN")} km`
-                : "Km on request";
+              const kmText = formatKm(listing.km);
+              const isFresh = isNewArrival(listing.created_at);
               return (
                 <Link
                   className="cw-featured__card"
@@ -884,6 +877,7 @@ export default async function Home({
                   key={`recent-${listing.id}`}
                 >
                   <div className="cw-featured__media">
+                    {isFresh && <span className="cw-featured__badge">Just Added</span>}
                     {photo ? (
                       <Image
                         src={photo}
@@ -900,14 +894,15 @@ export default async function Home({
                     <h3>{titleParts.join(" ")}</h3>
                     <strong>{formatPrice(listing.price)}</strong>
                     <p>
-                      {listing.year ?? "Year"} • {kmText} •{" "}
-                      {toTitle(listing.fuel) ?? "Fuel"}
+                      {[kmText, toTitle(listing.fuel), toTitle(listing.transmission)]
+                        .filter(Boolean)
+                        .join(" • ")}
                     </p>
                     <span className="cw-featured__city">
-                      {getCityFromLocation(listing.location) ?? "City on request"}
+                      {formatLocationTitle(listing.location) ?? "City on request"}
                     </span>
-                    <span className="cw-featured__link">
-                      View details
+                    <span className="cw-featured__link cw-featured__button">
+                      View Details →
                     </span>
                   </div>
                 </Link>
@@ -932,9 +927,8 @@ export default async function Home({
                 toTitle(listing.model),
                 toTitle(listing.variant),
               ].filter(Boolean);
-              const kmText = listing.km
-                ? `${listing.km.toLocaleString("en-IN")} km`
-                : "Km on request";
+              const kmText = formatKm(listing.km);
+              const isFresh = isNewArrival(listing.created_at);
               return (
                 <Link
                   className="cw-featured__card"
@@ -942,6 +936,7 @@ export default async function Home({
                   key={`featured-${listing.id}`}
                 >
                   <div className="cw-featured__media">
+                    {isFresh && <span className="cw-featured__badge">Just Added</span>}
                     {photo ? (
                       <Image
                         src={photo}
@@ -958,14 +953,15 @@ export default async function Home({
                     <h3>{titleParts.join(" ")}</h3>
                     <strong>{formatPrice(listing.price)}</strong>
                     <p>
-                      {listing.year ?? "Year"} • {kmText} •{" "}
-                      {toTitle(listing.fuel) ?? "Fuel"}
+                      {[kmText, toTitle(listing.fuel), toTitle(listing.transmission)]
+                        .filter(Boolean)
+                        .join(" • ")}
                     </p>
                     <span className="cw-featured__city">
-                      {getCityFromLocation(listing.location) ?? "City on request"}
+                      {formatLocationTitle(listing.location) ?? "City on request"}
                     </span>
-                    <span className="cw-featured__link">
-                      View details
+                    <span className="cw-featured__link cw-featured__button">
+                      View Details →
                     </span>
                   </div>
                 </Link>
@@ -1229,10 +1225,9 @@ export default async function Home({
                   const dealerCount = listing.dealer_id
                     ? dealerCounts.get(listing.dealer_id) ?? 0
                     : null;
-                  const kmText = listing.km
-                    ? `${listing.km.toLocaleString("en-IN")} km`
-                    : "Km on request";
+                  const kmText = formatKm(listing.km);
                   const isCertified = Boolean(listing.stock_id);
+                  const isFresh = isNewArrival(listing.created_at);
                   const listingCode = listing.id.slice(0, 6).toUpperCase();
                   const compareHref = isCompared
                     ? `/listings?${buildQuery(params, {
@@ -1275,6 +1270,11 @@ export default async function Home({
                           >
                             ID {listingCode}
                           </span>
+                          {isFresh && (
+                            <span className="simple-listing__tag simple-listing__tag--new">
+                              Just Added
+                            </span>
+                          )}
                           {isLuxury && (
                             <span className="simple-listing__tag simple-listing__tag--luxury">
                               Luxury
@@ -1317,7 +1317,7 @@ export default async function Home({
                         </div>
                         <div className="cw-listing__facts">
                           <span>{kmText}</span>
-                          <span>{city || "City on request"}</span>
+                          <span>{formatLocationTitle(city) || "City on request"}</span>
                         </div>
                         {(listing.fuel || listing.transmission) && (
                           <p className="cw-listing__location">
@@ -1355,10 +1355,12 @@ export default async function Home({
                         </div>
                         <div className="simple-listing__actions cw-listing__actions">
                           <Link
-                            className="simple-button simple-button--full"
+                            className="simple-button simple-button--full cw-listing__cta"
                             href={listingHref}
                           >
-                            {primaryActionLabel}
+                            {primaryActionLabel === "View details"
+                              ? "View Details →"
+                              : primaryActionLabel}
                           </Link>
                           {canAddToCompare ? (
                             <Link className="simple-link-btn" href={compareHref}>

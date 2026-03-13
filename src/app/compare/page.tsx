@@ -3,6 +3,7 @@ import Link from "next/link";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { getPrimaryPhoto } from "@/lib/photoUrls";
 import { extractDealerCode } from "@/lib/dealerCode";
+import { formatLocationTitle, formatPriceCompact, titleCase } from "@/lib/listingDisplay";
 
 type Listing = {
   id: string;
@@ -19,16 +20,9 @@ type Listing = {
   photo_urls: string[] | null;
 };
 
-const toTitle = (value: string | null) => {
-  if (!value) return "—";
-  return value
-    .split(" ")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-};
+const toTitle = (value: string | null) => titleCase(value) ?? "—";
 
-const formatPrice = (value: number | null) =>
-  value ? `₹${value.toLocaleString("en-IN")}` : "Price on request";
+const formatPrice = formatPriceCompact;
 
 const publicDealerLabel = (code?: string | null) =>
   code ? `Dealer ID ${code}` : "Verified dealer";
@@ -163,7 +157,7 @@ export default async function ComparePage({
     },
     {
       label: "Location",
-      getValue: (listing: Listing) => listing.location || "—",
+      getValue: (listing: Listing) => formatLocationTitle(listing.location) || "—",
     },
     {
       label: "Dealer",

@@ -539,6 +539,7 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.28s ease;
 }
 
 .listing__image {
@@ -599,6 +600,34 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.listing--suggested:hover .listing__media img {
+  transform: scale(1.06);
+}
+
+.listing__meta--stacked {
+  display: grid;
+  gap: 6px;
+}
+
+.listing__detail-line,
+.listing__detail-city {
+  font-size: 14px;
+  color: var(--fg-muted);
+}
+
+.listing__detail-city {
+  font-weight: 600;
+  color: var(--fg-default);
+}
+
+.listing__cta {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.listing__cta:hover {
+  transform: translateY(-1px);
 }
 
 .empty {
@@ -4533,6 +4562,7 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
 
 .simple-listing__image {
   object-fit: cover;
+  transition: transform 0.28s ease;
 }
 
 .simple-listing__placeholder {
@@ -4570,6 +4600,10 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
 
 .simple-listing__tag--id {
   background: rgba(59, 130, 246, 0.9);
+}
+
+.simple-listing__tag--new {
+  background: rgba(22, 163, 74, 0.92);
 }
 
 .simple-listing__tag--ar {
@@ -6378,6 +6412,10 @@ button.simple-link-btn:disabled {
   box-shadow: 0 24px 40px rgba(15, 23, 42, 0.16);
 }
 
+.carwale-listings-page .cw-featured__card:hover .cw-featured__image {
+  transform: scale(1.06);
+}
+
 .carwale-listings-page .cw-listing {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -6387,14 +6425,34 @@ button.simple-link-btn:disabled {
   box-shadow: 0 20px 36px rgba(15, 23, 42, 0.2);
 }
 
+.carwale-listings-page .cw-listing:hover .simple-listing__image {
+  transform: scale(1.06);
+}
+
 .carwale-listings-page .cw-featured__media {
   position: relative;
   height: 160px;
   overflow: hidden;
 }
 
+.carwale-listings-page .cw-featured__badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(22, 163, 74, 0.92);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
 .carwale-listings-page .cw-featured__image {
   object-fit: cover;
+  transition: transform 0.28s ease;
 }
 
 .carwale-listings-page .cw-featured__placeholder {
@@ -6436,6 +6494,23 @@ button.simple-link-btn:disabled {
   color: #2563eb;
   font-weight: 700;
   font-size: 13px;
+}
+
+.carwale-listings-page .cw-featured__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: #eff6ff;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.carwale-listings-page .cw-featured__button:hover {
+  background: #dbeafe;
+  transform: translateY(-1px);
 }
 
 .carwale-listings-page .cw-featured__link--muted {
