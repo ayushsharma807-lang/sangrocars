@@ -4723,12 +4723,13 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
 }
 
 .simple-pill {
-  border: 1px solid #dbeafe;
-  background: #eff6ff;
-  color: #1d4ed8;
-  border-radius: 999px;
-  padding: 5px 9px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #000000;
+  border-radius: 9999px;
+  padding: 4px 10px;
   font-size: 12px;
+  font-weight: 500;
 }
 
 .simple-listing__footer {
