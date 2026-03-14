@@ -981,6 +981,9 @@ export default async function Home({
               <a className="cw-footer__link" href="/sell">
                 Post your car
               </a>
+              <a className="cw-footer__link" href="/about">
+                About
+              </a>
               <a className="cw-footer__link" href="/dealer-admin">
                 Dealer login
               </a>
