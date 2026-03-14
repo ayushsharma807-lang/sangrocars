@@ -76,20 +76,6 @@ const getBudgetLabel = (value?: string | null) => {
   return BUDGET_OPTIONS.find((option) => option.value === value)?.label ?? null;
 };
 
-const parseCompareIds = (value?: string | string[]) => {
-  const raw = getParam(value);
-  if (!raw) return [] as string[];
-  const unique = Array.from(
-    new Set(
-      raw
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean)
-    )
-  );
-  return unique.slice(0, 3);
-};
-
 const buildQuery = (
   searchParams: SearchParams,
   overrides: Record<string, string | null>
@@ -110,7 +96,6 @@ const buildQuery = (
     dealer_id: getParam(searchParams.dealer_id),
     verified: getParam(searchParams.verified),
     sort: getParam(searchParams.sort),
-    compare: getParam(searchParams.compare),
   };
 
   for (const [key, value] of Object.entries(entries)) {
@@ -251,7 +236,6 @@ export default async function Home({
   const transmissionValue = getParam(params.transmission);
   const typeValue = getParam(params.type);
   const sortValue = getParam(params.sort) ?? "recent";
-  const compareIds = parseCompareIds(params.compare);
   const recentListings = listings.slice(0, 4);
   const featuredListings =
     listings.length > 4 ? listings.slice(4, 8) : listings.slice(0, 4);
@@ -270,7 +254,6 @@ export default async function Home({
     budget: budgetValue,
     dealer_id: dealerIdValue,
     verified: verifiedValue,
-    compare: compareIds.length > 0 ? compareIds.join(",") : undefined,
   };
   const topSearchHiddenEntries = [
     { key: "min_price", value: minPriceValue },
@@ -288,10 +271,6 @@ export default async function Home({
     { key: "dealer_id", value: dealerIdValue },
     { key: "verified", value: verifiedValue },
     { key: "sort", value: sortValue },
-    {
-      key: "compare",
-      value: compareIds.length > 0 ? compareIds.join(",") : undefined,
-    },
   ].filter((entry) => entry.value);
   const preservedParamEntries = Object.entries(preservedParams)
     .filter(([, value]) => value)
@@ -926,29 +905,6 @@ export default async function Home({
           </aside>
 
           <section className="listings-layout__results simple-results cw-results">
-            {compareIds.length > 0 && (
-              <div className="simple-compare-bar">
-                <p>
-                  {compareIds.length} car{compareIds.length > 1 ? "s" : ""} selected
-                  for compare
-                </p>
-                <div className="simple-compare-bar__actions">
-                  <Link
-                    className="simple-link-btn"
-                    href={`/listings?${buildQuery(params, { compare: null })}`}
-                  >
-                    Clear
-                  </Link>
-                  <Link
-                    className="simple-button"
-                    href={`/compare?ids=${compareIds.join(",")}`}
-                  >
-                    Compare now
-                  </Link>
-                </div>
-              </div>
-            )}
-
             {filterChips.length > 0 && (
               <div className="simple-chip-row">
                 {filterChips.map((chip) => (
@@ -988,10 +944,7 @@ export default async function Home({
                 dealer_id: dealerIdValue ?? undefined,
                 verified: verifiedValue ?? undefined,
                 sort: sortValue,
-                compare:
-                  compareIds.length > 0 ? compareIds.join(",") : undefined,
               }}
-              compareIds={compareIds}
             />
           </section>
         </div>

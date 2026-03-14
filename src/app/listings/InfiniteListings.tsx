@@ -22,30 +22,10 @@ type Props = {
   sortValue: string;
   preservedParamEntries: { key: string; value: string }[];
   currentQueryParams: Record<string, string | undefined>;
-  compareIds: string[];
 };
 
 const publicDealerLabel = (code?: string | null) =>
   code ? `Dealer ID ${code}` : "Verified dealer";
-
-const buildQueryString = (
-  currentQueryParams: Record<string, string | undefined>,
-  overrides: Record<string, string | null | undefined>
-) => {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(currentQueryParams)) {
-    if (value) params.set(key, value);
-  }
-  for (const [key, value] of Object.entries(overrides)) {
-    if (value === undefined) continue;
-    if (value === null || value === "") {
-      params.delete(key);
-    } else {
-      params.set(key, value);
-    }
-  }
-  return params.toString();
-};
 
 const estimateEmi = (value: number | null) => {
   if (!value) return null;
@@ -62,7 +42,6 @@ export default function InfiniteListings({
   sortValue,
   preservedParamEntries,
   currentQueryParams,
-  compareIds,
 }: Props) {
   const [listings, setListings] = useState(initialListings);
   const [loading, setLoading] = useState(false);
@@ -181,11 +160,6 @@ export default function InfiniteListings({
               titleCase(listing.variant),
             ].filter(Boolean);
             const isLuxury = isLuxuryListing(listing.price);
-            const isCompared = compareIds.includes(listing.id);
-            const nextCompareIds = isCompared
-              ? compareIds.filter((id) => id !== listing.id)
-              : [...compareIds, listing.id].slice(0, 3);
-            const canAddToCompare = isCompared || compareIds.length < 3;
             const emi = estimateEmi(listing.price);
             const city = formatCityTitle(listing.location);
             const dealerName = listing.dealer_id
@@ -196,25 +170,7 @@ export default function InfiniteListings({
             const isCertified = Boolean(listing.stock_id);
             const isFresh = isNewArrival(listing.created_at);
             const listingCode = listing.id.slice(0, 6).toUpperCase();
-            const compareHref = isCompared
-              ? `/listings?${buildQueryString(currentQueryParams, {
-                  compare: nextCompareIds.length ? nextCompareIds.join(",") : null,
-                })}`
-              : nextCompareIds.length >= 2
-                ? `/compare?ids=${nextCompareIds.join(",")}`
-                : `/listings?${buildQueryString(currentQueryParams, {
-                    compare: nextCompareIds.length ? nextCompareIds.join(",") : null,
-                  })}`;
-            const listingHref =
-              compareIds.length > 0 && !isCompared
-                ? compareHref
-                : compareIds.length
-                  ? `/listing/${listing.id}?compare=${compareIds.join(",")}`
-                  : `/listing/${listing.id}`;
-            const primaryActionLabel =
-              compareIds.length > 0 && !isCompared
-                ? "Compare with selected car"
-                : "View details";
+            const listingHref = `/listing/${listing.id}`;
 
             return (
               <article className="simple-listing cw-listing" key={listing.id}>
@@ -254,24 +210,6 @@ export default function InfiniteListings({
                     className="cw-listing__image-link"
                     aria-label={`View ${titleParts.join(" ") || "car listing"}`}
                   />
-                  {canAddToCompare ? (
-                    <Link
-                      className={`cw-save-btn${isCompared ? " cw-save-btn--active" : ""}`}
-                      href={compareHref}
-                      aria-label={isCompared ? "Remove saved car" : "Save this car"}
-                      title={isCompared ? "Remove from saved" : "Save this car"}
-                    >
-                      ❤
-                    </Link>
-                  ) : (
-                    <span
-                      className="cw-save-btn cw-save-btn--disabled"
-                      aria-label="Maximum 3 saved cars"
-                      title="Maximum 3 saved cars"
-                    >
-                      ❤
-                    </span>
-                  )}
                 </div>
                 <div className="simple-listing__body cw-listing__body">
                   <h3>{titleParts.join(" ")}</h3>
@@ -326,19 +264,8 @@ export default function InfiniteListings({
                       className="simple-button simple-button--full cw-listing__cta"
                       href={listingHref}
                     >
-                      {primaryActionLabel === "View details"
-                        ? "View Details →"
-                        : primaryActionLabel}
+                      View Details →
                     </Link>
-                    {canAddToCompare ? (
-                      <Link className="simple-link-btn" href={compareHref}>
-                        {isCompared ? "Remove compare" : "Add compare"}
-                      </Link>
-                    ) : (
-                      <span className="simple-link-btn simple-link-btn--muted">
-                        Max 3 cars
-                      </span>
-                    )}
                   </div>
                 </div>
               </article>
