@@ -4568,6 +4568,7 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
   overflow: hidden;
   background: #ffffff;
   display: grid;
+  position: relative;
 }
 
 .cw-listing {
@@ -4608,6 +4609,12 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
 }
 
 .cw-listing__image-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.cw-listing__card-link {
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -4706,6 +4713,8 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
   padding: 14px 16px 16px;
   align-content: start;
   gap: 8px;
+  position: relative;
+  z-index: 2;
 }
 
 .cw-listing__body h3 {
@@ -4726,16 +4735,16 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
   font-size: 14px;
 }
 
-.cw-listing__location {
-  color: #4b5563 !important;
-  font-size: 13px !important;
-  font-weight: 500;
-}
-
 .cw-listing__price-line {
   color: #0f172a;
-  font-size: 21px;
+  font-size: 24px;
   line-height: 1.1;
+}
+
+.cw-listing__city-line {
+  color: #374151 !important;
+  font-size: 15px !important;
+  font-weight: 600;
 }
 
 .cw-listing__price-row {
@@ -4758,10 +4767,9 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
 
 .cw-listing__facts {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: #1f2937;
   border: 1px solid #e2e8f0;
   background: #f9fafb;
@@ -5308,6 +5316,8 @@ button.simple-link-btn:disabled {
   align-items: center;
   gap: 14px;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 3;
 }
 
 .cw-listing__actions {

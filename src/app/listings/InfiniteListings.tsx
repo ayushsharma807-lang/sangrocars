@@ -174,6 +174,11 @@ export default function InfiniteListings({
 
             return (
               <article className="simple-listing cw-listing" key={listing.id}>
+                <Link
+                  href={listingHref}
+                  className="cw-listing__card-link"
+                  aria-label={`Open ${titleParts.join(" ") || "car listing"}`}
+                />
                 <div className="simple-listing__media cw-listing__media">
                   {photo ? (
                     <Image
@@ -221,17 +226,20 @@ export default function InfiniteListings({
                       <span className="cw-certified-badge">Certified</span>
                     )}
                   </div>
+                  <p className="cw-listing__city-line">
+                    {formatLocationTitle(city) || "City on request"}
+                  </p>
                   <div className="cw-listing__facts">
-                    <span>{kmText}</span>
-                    <span>{formatLocationTitle(city) || "City on request"}</span>
-                  </div>
-                  {(listing.fuel || listing.transmission) && (
-                    <p className="cw-listing__location">
-                      {[titleCase(listing.fuel), titleCase(listing.transmission)]
+                    <span>
+                      {[
+                        kmText,
+                        titleCase(listing.fuel),
+                        titleCase(listing.transmission),
+                      ]
                         .filter(Boolean)
                         .join(" • ")}
-                    </p>
-                  )}
+                    </span>
+                  </div>
                   <div className="cw-listing__dealer">
                     <div className="cw-listing__dealer-head">
                       <span className="cw-dealer-logo cw-dealer-logo--fallback">
