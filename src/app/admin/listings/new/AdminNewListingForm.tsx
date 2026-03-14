@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FUEL_OPTIONS,
@@ -9,6 +9,7 @@ import {
   getModelOptions,
   getVariantOptions,
 } from "@/lib/carOptions";
+import ListingComboboxField from "@/app/admin/listings/ListingComboboxField";
 
 type DealerOption = {
   id: string;
@@ -32,24 +33,6 @@ export default function AdminNewListingForm({
   const modelOptions = useMemo(() => getModelOptions(make), [make]);
   const variantOptions = useMemo(() => getVariantOptions(model), [model]);
 
-  useEffect(() => {
-    if (!make) {
-      setModel("");
-      setVariant("");
-      return;
-    }
-
-    if (model && !modelOptions.includes(model)) {
-      setModel("");
-      setVariant("");
-    }
-  }, [make, model, modelOptions]);
-
-  useEffect(() => {
-    if (variant && !variantOptions.includes(variant)) {
-      setVariant("");
-    }
-  }, [model, variant, variantOptions]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -95,7 +78,7 @@ export default function AdminNewListingForm({
   return (
     <form
       ref={formRef}
-      className="dealer-form"
+      className="dealer-form admin-car-form"
       encType="multipart/form-data"
       onSubmit={handleSubmit}
     >
@@ -129,50 +112,32 @@ export default function AdminNewListingForm({
             <option value="sold">Sold</option>
           </select>
         </label>
-        <label>
-          Make *
-          <select name="make" value={make} onChange={(event) => setMake(event.target.value)} required>
-            <option value="">Select make</option>
-            {MAKE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Model *
-          <select
-            name="model"
-            value={model}
-            onChange={(event) => setModel(event.target.value)}
-            required
-            disabled={!make}
-          >
-            <option value="">{make ? "Select model" : "Select make first"}</option>
-            {modelOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Variant
-          <select
-            name="variant"
-            value={variant}
-            onChange={(event) => setVariant(event.target.value)}
-            disabled={!model}
-          >
-            <option value="">{model ? "Select variant" : "Select model first"}</option>
-            {variantOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
+        <ListingComboboxField
+          label="Make *"
+          name="make"
+          value={make}
+          onChange={(value) => setMake(value)}
+          options={MAKE_OPTIONS}
+          placeholder="Type or search make"
+          required
+        />
+        <ListingComboboxField
+          label="Model *"
+          name="model"
+          value={model}
+          onChange={(value) => setModel(value)}
+          options={modelOptions}
+          placeholder={make ? "Type or search model" : "Type model or select make first"}
+          required
+        />
+        <ListingComboboxField
+          label="Variant"
+          name="variant"
+          value={variant}
+          onChange={(value) => setVariant(value)}
+          options={variantOptions}
+          placeholder={model ? "Type or search variant" : "Type variant or select model first"}
+        />
         <label>
           Year
           <input name="year" type="number" placeholder="e.g., 2021" />

@@ -2572,6 +2572,36 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
   box-shadow: 0 0 0 3px rgba(109, 211, 255, 0.15);
 }
 
+.admin-car-form label {
+  color: #4b5563;
+}
+
+.admin-car-form input,
+.admin-car-form select,
+.admin-car-form textarea {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.admin-car-form input::placeholder,
+.admin-car-form textarea::placeholder {
+  color: #6b7280;
+}
+
+.admin-car-form input:focus,
+.admin-car-form select:focus,
+.admin-car-form textarea:focus {
+  border-color: #111827;
+  box-shadow: none;
+}
+
+.admin-car-form select {
+  appearance: none;
+}
+
 .dealer-delete {
   margin-top: 12px;
 }
