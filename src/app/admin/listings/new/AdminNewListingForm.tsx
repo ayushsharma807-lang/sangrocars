@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FUEL_OPTIONS,
@@ -21,6 +21,8 @@ export default function AdminNewListingForm({
   dealers: DealerOption[];
 }) {
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const [dealerId, setDealerId] = useState("none");
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
   const [variant, setVariant] = useState("");
@@ -75,7 +77,14 @@ export default function AdminNewListingForm({
         return;
       }
 
-      window.location.assign(payload.redirectTo);
+      formRef.current?.reset();
+      setMake("");
+      setModel("");
+      setVariant("");
+      setSubmitError(null);
+      setDealerId(String(formData.get("dealer_id") ?? "none") || "none");
+      router.replace(payload.redirectTo, { scroll: false });
+      router.refresh();
     } catch {
       setSubmitError("Could not create listing. Please try again.");
     } finally {
@@ -85,6 +94,7 @@ export default function AdminNewListingForm({
 
   return (
     <form
+      ref={formRef}
       className="dealer-form"
       encType="multipart/form-data"
       onSubmit={handleSubmit}
@@ -92,7 +102,11 @@ export default function AdminNewListingForm({
       <div className="dealer-form__grid">
         <label>
           Dealer account
-          <select name="dealer_id" defaultValue="none">
+          <select
+            name="dealer_id"
+            value={dealerId}
+            onChange={(event) => setDealerId(event.target.value)}
+          >
             <option value="none">No dealer (private seller / ad-hoc)</option>
             {dealers.map((dealer) => (
               <option key={dealer.id} value={dealer.id}>
