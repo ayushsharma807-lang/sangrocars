@@ -429,7 +429,7 @@ export default async function Home({
                 <div className="cw-header__trust">
                   <span>✓ All kinds of cars available</span>
                   <span>✓ Direct owner listings</span>
-                  <span>✓ No dealer spam</span>
+                  <span>🛡 Verified dealer listings</span>
                 </div>
               </div>
             </div>
