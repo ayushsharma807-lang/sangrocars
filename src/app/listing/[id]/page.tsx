@@ -49,14 +49,6 @@ type Dealer = {
   description: string | null;
 };
 
-type PredictivePricing = {
-  median: number;
-  total: number;
-  recommendation: string;
-};
-
-type SupabaseClient = NonNullable<ReturnType<typeof supabaseServerOptional>>;
-
 const publicDealerLabel = (code?: string | null) =>
   code ? `Dealer ID ${code}` : "Verified dealer";
 
@@ -133,22 +125,6 @@ const normalizePhone = (value?: string | null) => {
   return digits;
 };
 
-const getSearchParam = (value?: string | string[]) =>
-  Array.isArray(value) ? value[0] : value;
-
-const parseCompareIds = (value?: string | string[]) => {
-  const raw = getSearchParam(value);
-  if (!raw) return [] as string[];
-  return Array.from(
-    new Set(
-      raw
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean)
-    )
-  ).slice(0, 3);
-};
-
 const buildSupportLinks = (
   listingTitle: string,
   listingUrl: string,
@@ -198,54 +174,6 @@ const sanitizeSellerName = (value: string | null) => {
   return value;
 };
 
-const median = (values: number[]) => {
-  if (values.length === 0) return null;
-  const sorted = [...values].sort((a, b) => a - b);
-  const middle = Math.floor(sorted.length / 2);
-  if (sorted.length % 2 === 0) return (sorted[middle - 1] + sorted[middle]) / 2;
-  return sorted[middle];
-};
-
-const getPredictivePricing = async (
-  sb: SupabaseClient,
-  listing: Listing
-): Promise<PredictivePricing | null> => {
-  if (!listing.make || !listing.model) return null;
-
-  let query = sb
-    .from("listings")
-    .select("id, price")
-    .eq("status", "available")
-    .not("price", "is", null)
-    .limit(220);
-
-  query = query.ilike("make", `%${listing.make}%`).ilike("model", `%${listing.model}%`);
-
-  const { data, error } = await query;
-  if (error || !data) return null;
-
-  const prices = data
-    .filter((row) => row.id !== listing.id)
-    .map((row) => Number(row.price ?? 0))
-    .filter((value) => Number.isFinite(value) && value > 0);
-
-  const med = median(prices);
-  if (!med) return null;
-
-  let recommendation = "Pricing is aligned with current market demand.";
-  if (listing.price && listing.price <= med * 0.95) {
-    recommendation = "Good buy signal: this car is priced below the model median.";
-  } else if (listing.price && listing.price >= med * 1.08) {
-    recommendation = "Premium ask: negotiate or compare with similar listings.";
-  }
-
-  return {
-    median: Math.round(med),
-    total: prices.length,
-    recommendation,
-  };
-};
-
 export default async function ListingPage({
   params,
   searchParams,
@@ -260,7 +188,6 @@ export default async function ListingPage({
       : Array.isArray(searchParams?.debug)
         ? searchParams?.debug[0] === "1"
         : false;
-  const compareIds = parseCompareIds(searchParams?.compare);
   if (!hasSupabaseConfig()) {
     return (
       <main className="simple-page simple-detail-page">
@@ -358,15 +285,6 @@ export default async function ListingPage({
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
     "https://www.sangrocars.in";
   const listingUrl = `${listingUrlBase}/listing/${listing.id}`;
-  const compareTargetIds = Array.from(
-    new Set([...compareIds.filter((compareId) => compareId !== listing.id), listing.id])
-  ).slice(0, 3);
-  const compareHref =
-    compareTargetIds.length >= 2
-      ? `/compare?ids=${compareTargetIds.join(",")}`
-      : `/listings?compare=${compareTargetIds.join(",")}`;
-  const compareLabel =
-    compareTargetIds.length >= 2 ? "Compare this car" : "Select another car to compare";
   const primaryPhoto = getPrimaryPhoto(photos) ?? photos[0] ?? null;
   const structuredData = {
     "@context": "https://schema.org",
@@ -395,7 +313,6 @@ export default async function ListingPage({
         }
       : undefined,
   };
-  const predictivePricing = await getPredictivePricing(sb, listing);
 
   let dealer: Dealer | null = null;
   if (listing.dealer_id) {
@@ -457,12 +374,6 @@ export default async function ListingPage({
     listing.fuel ? `${toTitle(listing.fuel)} powertrain` : null,
     "Verified documents",
   ].filter(Boolean) as string[];
-  const priceRange = predictivePricing
-    ? {
-        min: Math.round(predictivePricing.median * 0.9),
-        max: Math.round(predictivePricing.median * 1.1),
-      }
-    : null;
   return (
     <main className="simple-page simple-detail-page">
       <script
@@ -555,20 +466,6 @@ export default async function ListingPage({
                 </div>
               )}
             </div>
-            {priceRange && (
-              <div className="detail-sidebar__range">
-                <div>
-                  <span>Market price range</span>
-                  <strong>
-                    {formatPrice(priceRange.min)} — {formatPrice(priceRange.max)}
-                  </strong>
-                </div>
-                <div>
-                  <span>Your price</span>
-                  <strong>{formatPrice(listing.price)}</strong>
-                </div>
-              </div>
-            )}
             <div className="detail-sidebar__trust">
               <span>✓ Verified listing</span>
               <span>✓ SangroCars assisted deal</span>
@@ -607,22 +504,6 @@ export default async function ListingPage({
                 variant="secondary"
               />
               <EmiModal price={listing.price} />
-              <LeadModal
-                label="Request callback"
-                listingId={listing.id}
-                dealerId={listing.dealer_id}
-                listingTitle={listingTitle}
-                defaultIntent="callback"
-                variant="secondary"
-              />
-            </div>
-            <div className="detail-sidebar__secondary-actions">
-              <Link className="simple-button simple-button--secondary" href="/listings">
-                ← Back to listings
-              </Link>
-              <Link className="simple-button simple-button--secondary" href={compareHref}>
-                {compareLabel}
-              </Link>
             </div>
             <div className="detail-sidebar__listed">
               <p className="detail-sidebar__label">LISTED BY</p>
