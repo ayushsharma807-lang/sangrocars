@@ -19,7 +19,6 @@ export default function SortForm({ sortValue, preservedParams }: Props) {
       {preservedParams.map(({ key, value }) => (
         <input key={key} type="hidden" name={key} value={value} />
       ))}
-      <input type="hidden" name="page" value="1" />
       <label className="sort">
         <span>Sort by</span>
         <select name="sort" defaultValue={sortValue} onChange={handleChange}>

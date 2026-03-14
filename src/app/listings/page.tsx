@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import SortForm from "@/app/components/SortForm";
+import InfiniteListings from "@/app/listings/InfiniteListings";
 import PriceRangeSlider from "@/app/components/PriceRangeSlider";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { getPrimaryPhoto } from "@/lib/photoUrls";
@@ -13,26 +13,14 @@ import {
   isNewArrival,
   titleCase,
 } from "@/lib/listingDisplay";
-
-type SearchParams = {
-  q?: string | string[];
-  min_price?: string | string[];
-  max_price?: string | string[];
-  price_mode?: string | string[];
-  fuel?: string | string[];
-  transmission?: string | string[];
-  type?: string | string[];
-  year_min?: string | string[];
-  year_max?: string | string[];
-  city?: string | string[];
-  location?: string | string[];
-  budget?: string | string[];
-  dealer_id?: string | string[];
-  verified?: string | string[];
-  sort?: string | string[];
-  page?: string | string[];
-  compare?: string | string[];
-};
+import {
+  attachDealerMeta,
+  fetchPublicListingsPage,
+  getParam,
+  ListingsSearchParams as SearchParams,
+  PAGE_SIZE,
+  parseNumber,
+} from "@/lib/publicListings";
 
 const buildWhatsAppLink = () => {
   const raw = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
@@ -62,30 +50,11 @@ const buildSupportWhatsApp = () => {
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 };
 
-type Listing = {
-  id: string;
-  dealer_id: string | null;
-  make: string | null;
-  model: string | null;
-  variant: string | null;
-  year: number | null;
-  price: number | null;
-  km: number | null;
-  fuel: string | null;
-  transmission: string | null;
-  location: string | null;
-  description: string | null;
-  photo_urls: string[] | null;
-  stock_id: string | null;
-  created_at: string | null;
-};
-
 type DealerOption = {
   id: string;
   code: string | null;
 };
 
-const PAGE_SIZE = 9;
 const DEFAULT_PRICE_MIN = 100_000;
 const DEFAULT_PRICE_MAX = 5_000_000;
 const BUDGET_OPTIONS = [
@@ -102,44 +71,10 @@ const POPULAR_SEARCHES = ["Swift", "Thar", "Creta", "Fortuner"];
 const publicDealerLabel = (code?: string | null) =>
   code ? `Dealer ID ${code}` : "Verified dealer";
 
-const parseMoney = (value?: string) => {
-  if (!value) return null;
-  const normalized = value.trim().toLowerCase();
-  const hasLakh = normalized.includes("l");
-  const hasCr = normalized.includes("cr");
-  const hasK = normalized.includes("k");
-  const cleaned = normalized.replace(/[^0-9.]/g, "");
-  if (!cleaned) return null;
-  const num = Number(cleaned);
-  if (!Number.isFinite(num)) return null;
-  if (hasCr) return Math.round(num * 10_000_000);
-  if (hasLakh) return Math.round(num * 100_000);
-  if (hasK) return Math.round(num * 1_000);
-  return Math.round(num);
-};
-
-const parseNumber = (value?: string) => {
-  if (!value) return null;
-  const cleaned = value.replace(/[^0-9.]/g, "");
-  if (!cleaned) return null;
-  const num = Number(cleaned);
-  return Number.isFinite(num) ? num : null;
-};
-
-const parseBudgetRange = (value?: string | null) => {
-  if (!value) return null;
-  const [minRaw, maxRaw] = value.split("-").map((part) => Number(part));
-  if (!Number.isFinite(minRaw) || !Number.isFinite(maxRaw)) return null;
-  return { min: minRaw, max: maxRaw };
-};
-
 const getBudgetLabel = (value?: string | null) => {
   if (!value) return null;
   return BUDGET_OPTIONS.find((option) => option.value === value)?.label ?? null;
 };
-
-const getParam = (value?: string | string[]) =>
-  Array.isArray(value) ? value[0] : value;
 
 const parseCompareIds = (value?: string | string[]) => {
   const raw = getParam(value);
@@ -175,7 +110,6 @@ const buildQuery = (
     dealer_id: getParam(searchParams.dealer_id),
     verified: getParam(searchParams.verified),
     sort: getParam(searchParams.sort),
-    page: getParam(searchParams.page),
     compare: getParam(searchParams.compare),
   };
 
@@ -187,14 +121,6 @@ const buildQuery = (
   }
 
   return params.toString();
-};
-
-const isLuxuryListing = (price?: number | null) => (price ?? 0) >= 4_500_000;
-
-const estimateEmi = (value: number | null) => {
-  if (!value) return null;
-  const monthly = Math.round(value * 0.019);
-  return `EMI from ₹${monthly.toLocaleString("en-IN")}/mo`;
 };
 
 const formatFilterLabel = (label: string, value: string) => `${label}: ${value}`;
@@ -295,106 +221,6 @@ const getPriceBounds = async () => {
   return { min, max };
 };
 
-const getListings = async (searchParams: SearchParams) => {
-  const pageRaw = getParam(searchParams.page);
-  const page = Math.max(1, Number(pageRaw ?? 1) || 1);
-  if (!hasSupabaseConfig()) {
-    return { listings: [] as Listing[], count: 0, error: "supabase_not_configured", page };
-  }
-  const sb = supabaseServerOptional();
-  if (!sb) {
-    return { listings: [] as Listing[], count: 0, error: "supabase_not_configured", page };
-  }
-  let query = sb
-    .from("listings")
-    .select(
-      "id, dealer_id, make, model, variant, year, price, km, fuel, transmission, location, description, photo_urls, stock_id, created_at",
-      { count: "exact" }
-    )
-    .eq("status", "available");
-
-  const q = getParam(searchParams.q)?.replace(/,/g, " ").trim();
-  if (q) {
-    query = query.or(
-      `make.ilike.%${q}%,model.ilike.%${q}%,variant.ilike.%${q}%`
-    );
-  }
-
-  const priceMode = getParam(searchParams.price_mode);
-  const budgetValue = getParam(searchParams.budget);
-  if (budgetValue && priceMode !== "custom") {
-    const range = parseBudgetRange(budgetValue);
-    if (range) {
-      query = query.gte("price", range.min).lte("price", range.max);
-    }
-  }
-  if (priceMode === "custom") {
-    const minPrice = parseMoney(getParam(searchParams.min_price));
-    const maxPrice = parseMoney(getParam(searchParams.max_price));
-    if (minPrice !== null) query = query.gte("price", minPrice);
-    if (maxPrice !== null) query = query.lte("price", maxPrice);
-  }
-
-  const fuel = getParam(searchParams.fuel)?.trim();
-  if (fuel) query = query.ilike("fuel", `%${fuel}%`);
-
-  const transmission = getParam(searchParams.transmission)?.trim();
-  if (transmission) query = query.ilike("transmission", `%${transmission}%`);
-
-  const type = getParam(searchParams.type)?.trim();
-  if (type) query = query.eq("type", type);
-
-  const yearMin = parseNumber(getParam(searchParams.year_min));
-  const yearMax = parseNumber(getParam(searchParams.year_max));
-  if (yearMin !== null) query = query.gte("year", yearMin);
-  if (yearMax !== null) query = query.lte("year", yearMax);
-
-  const city = getParam(searchParams.city)?.trim();
-  if (city) query = query.ilike("location", `%${city}%`);
-
-  const location = getParam(searchParams.location)?.trim();
-  if (location) query = query.ilike("location", `%${location}%`);
-
-  const dealerId = getParam(searchParams.dealer_id)?.trim();
-  if (dealerId) query = query.eq("dealer_id", dealerId);
-
-  const verified = getParam(searchParams.verified);
-  if (verified === "1") query = query.not("dealer_id", "is", null);
-
-  const sort = getParam(searchParams.sort) ?? "recent";
-  switch (sort) {
-    case "price_asc":
-      query = query.order("price", { ascending: true });
-      break;
-    case "price_desc":
-      query = query.order("price", { ascending: false });
-      break;
-    case "year_desc":
-      query = query.order("year", { ascending: false });
-      break;
-    case "year_asc":
-      query = query.order("year", { ascending: true });
-      break;
-    default:
-      query = query.order("last_seen_at", { ascending: false });
-      break;
-  }
-
-  const from = (page - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
-
-  const { data, error, count } = await query.range(from, to);
-  if (error) {
-    return { listings: [] as Listing[], count: 0, error: error.message, page };
-  }
-  return {
-    listings: (data ?? []) as Listing[],
-    count: count ?? 0,
-    error: null,
-    page,
-  };
-};
-
 export default async function Home({
   searchParams,
 }: {
@@ -402,13 +228,14 @@ export default async function Home({
 }) {
   const whatsappHref = buildSupportWhatsApp();
   const params = await searchParams;
-  const [{ listings, count, error, page }, cities, priceBounds, dealers] =
+  const [{ listings: rawListings, count, error }, cities, priceBounds, dealers] =
     await Promise.all([
-      getListings(params),
+      fetchPublicListingsPage(params, { offset: 0, limit: PAGE_SIZE, includeCount: true }),
       getCityOptions(),
       getPriceBounds(),
       getDealerOptions(),
     ]);
+  const listings = await attachDealerMeta(rawListings);
   const qValue = getParam(params.q);
   const minPriceValue = getParam(params.min_price);
   const maxPriceValue = getParam(params.max_price);
@@ -425,44 +252,6 @@ export default async function Home({
   const typeValue = getParam(params.type);
   const sortValue = getParam(params.sort) ?? "recent";
   const compareIds = parseCompareIds(params.compare);
-  const totalPages = Math.max(1, Math.ceil(count / PAGE_SIZE));
-  const dealerMap = new Map<string, DealerOption>();
-  const dealerCounts = new Map<string, number>();
-  const dealerIds = Array.from(
-    new Set(
-      listings
-        .map((listing) => listing.dealer_id)
-        .filter((id): id is string => Boolean(id))
-    )
-  );
-  if (dealerIds.length > 0 && hasSupabaseConfig()) {
-    const sb = supabaseServerOptional();
-    if (sb) {
-      const { data: dealerRows } = await sb
-        .from("dealers")
-        .select("id, description")
-        .in("id", dealerIds);
-      for (const row of (dealerRows ?? []) as Record<string, unknown>[]) {
-        const id = String(row.id ?? "");
-        if (!id) continue;
-        dealerMap.set(id, {
-          id,
-          code: extractDealerCode((row.description ?? null) as string | null),
-        });
-      }
-
-      const { data: countRows } = await sb
-        .from("listings")
-        .select("dealer_id")
-        .eq("status", "available")
-        .in("dealer_id", dealerIds);
-      for (const row of (countRows ?? []) as { dealer_id?: string | null }[]) {
-        const id = row.dealer_id;
-        if (!id) continue;
-        dealerCounts.set(id, (dealerCounts.get(id) ?? 0) + 1);
-      }
-    }
-  }
   const recentListings = listings.slice(0, 4);
   const featuredListings =
     listings.length > 4 ? listings.slice(4, 8) : listings.slice(0, 4);
@@ -731,7 +520,6 @@ export default async function Home({
                   value={String(entry.value)}
                 />
               ))}
-              <input type="hidden" name="page" value="1" />
             </form>
           </div>
           <div className="cw-search-popular">
@@ -740,7 +528,7 @@ export default async function Home({
               <Link
                 key={term}
                 className="cw-pill"
-                href={`/listings?${buildQuery(params, { q: term, page: "1" })}`}
+                href={`/listings?${buildQuery(params, { q: term })}`}
               >
                 {term}
               </Link>
@@ -1130,7 +918,6 @@ export default async function Home({
                   initialMode={priceModeValue}
                 />
               </label>
-              <input type="hidden" name="page" value="1" />
               <input type="hidden" name="sort" value={sortValue} />
               <button className="simple-button simple-button--full" type="submit">
                 Show cars
@@ -1162,31 +949,13 @@ export default async function Home({
               </div>
             )}
 
-            <div className="simple-results__header">
-              <div>
-                <h2>Search results</h2>
-                <p>
-                  {error
-                    ? "Listings are unavailable right now. Check your Supabase connection."
-                    : `Showing ${listings.length} of ${count} listings (page ${page} of ${totalPages})`}
-                </p>
-              </div>
-              <SortForm
-                sortValue={sortValue}
-                preservedParams={preservedParamEntries}
-              />
-            </div>
-
             {filterChips.length > 0 && (
               <div className="simple-chip-row">
                 {filterChips.map((chip) => (
                   <Link
                     key={chip.key}
                     className="simple-chip"
-                    href={`/listings?${buildQuery(params, {
-                      ...chip.overrides,
-                      page: "1",
-                    })}`}
+                    href={`/listings?${buildQuery(params, chip.overrides)}`}
                   >
                     {chip.label} x
                   </Link>
@@ -1196,216 +965,34 @@ export default async function Home({
                 </Link>
               </div>
             )}
-
-            <div className="simple-listings cw-listings">
-              {listings.length === 0 ? (
-                <div className="simple-empty">
-                  No listings match these filters yet. Try a wider search.
-                </div>
-              ) : (
-                listings.map((listing) => {
-                  const photo = getPrimaryPhoto(listing.photo_urls);
-                  const titleParts = [
-                    listing.year ?? undefined,
-                    toTitle(listing.make),
-                    toTitle(listing.model),
-                    toTitle(listing.variant),
-                  ].filter(Boolean);
-                  const isLuxury = isLuxuryListing(listing.price);
-                  const isCompared = compareIds.includes(listing.id);
-                  const nextCompareIds = isCompared
-                    ? compareIds.filter((id) => id !== listing.id)
-                    : [...compareIds, listing.id].slice(0, 3);
-                  const canAddToCompare = isCompared || compareIds.length < 3;
-                  const emi = estimateEmi(listing.price);
-                  const city = getCityFromLocation(listing.location);
-                  const dealerInfo = listing.dealer_id
-                    ? dealerMap.get(listing.dealer_id)
-                    : null;
-                  const dealerName = listing.dealer_id
-                    ? publicDealerLabel(dealerInfo?.code)
-                    : "Private seller";
-                  const dealerCount = listing.dealer_id
-                    ? dealerCounts.get(listing.dealer_id) ?? 0
-                    : null;
-                  const kmText = formatKm(listing.km);
-                  const isCertified = Boolean(listing.stock_id);
-                  const isFresh = isNewArrival(listing.created_at);
-                  const listingCode = listing.id.slice(0, 6).toUpperCase();
-                  const compareHref = isCompared
-                    ? `/listings?${buildQuery(params, {
-                        compare: nextCompareIds.length ? nextCompareIds.join(",") : null,
-                      })}`
-                    : nextCompareIds.length >= 2
-                      ? `/compare?ids=${nextCompareIds.join(",")}`
-                      : `/listings?${buildQuery(params, {
-                          compare: nextCompareIds.length ? nextCompareIds.join(",") : null,
-                        })}`;
-                  const listingHref =
-                    compareIds.length > 0 && !isCompared
-                      ? compareHref
-                      : compareIds.length
-                        ? `/listing/${listing.id}?compare=${compareIds.join(",")}`
-                        : `/listing/${listing.id}`;
-                  const primaryActionLabel =
-                    compareIds.length > 0 && !isCompared
-                      ? "Compare with selected car"
-                      : "View details";
-                  return (
-                    <article className="simple-listing cw-listing" key={listing.id}>
-                      <div className="simple-listing__media cw-listing__media">
-                        {photo ? (
-                          <Image
-                            src={photo}
-                            alt={String(listing.model ?? "Car")}
-                            fill
-                            sizes="(max-width: 980px) 100vw, 320px"
-                            className="simple-listing__image"
-                          />
-                        ) : (
-                          <div className="simple-listing__placeholder" />
-                        )}
-                        <div className="simple-listing__tag-stack">
-                          <span className="simple-listing__tag">Available</span>
-                          <span
-                            className="simple-listing__tag simple-listing__tag--id"
-                            title={`Listing ID: ${listing.id}`}
-                          >
-                            ID {listingCode}
-                          </span>
-                          {isFresh && (
-                            <span className="simple-listing__tag simple-listing__tag--new">
-                              Just Added
-                            </span>
-                          )}
-                          {isLuxury && (
-                            <span className="simple-listing__tag simple-listing__tag--luxury">
-                              Luxury
-                            </span>
-                          )}
-                        </div>
-                        <Link
-                          href={listingHref}
-                          className="cw-listing__image-link"
-                          aria-label={`View ${titleParts.join(" ") || "car listing"}`}
-                        />
-                        {canAddToCompare ? (
-                          <Link
-                            className={`cw-save-btn${isCompared ? " cw-save-btn--active" : ""}`}
-                            href={compareHref}
-                            aria-label={isCompared ? "Remove saved car" : "Save this car"}
-                            title={isCompared ? "Remove from saved" : "Save this car"}
-                          >
-                            ❤
-                          </Link>
-                        ) : (
-                          <span
-                            className="cw-save-btn cw-save-btn--disabled"
-                            aria-label="Maximum 3 saved cars"
-                            title="Maximum 3 saved cars"
-                          >
-                            ❤
-                          </span>
-                        )}
-                      </div>
-                      <div className="simple-listing__body cw-listing__body">
-                        <h3>{titleParts.join(" ")}</h3>
-                        <div className="cw-listing__price-row">
-                          <strong className="cw-listing__price-line">
-                            {formatPrice(listing.price)}
-                          </strong>
-                          {isCertified && (
-                            <span className="cw-certified-badge">Certified</span>
-                          )}
-                        </div>
-                        <div className="cw-listing__facts">
-                          <span>{kmText}</span>
-                          <span>{formatLocationTitle(city) || "City on request"}</span>
-                        </div>
-                        {(listing.fuel || listing.transmission) && (
-                          <p className="cw-listing__location">
-                            {[toTitle(listing.fuel), toTitle(listing.transmission)]
-                              .filter(Boolean)
-                              .join(" • ")}
-                          </p>
-                        )}
-                        <div className="cw-listing__dealer">
-                          <div className="cw-listing__dealer-head">
-                            <span className="cw-dealer-logo cw-dealer-logo--fallback">
-                              {listing.dealer_id ? "#" : "P"}
-                            </span>
-                            <div>
-                              <span className="cw-dealer-name">{dealerName}</span>
-                              <div className="cw-dealer-meta">
-                                {listing.dealer_id
-                                  ? `Verified dealer · ${dealerCount} active cars`
-                                  : "Private seller"}
-                              </div>
-                            </div>
-                          </div>
-                          {listing.dealer_id && (
-                            <div className="cw-dealer-row">
-                              <span className="cw-dealer-response">
-                                Usually responds in 10 mins
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        {emi && <span className="cw-listing__emi">{emi}</span>}
-                        <div className="cw-listing__finance">
-                          <span>Finance available</span>
-                          <span>Insurance assistance</span>
-                        </div>
-                        <div className="simple-listing__actions cw-listing__actions">
-                          <Link
-                            className="simple-button simple-button--full cw-listing__cta"
-                            href={listingHref}
-                          >
-                            {primaryActionLabel === "View details"
-                              ? "View Details →"
-                              : primaryActionLabel}
-                          </Link>
-                          {canAddToCompare ? (
-                            <Link className="simple-link-btn" href={compareHref}>
-                              {isCompared ? "Remove compare" : "Add compare"}
-                            </Link>
-                          ) : (
-                            <span className="simple-link-btn simple-link-btn--muted">
-                              Max 3 cars
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })
-              )}
-            </div>
-
-            {!error && count > PAGE_SIZE && (
-              <div className="simple-pagination">
-                {page > 1 && (
-                  <Link
-                    className="simple-button simple-button--secondary"
-                    href={`/listings?${buildQuery(params, {
-                      page: String(page - 1),
-                    })}`}
-                  >
-                    Previous
-                  </Link>
-                )}
-                {page < totalPages && (
-                  <Link
-                    className="simple-button"
-                    href={`/listings?${buildQuery(params, {
-                      page: String(page + 1),
-                    })}`}
-                  >
-                    Load more
-                  </Link>
-                )}
-              </div>
-            )}
+            <InfiniteListings
+              initialListings={listings}
+              totalCount={count}
+              error={error}
+              sortValue={sortValue}
+              preservedParamEntries={preservedParamEntries}
+              currentQueryParams={{
+                q: qValue ?? undefined,
+                min_price: minPriceValue ?? undefined,
+                max_price: maxPriceValue ?? undefined,
+                price_mode:
+                  priceModeValue === "custom" ? priceModeValue : undefined,
+                fuel: fuelValue ?? undefined,
+                transmission: transmissionValue ?? undefined,
+                type: typeValue ?? undefined,
+                year_min: yearMinValue ?? undefined,
+                year_max: yearMaxValue ?? undefined,
+                city: cityValue ?? undefined,
+                location: locationValue ?? undefined,
+                budget: budgetValue ?? undefined,
+                dealer_id: dealerIdValue ?? undefined,
+                verified: verifiedValue ?? undefined,
+                sort: sortValue,
+                compare:
+                  compareIds.length > 0 ? compareIds.join(",") : undefined,
+              }}
+              compareIds={compareIds}
+            />
           </section>
         </div>
 

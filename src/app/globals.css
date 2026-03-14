@@ -4796,6 +4796,50 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
   flex-wrap: wrap;
 }
 
+.simple-infinite-status {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 12px 8px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.simple-infinite-status--done {
+  padding-top: 8px;
+}
+
+.simple-infinite-status--error {
+  color: #b91c1c;
+}
+
+.simple-infinite-hint {
+  color: #94a3b8;
+}
+
+.simple-spinner-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.simple-spinner {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 3px solid #dbeafe;
+  border-top-color: #2563eb;
+  animation: simple-spin 0.85s linear infinite;
+}
+
+@keyframes simple-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .simple-detail-page .simple-shell {
   width: min(1140px, 92vw);
 }
