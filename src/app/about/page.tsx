@@ -30,7 +30,7 @@ export default function AboutPage() {
             <Link href="/dealer-admin/login">Dealer Login</Link>
             <Link href="/deals-of-the-week">Deals of Week</Link>
             <Link href="/about">About</Link>
-            <Link href="/listings#contact">Contact</Link>
+            <Link href="/contact">Contact</Link>
           </div>
         </nav>
 

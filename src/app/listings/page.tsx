@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import InfiniteListings from "@/app/listings/InfiniteListings";
+import ContactSection from "@/app/components/ContactSection";
 import PriceRangeSlider from "@/app/components/PriceRangeSlider";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
 import { getPrimaryPhoto } from "@/lib/photoUrls";
@@ -949,6 +950,8 @@ export default async function Home({
           </section>
         </div>
 
+          <ContactSection id="contact" compact source="homepage_contact" />
+
         <footer className="cw-footer">
           <div className="cw-footer__grid">
             <div className="cw-footer__col">
@@ -969,7 +972,7 @@ export default async function Home({
               >
                 Deals of week
               </a>
-              <a className="cw-footer__link" href="/#contact">
+              <a className="cw-footer__link" href="/contact">
                 Contact
               </a>
             </div>
@@ -987,8 +990,8 @@ export default async function Home({
               <a className="cw-footer__link" href="/dealer-admin">
                 Dealer login
               </a>
-              <a className="cw-footer__link" href="/#contact">
-                Support
+              <a className="cw-footer__link" href="/contact">
+                Contact
               </a>
             </div>
             <div className="cw-footer__col">
