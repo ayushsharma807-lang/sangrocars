@@ -2602,6 +2602,29 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
   appearance: none;
 }
 
+.admin-car-form__margin {
+  margin: 14px 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #111827;
+}
+
+.admin-car-form__margin span {
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.admin-car-form__margin strong {
+  font-size: 15px;
+}
+
 .dealer-delete {
   margin-top: 12px;
 }

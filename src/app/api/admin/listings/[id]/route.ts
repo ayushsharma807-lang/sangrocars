@@ -79,7 +79,8 @@ export async function POST(
     },
     String(form.get("description") ?? "").trim()
   );
-  const netPrice = extractDealerSubmittedPrice(current.description) ?? current.price ?? null;
+  const submittedNetPrice = parseNumber(form.get("net_price"));
+  const netPrice = submittedNetPrice ?? extractDealerSubmittedPrice(current.description) ?? current.price ?? null;
   let description = withDealerSubmittedPrice(clearListingPendingApproval(cleanDescription), netPrice);
 
   if (selectedStatus === "pending") {

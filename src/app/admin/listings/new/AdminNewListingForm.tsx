@@ -27,12 +27,21 @@ export default function AdminNewListingForm({
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
   const [variant, setVariant] = useState("");
+  const [sellingPrice, setSellingPrice] = useState("");
+  const [netPrice, setNetPrice] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const modelOptions = useMemo(() => getModelOptions(make), [make]);
   const variantOptions = useMemo(() => getVariantOptions(model), [model]);
 
+  const marginValue = (() => {
+    const selling = Number(sellingPrice);
+    const net = Number(netPrice);
+    return Number.isFinite(selling) && selling > 0 && Number.isFinite(net) && net > 0
+      ? selling - net
+      : null;
+  })();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -64,6 +73,8 @@ export default function AdminNewListingForm({
       setMake("");
       setModel("");
       setVariant("");
+      setSellingPrice("");
+      setNetPrice("");
       setSubmitError(null);
       setDealerId(String(formData.get("dealer_id") ?? "none") || "none");
       router.replace(payload.redirectTo, { scroll: false });
@@ -116,7 +127,7 @@ export default function AdminNewListingForm({
           label="Make *"
           name="make"
           value={make}
-          onChange={(value) => setMake(value)}
+          onChange={setMake}
           options={MAKE_OPTIONS}
           placeholder="Type or search make"
           required
@@ -125,7 +136,7 @@ export default function AdminNewListingForm({
           label="Model *"
           name="model"
           value={model}
-          onChange={(value) => setModel(value)}
+          onChange={setModel}
           options={modelOptions}
           placeholder={make ? "Type or search model" : "Type model or select make first"}
           required
@@ -134,7 +145,7 @@ export default function AdminNewListingForm({
           label="Variant"
           name="variant"
           value={variant}
-          onChange={(value) => setVariant(value)}
+          onChange={setVariant}
           options={variantOptions}
           placeholder={model ? "Type or search variant" : "Type variant or select model first"}
         />
@@ -143,8 +154,24 @@ export default function AdminNewListingForm({
           <input name="year" type="number" placeholder="e.g., 2021" />
         </label>
         <label>
-          Price
-          <input name="price" type="number" placeholder="e.g., 950000" />
+          Selling Price
+          <input
+            name="price"
+            type="number"
+            placeholder="e.g., 270000"
+            value={sellingPrice}
+            onChange={(event) => setSellingPrice(event.target.value)}
+          />
+        </label>
+        <label>
+          Net Price (Seller Price)
+          <input
+            name="net_price"
+            type="number"
+            placeholder="Seller's minimum price"
+            value={netPrice}
+            onChange={(event) => setNetPrice(event.target.value)}
+          />
         </label>
         <label>
           KM driven
@@ -188,6 +215,12 @@ export default function AdminNewListingForm({
           Seller email (if no dealer)
           <input name="seller_email" type="email" placeholder="e.g., you@gmail.com" />
         </label>
+      </div>
+      <div className="admin-car-form__margin">
+        <span>Your Margin</span>
+        <strong>
+          {marginValue !== null ? `₹${marginValue.toLocaleString("en-IN")}` : "—"}
+        </strong>
       </div>
       <label>
         Description

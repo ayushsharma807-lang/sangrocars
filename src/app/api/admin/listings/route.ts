@@ -5,6 +5,7 @@ import { buildPrivateSellerDescription } from "@/lib/privateSeller";
 import { buildListingExperienceDescription } from "@/lib/listingExperience";
 import { uploadListingPhotoFiles } from "@/lib/uploadListingPhotos";
 import { DEFAULT_LISTING_SOURCE } from "@/lib/listingSource";
+import { withDealerSubmittedPrice } from "@/lib/listingApproval";
 
 const parseNumber = (value: FormDataEntryValue | null) => {
   if (!value) return null;
@@ -57,6 +58,7 @@ export async function POST(req: Request) {
 
   const dealerIdRaw = String(form.get("dealer_id") ?? "").trim();
   const dealerId = dealerIdRaw && dealerIdRaw !== "none" ? dealerIdRaw : null;
+  const netPrice = parseNumber(form.get("net_price"));
   const privateSellerDescription = buildPrivateSellerDescription(
     {
       name: String(form.get("seller_name") ?? "").trim(),
@@ -65,7 +67,7 @@ export async function POST(req: Request) {
     },
     String(form.get("description") ?? "").trim()
   );
-  const description = buildListingExperienceDescription(
+  const description = withDealerSubmittedPrice(buildListingExperienceDescription(
     {
       tour360Url: String(form.get("tour_360_url") ?? "").trim(),
       walkthroughVideoUrl: String(form.get("walkthrough_video_url") ?? "").trim(),
@@ -74,7 +76,7 @@ export async function POST(req: Request) {
       arIosModelUrl: String(form.get("ar_ios_model_url") ?? "").trim(),
     },
     privateSellerDescription
-  );
+  ), netPrice);
 
   const uploaded = await uploadListingPhotoFiles(
     form.getAll("photo_files"),

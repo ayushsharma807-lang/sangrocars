@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/adminAuth";
 import {
   isListingPendingApproval,
   stripListingInternalMeta,
+  extractDealerSubmittedPrice,
 } from "@/lib/listingApproval";
 import AdminEditListingForm from "./AdminEditListingForm";
 
@@ -83,6 +84,7 @@ export default async function AdminEditListingPage({
           dealers={dealerOptions}
           isPending={isPending}
           cleanedDescription={stripListingInternalMeta(listing.description)}
+          initialNetPrice={extractDealerSubmittedPrice(listing.description) ?? null}
         />
       </section>
     </main>

@@ -41,19 +41,32 @@ export default function AdminEditListingForm({
   dealers,
   isPending,
   cleanedDescription,
+  initialNetPrice,
 }: {
   listing: ListingValues;
   dealers: DealerOption[];
   isPending: boolean;
   cleanedDescription: string;
+  initialNetPrice: number | null;
 }) {
   const [make, setMake] = useState(listing.make ?? "");
   const [model, setModel] = useState(listing.model ?? "");
   const [variant, setVariant] = useState(listing.variant ?? "");
+  const [sellingPrice, setSellingPrice] = useState(String(listing.price ?? ""));
+  const [netPrice, setNetPrice] = useState(
+    initialNetPrice !== null && initialNetPrice !== undefined ? String(initialNetPrice) : ""
+  );
 
   const modelOptions = useMemo(() => getModelOptions(make), [make]);
   const variantOptions = useMemo(() => getVariantOptions(model), [model]);
 
+  const marginValue = (() => {
+    const selling = Number(sellingPrice);
+    const net = Number(netPrice);
+    return Number.isFinite(selling) && selling > 0 && Number.isFinite(net) && net > 0
+      ? selling - net
+      : null;
+  })();
 
   return (
     <form className="dealer-form admin-car-form" method="post" action={`/api/admin/listings/${listing.id}`}>
@@ -91,7 +104,7 @@ export default function AdminEditListingForm({
           label="Make *"
           name="make"
           value={make}
-          onChange={(value) => setMake(value)}
+          onChange={setMake}
           options={MAKE_OPTIONS}
           placeholder="Type or search make"
           required
@@ -100,7 +113,7 @@ export default function AdminEditListingForm({
           label="Model *"
           name="model"
           value={model}
-          onChange={(value) => setModel(value)}
+          onChange={setModel}
           options={modelOptions}
           placeholder={make ? "Type or search model" : "Type model or select make first"}
           required
@@ -109,7 +122,7 @@ export default function AdminEditListingForm({
           label="Variant"
           name="variant"
           value={variant}
-          onChange={(value) => setVariant(value)}
+          onChange={setVariant}
           options={variantOptions}
           placeholder={model ? "Type or search variant" : "Type variant or select model first"}
         />
@@ -118,8 +131,23 @@ export default function AdminEditListingForm({
           <input name="year" type="number" defaultValue={listing.year ?? ""} />
         </label>
         <label>
-          Selling price
-          <input name="price" type="number" defaultValue={listing.price ?? ""} />
+          Selling Price
+          <input
+            name="price"
+            type="number"
+            value={sellingPrice}
+            onChange={(event) => setSellingPrice(event.target.value)}
+          />
+        </label>
+        <label>
+          Net Price (Seller Price)
+          <input
+            name="net_price"
+            type="number"
+            placeholder="Seller's minimum price"
+            value={netPrice}
+            onChange={(event) => setNetPrice(event.target.value)}
+          />
         </label>
         <label>
           KM driven
@@ -151,6 +179,12 @@ export default function AdminEditListingForm({
           Location
           <input name="location" defaultValue={listing.location ?? ""} />
         </label>
+      </div>
+      <div className="admin-car-form__margin">
+        <span>Your Margin</span>
+        <strong>
+          {marginValue !== null ? `₹${marginValue.toLocaleString("en-IN")}` : "—"}
+        </strong>
       </div>
       <label>
         Description
