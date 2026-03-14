@@ -549,10 +549,6 @@ export default async function ListingPage({
               <span>Location</span>
               <strong>{formatLocationTitle(listing.location) ?? "—"}</strong>
             </div>
-            <div>
-              <span>Registration</span>
-              <strong>{formatLocationTitle(listing.location?.split(",")[0] ?? null) ?? "—"}</strong>
-            </div>
           </div>
           {highlights.length > 0 && (
             <div className="spec-highlights">
