@@ -11,7 +11,6 @@ import {
   formatKm,
   formatLocationTitle,
   formatPriceCompact,
-  isNewArrival,
   titleCase,
 } from "@/lib/listingDisplay";
 import {
@@ -238,8 +237,6 @@ export default async function Home({
   const typeValue = getParam(params.type);
   const sortValue = getParam(params.sort) ?? "recent";
   const recentListings = listings.slice(0, 4);
-  const featuredListings =
-    listings.length > 4 ? listings.slice(4, 8) : listings.slice(0, 4);
   const preservedParams = {
     q: qValue,
     min_price: minPriceValue,
@@ -640,7 +637,6 @@ export default async function Home({
                 toTitle(listing.variant),
               ].filter(Boolean);
               const kmText = formatKm(listing.km);
-              const isFresh = isNewArrival(listing.created_at);
               return (
                 <Link
                   className="cw-featured__card"
@@ -648,7 +644,6 @@ export default async function Home({
                   key={`recent-${listing.id}`}
                 >
                   <div className="cw-featured__media">
-                    {isFresh && <span className="cw-featured__badge">Just Added</span>}
                     {photo ? (
                       <Image
                         src={photo}
@@ -679,111 +674,6 @@ export default async function Home({
                 </Link>
               );
             })}
-          </div>
-        </section>
-
-        <section className="cw-featured">
-          <div className="cw-featured__header">
-            <div>
-              <h2>Featured cars</h2>
-              <p>Handpicked listings with great value and verified sellers.</p>
-            </div>
-          </div>
-          <div className="cw-featured__grid">
-            {featuredListings.map((listing) => {
-              const photo = getPrimaryPhoto(listing.photo_urls);
-              const titleParts = [
-                listing.year ?? undefined,
-                toTitle(listing.make),
-                toTitle(listing.model),
-                toTitle(listing.variant),
-              ].filter(Boolean);
-              const kmText = formatKm(listing.km);
-              const isFresh = isNewArrival(listing.created_at);
-              return (
-                <Link
-                  className="cw-featured__card"
-                  href={`/listing/${listing.id}`}
-                  key={`featured-${listing.id}`}
-                >
-                  <div className="cw-featured__media">
-                    {isFresh && <span className="cw-featured__badge">Just Added</span>}
-                    {photo ? (
-                      <Image
-                        src={photo}
-                        alt={String(listing.model ?? "Car")}
-                        fill
-                        sizes="(max-width: 980px) 100vw, 320px"
-                        className="cw-featured__image"
-                      />
-                    ) : (
-                      <div className="cw-featured__placeholder" />
-                    )}
-                  </div>
-                  <div className="cw-featured__body">
-                    <h3>{titleParts.join(" ")}</h3>
-                    <strong>{formatPrice(listing.price)}</strong>
-                    <p>
-                      {[kmText, toTitle(listing.fuel), toTitle(listing.transmission)]
-                        .filter(Boolean)
-                        .join(" • ")}
-                    </p>
-                    <span className="cw-featured__city">
-                      {formatLocationTitle(listing.location) ?? "City on request"}
-                    </span>
-                    <span className="cw-featured__link cw-featured__button">
-                      View Details →
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-            {listings.length === 0 &&
-              [
-                {
-                  id: "fallback-1",
-                  title: "Hyundai Creta SX",
-                  price: "₹11,20,000",
-                  meta: "2019 • 45,000 km • Petrol",
-                  city: "Jalandhar",
-                },
-                {
-                  id: "fallback-2",
-                  title: "Mahindra Thar LX",
-                  price: "₹14,75,000",
-                  meta: "2021 • 18,000 km • Diesel",
-                  city: "Ludhiana",
-                },
-                {
-                  id: "fallback-3",
-                  title: "Toyota Fortuner",
-                  price: "₹32,50,000",
-                  meta: "2020 • 36,000 km • Diesel",
-                  city: "Delhi",
-                },
-                {
-                  id: "fallback-4",
-                  title: "Maruti Swift VXI",
-                  price: "₹6,20,000",
-                  meta: "2018 • 52,000 km • Petrol",
-                  city: "Jaipur",
-                },
-              ].map((item) => (
-                <div className="cw-featured__card" key={item.id}>
-                  <div className="cw-featured__media">
-                    <div className="cw-featured__placeholder" />
-                  </div>
-                  <div className="cw-featured__body">
-                    <h3>{item.title}</h3>
-                    <strong>{item.price}</strong>
-                    <p>{item.meta}</p>
-                    <span className="cw-featured__city">{item.city}</span>
-                    <span className="cw-featured__link cw-featured__link--muted">
-                      View details
-                    </span>
-                  </div>
-                </div>
-              ))}
           </div>
         </section>
 

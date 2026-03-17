@@ -4662,9 +4662,6 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
   background: rgba(59, 130, 246, 0.9);
 }
 
-.simple-listing__tag--new {
-  background: rgba(22, 163, 74, 0.92);
-}
 
 .simple-listing__tag--ar {
   background: rgba(37, 99, 235, 0.9);

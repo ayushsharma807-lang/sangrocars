@@ -11,7 +11,6 @@ import {
   formatKm,
   formatLocationTitle,
   formatPriceCompact,
-  isNewArrival,
   titleCase,
 } from "@/lib/listingDisplay";
 
@@ -168,7 +167,6 @@ export default function InfiniteListings({
             const dealerCount = listing.dealer_count ?? 0;
             const kmText = formatKm(listing.km);
             const isCertified = Boolean(listing.stock_id);
-            const isFresh = isNewArrival(listing.created_at);
             const listingCode = listing.id.slice(0, 6).toUpperCase();
             const listingHref = `/listing/${listing.id}`;
 
@@ -199,11 +197,6 @@ export default function InfiniteListings({
                     >
                       ID {listingCode}
                     </span>
-                    {isFresh && (
-                      <span className="simple-listing__tag simple-listing__tag--new">
-                        Just Added
-                      </span>
-                    )}
                     {isLuxury && (
                       <span className="simple-listing__tag simple-listing__tag--luxury">
                         Luxury
