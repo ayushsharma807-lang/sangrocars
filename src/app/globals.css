@@ -4925,19 +4925,19 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
   gap: 24px;
   align-items: center;
   padding: 22px 24px;
-  border-radius: 18px;
+  border-radius: 16px;
   background:
     linear-gradient(
       90deg,
-      rgba(2, 6, 23, 0.9) 0%,
-      rgba(2, 6, 23, 0.82) 38%,
-      rgba(2, 6, 23, 0.72) 66%,
-      rgba(2, 6, 23, 0.78) 100%
+      rgba(255, 255, 255, 0.96) 0%,
+      rgba(255, 255, 255, 0.94) 38%,
+      rgba(255, 255, 255, 0.88) 66%,
+      rgba(255, 255, 255, 0.9) 100%
     ),
     url("/images/listing-hero-bg.png") center / cover no-repeat;
-  border: 1px solid #1f2937;
-  box-shadow: 0 18px 40px rgba(3, 7, 18, 0.35);
-  margin-bottom: 18px;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
 }
 
 .listing-hero__brand {
@@ -4950,10 +4950,11 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
   width: 68px;
   height: 68px;
   border-radius: 16px;
-  background: #050505;
+  background: #ffffff;
   display: grid;
   place-items: center;
-  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.15);
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .listing-hero__logo img {
@@ -4964,23 +4965,25 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
 
 .listing-hero h1 {
   margin: 0;
-  color: #f8fafc;
+  color: #111111;
   font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+  letter-spacing: -0.02em;
 }
 
 .listing-hero p {
   margin: 6px 0 0;
-  color: #cbd5f5;
+  color: #4b5563;
 }
 
 .listing-hero__actions .simple-button {
-  border-color: #374151;
-  color: #e2e8f0;
-  background: rgba(15, 23, 42, 0.55);
+  border-color: #d1d5db;
+  color: #111111;
+  background: #ffffff;
 }
 
 .listing-hero__actions .simple-button:hover {
-  background: rgba(30, 41, 59, 0.8);
+  background: #ffffff;
+  border-color: #111827;
 }
 
 .listing-hero__actions {
@@ -4991,21 +4994,22 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
   width: 54px;
   height: 54px;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: rgba(15, 23, 42, 0.55);
-  color: #f8fafc;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111111;
   display: grid;
   place-items: center;
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
   transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .garage-save-icon:hover {
   transform: translateY(-2px);
-  background: rgba(30, 41, 59, 0.8);
-  border-color: rgba(248, 250, 252, 0.45);
+  background: #ffffff;
+  border-color: #111827;
 }
 
 .simple-detail__panel {
@@ -7673,7 +7677,7 @@ iframe {
 
 .listing-hero__meta {
   margin-top: 6px;
-  color: rgba(226, 232, 240, 0.8);
+  color: #6b7280;
   font-size: 13px;
 }
 
