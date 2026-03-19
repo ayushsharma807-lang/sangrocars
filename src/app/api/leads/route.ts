@@ -39,6 +39,23 @@ export async function POST(req: Request) {
     );
   }
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("Missing Supabase env", {
+      hasUrl: Boolean(supabaseUrl),
+      hasServiceRole: Boolean(serviceRoleKey),
+    });
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "Supabase env vars missing. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+      },
+      { status: 500 }
+    );
+  }
+
   const name = body.name?.trim();
   const phone = normalizePhone(body.phone);
   if (!name || !phone) {
@@ -60,10 +77,20 @@ export async function POST(req: Request) {
     listing_title: body.listing_title ?? null,
     status: "new",
   };
-
-  const { error } = await sb.from("leads").insert(primaryPayload);
+  let error: { message: string } | null = null;
+  try {
+    const res = await sb.from("leads").insert(primaryPayload);
+    error = res.error ? { message: res.error.message } : null;
+  } catch (err) {
+    console.error("Supabase insert threw", err);
+    return NextResponse.json(
+      { ok: false, error: "Supabase insert failed unexpectedly." },
+      { status: 500 }
+    );
+  }
 
   if (error) {
+    console.error("Lead insert failed", { error: error.message, payload: primaryPayload });
     if (isMissingSchema(error.message)) {
       return NextResponse.json(
         {

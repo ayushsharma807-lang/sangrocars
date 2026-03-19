@@ -21,21 +21,23 @@ export default function ContactForm({ source = "contact_page" }: Props) {
     const formData = new FormData(event.currentTarget);
 
     try {
+      const payload = {
+        name: formData.get("name"),
+        phone: formData.get("phone"),
+        email: "support@sangrocars.in",
+        message: String(formData.get("message") ?? "").trim(),
+        source,
+        listing_title: "General SangroCars contact",
+      };
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.get("name"),
-          phone: formData.get("phone"),
-          email: "support@sangrocars.in",
-          message: String(formData.get("message") ?? "").trim(),
-          source,
-          listing_title: "General SangroCars contact",
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        console.error("Contact form submit failed", { status: res.status, data, payload });
         setStatus({
           state: "error",
           message: data?.error ?? "Could not send your message right now.",
@@ -45,7 +47,8 @@ export default function ContactForm({ source = "contact_page" }: Props) {
 
       setStatus({ state: "success" });
       event.currentTarget.reset();
-    } catch {
+    } catch (error) {
+      console.error("Contact form submit crashed", error);
       setStatus({
         state: "error",
         message: "Network error. Please try again.",
