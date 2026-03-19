@@ -41,10 +41,32 @@ const sanitizeBaseName = (name: string) => {
   return cleaned || "car-photo";
 };
 
+const isHeicLike = (file: File) => {
+  const name = file.name.toLowerCase();
+  const type = file.type.toLowerCase();
+  return (
+    type.includes("heic") ||
+    type.includes("heif") ||
+    name.endsWith(".heic") ||
+    name.endsWith(".heif")
+  );
+};
+
 export const compressCarImage = async (file: File) => {
   if (!file.type.startsWith("image/")) return file;
-
-  const image = await readImage(file);
+  let image: HTMLImageElement;
+  try {
+    image = await readImage(file);
+  } catch (error) {
+    if (isHeicLike(file)) {
+      console.warn("Skipping client-side compression for HEIC/HEIF image", {
+        fileName: file.name,
+        type: file.type,
+      });
+      return file;
+    }
+    throw error;
+  }
   const largestSide = Math.max(image.naturalWidth, image.naturalHeight);
   const needsResize = largestSide > MAX_DIMENSION;
   const needsCompression = file.size > LARGE_FILE_BYTES;
