@@ -73,6 +73,25 @@ That helper uses `SUPABASE_SERVICE_ROLE_KEY`, so the app keeps working after RLS
 - Internal customer profile sync only:
   - `/Users/ayushsharma/carhub/src/lib/customerAuth.ts`
 
+### `public.leads`
+
+- Public website forms submit to:
+  - `/Users/ayushsharma/carhub/src/app/components/ContactForm.tsx`
+  - `/Users/ayushsharma/carhub/src/app/listing/[id]/LeadForm.tsx`
+- Those forms call the Next.js API route:
+  - `/Users/ayushsharma/carhub/src/app/api/leads/route.ts`
+- That API route inserts with the server-side service-role client:
+  - `/Users/ayushsharma/carhub/src/lib/supabase.ts`
+- Admin/dealer lead reads and updates are also server-side only:
+  - `/Users/ayushsharma/carhub/src/app/admin/leads/page.tsx`
+  - `/Users/ayushsharma/carhub/src/app/admin/leads/[id]/page.tsx`
+  - `/Users/ayushsharma/carhub/src/app/dealer-admin/page.tsx`
+  - `/Users/ayushsharma/carhub/src/app/dealer-admin/leads/page.tsx`
+  - `/Users/ayushsharma/carhub/src/app/api/leads/[id]/route.ts`
+  - `/Users/ayushsharma/carhub/src/app/api/leads/bulk/route.ts`
+  - `/Users/ayushsharma/carhub/src/app/api/dealer/leads/[id]/route.ts`
+  - `/Users/ayushsharma/carhub/src/app/api/dealer/leads/bulk/route.ts`
+
 ## Browser-side note
 
 The browser Supabase client is currently used for storage/image upload flows, not direct reads from the tables above:
