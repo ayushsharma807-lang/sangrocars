@@ -11,6 +11,9 @@ type DealerOption = {
 
 const errorText = {
   missing_fields: "Please fill required fields (make and model).",
+  private_seller_missing:
+    "Private seller name and phone are required when no dealer is selected.",
+  photo_upload_failed: "Photo upload failed while creating the listing.",
   create_failed: "Could not create listing. Please try again.",
 } as const;
 

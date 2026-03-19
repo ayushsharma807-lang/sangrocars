@@ -59,13 +59,22 @@ export default function AdminNewListingForm({
       });
 
       const payload = (await response.json().catch(() => null)) as
-        | { ok?: boolean; error?: string; redirectTo?: string }
+        | { ok?: boolean; error?: string; message?: string; redirectTo?: string }
         | null;
 
       if (!response.ok || !payload?.ok || !payload.redirectTo) {
-        const errorCode = payload?.error ?? "create_failed";
-        router.replace(`/admin/listings/new?error=${errorCode}`);
-        router.refresh();
+        const errorMessage =
+          payload?.message ??
+          (payload?.error === "private_seller_missing"
+            ? "Private seller name and phone are required when no dealer is selected."
+            : "Could not create listing. Please try again.");
+        console.error("Admin create listing failed", {
+          status: response.status,
+          payload,
+          dealerId,
+          mode: dealerId === "none" ? "private_seller" : "dealer",
+        });
+        setSubmitError(errorMessage);
         return;
       }
 

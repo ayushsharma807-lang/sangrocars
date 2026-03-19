@@ -58,12 +58,29 @@ export async function POST(req: Request) {
 
   const dealerIdRaw = String(form.get("dealer_id") ?? "").trim();
   const dealerId = dealerIdRaw && dealerIdRaw !== "none" ? dealerIdRaw : null;
+  const isPrivateSeller = !dealerId;
+  const sellerName = String(form.get("seller_name") ?? "").trim();
+  const sellerPhone = String(form.get("seller_phone") ?? "").trim();
+  const sellerEmail = String(form.get("seller_email") ?? "").trim();
+  if (isPrivateSeller && (!sellerName || !sellerPhone)) {
+    const body = {
+      ok: false,
+      error: "private_seller_missing",
+      message: "Private seller name and phone are required when no dealer is selected.",
+    };
+    if (wantsJson) {
+      return NextResponse.json(body, { status: 400 });
+    }
+    return NextResponse.redirect(
+      new URL("/admin/listings/new?error=private_seller_missing", req.url)
+    );
+  }
   const netPrice = parseNumber(form.get("net_price"));
   const privateSellerDescription = buildPrivateSellerDescription(
     {
-      name: String(form.get("seller_name") ?? "").trim(),
-      phone: String(form.get("seller_phone") ?? "").trim(),
-      email: String(form.get("seller_email") ?? "").trim(),
+      name: sellerName,
+      phone: sellerPhone,
+      email: sellerEmail,
     },
     String(form.get("description") ?? "").trim()
   );
@@ -78,17 +95,39 @@ export async function POST(req: Request) {
     privateSellerDescription
   ), netPrice);
 
-  const uploaded = await uploadListingPhotoFiles(
-    form.getAll("photo_files"),
-    `admin/${Date.now()}`
-  );
+  let uploaded: Awaited<ReturnType<typeof uploadListingPhotoFiles>>;
+  try {
+    uploaded = await uploadListingPhotoFiles(
+      form.getAll("photo_files"),
+      `admin/${Date.now()}`
+    );
+  } catch (error) {
+    console.error("Admin listing photo upload failed", {
+      error,
+      dealerId,
+      isPrivateSeller,
+      make,
+      model,
+    });
+    const body = {
+      ok: false,
+      error: "photo_upload_failed",
+      message: "Photo upload failed while creating the listing.",
+    };
+    if (wantsJson) {
+      return NextResponse.json(body, { status: 500 });
+    }
+    return NextResponse.redirect(
+      new URL("/admin/listings/new?error=photo_upload_failed", req.url)
+    );
+  }
   const photoUrls = mergePhotoUrls(
     parsePhotos(form.get("photo_urls")),
     uploaded.urls
   );
 
   const payload = {
-    source: DEFAULT_LISTING_SOURCE,
+    source: isPrivateSeller ? "individual" : DEFAULT_LISTING_SOURCE,
     dealer_id: dealerId,
     type: toType(form.get("type")),
     status: toStatus(form.get("status")),
@@ -106,18 +145,25 @@ export async function POST(req: Request) {
   };
 
   const sb = supabaseServer();
-  const { data, error } = await sb
-    .from("listings")
-    .insert(payload)
-    .select("id")
-    .single();
+  const { data, error } = await sb.from("listings").insert(payload).select("id").single();
 
   if (error || !data?.id) {
+    console.error("Admin listing create failed", {
+      dealerId,
+      isPrivateSeller,
+      sellerName: sellerName || null,
+      sellerPhone: sellerPhone || null,
+      payload,
+      uploadErrors: uploaded.errors,
+      error,
+    });
+    const body = {
+      ok: false,
+      error: "create_failed",
+      message: error?.message ?? "Could not create listing. Please try again.",
+    };
     if (wantsJson) {
-      return NextResponse.json(
-        { ok: false, error: "create_failed" },
-        { status: 500 }
-      );
+      return NextResponse.json(body, { status: 500 });
     }
     return NextResponse.redirect(
       new URL("/admin/listings/new?error=create_failed", req.url)
