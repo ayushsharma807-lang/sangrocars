@@ -19,6 +19,29 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sangrocars.in";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY ?? "";
 const OPENAI_PARSER_MODEL = process.env.OPENAI_PARSER_MODEL ?? "gpt-4o-mini";
+const TELEGRAM_KNOWN_MAKES = [
+  "maruti",
+  "maruti suzuki",
+  "suzuki",
+  "hyundai",
+  "tata",
+  "mahindra",
+  "toyota",
+  "kia",
+  "honda",
+  "mg",
+  "skoda",
+  "volkswagen",
+  "renault",
+  "nissan",
+  "ford",
+  "jeep",
+  "bmw",
+  "mercedes-benz",
+  "audi",
+  "lexus",
+  "volvo",
+];
 
 const getLargestPhotoId = (photos: Array<{ file_id: string }> = []) =>
   photos.length ? photos[photos.length - 1]?.file_id : null;
@@ -220,6 +243,10 @@ const broadcast = async (text: string) => {
 
 const nextPrompt = (step: string) => {
   switch (step) {
+    case "seller_type":
+      return "Seller type? (Dealer / Private Seller)";
+    case "seller_name":
+      return "Seller name? (Dealer name or private seller name)";
     case "make":
       return "Car make? (Example: Hyundai)";
     case "model":
@@ -243,13 +270,15 @@ const nextPrompt = (step: string) => {
     case "condition":
       return "Condition? (Excellent / Good)";
     case "photos":
-      return "Send 1 to 8 photos now. When done, type done.";
+      return "Send at least 3 photos now. When done, type done.";
     default:
       return "Send hi to start.";
   }
 };
 
 const QUICK_REQUIRED_TEXT_FIELDS = [
+  "seller_type",
+  "seller_name",
   "make",
   "model",
   "year",
@@ -258,10 +287,11 @@ const QUICK_REQUIRED_TEXT_FIELDS = [
   "km",
   "price",
   "location",
-  "phone",
 ] as const;
 
 type AiQuickParse = {
+  seller_type?: string | null;
+  seller_name?: string | null;
   make?: string | null;
   model?: string | null;
   variant?: string | null;
@@ -277,6 +307,8 @@ type AiQuickParse = {
 };
 
 const FIELD_LABELS: Record<string, string> = {
+  seller_type: "Seller type",
+  seller_name: "Seller name",
   make: "Make",
   model: "Model",
   variant: "Variant",
@@ -293,6 +325,8 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 const QUICK_EDIT_FIELDS = [
+  "seller_type",
+  "seller_name",
   "price",
   "location",
   "km",
@@ -304,6 +338,26 @@ const QUICK_EDIT_FIELDS = [
   "color",
   "phone",
 ] as const;
+
+const COMMON_PRIVATE_SURNAMES = new Set([
+  "sharma",
+  "singh",
+  "kumar",
+  "gill",
+  "gupta",
+  "patel",
+  "arora",
+  "jain",
+  "verma",
+  "mehta",
+  "khan",
+  "bajaj",
+  "malhotra",
+  "ahuja",
+  "kapoor",
+  "bhatia",
+  "aggarwal",
+]);
 
 const formatPrice = (value: unknown) => {
   const num = typeof value === "number" ? value : null;
@@ -321,6 +375,73 @@ const normalizeColor = (value: string) => {
   return cleaned === "gray"
     ? "Grey"
     : cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+};
+
+const normalizeSellerType = (value: string) => {
+  const lower = value.trim().toLowerCase();
+  if (!lower) return null;
+  if (lower.includes("dealer") || lower.includes("showroom")) return "Dealer";
+  if (lower.includes("private") || lower.includes("owner")) return "Private Seller";
+  return null;
+};
+
+const normalizeSellerName = (value: string) => {
+  const cleaned = value
+    .replace(/\b(private seller|private|seller|dealer|showroom|owner)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned ? titleCase(cleaned) : null;
+};
+
+const detectSellerDetails = (text: string) => {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  let sellerType: string | null = null;
+  let sellerName: string | null = null;
+
+  const dealerMatch = normalized.match(/\bdealer\b[:\-\s]+(.+)$/i);
+  if (dealerMatch?.[1]) {
+    sellerType = "Dealer";
+    const rawName = dealerMatch[1]
+      .split(/\b(19\d{2}|20\d{2})\b/i)[0]
+      ?.replace(/\b(petrol|diesel|cng|electric|hybrid|manual|automatic|amt|cvt|dct)\b.*$/i, "")
+      .trim();
+    sellerName = normalizeSellerName(rawName ?? "");
+  }
+
+  const privateMatch = normalized.match(/\b(private seller|owner)\b[:\-\s]+(.+)$/i);
+  if (!sellerType && privateMatch?.[2]) {
+    sellerType = "Private Seller";
+    const tokens = privateMatch[2].trim().split(/\s+/);
+    const picked: string[] = [];
+    for (const token of tokens) {
+      const lowerToken = token.toLowerCase();
+      if (/^(19\d{2}|20\d{2})$/.test(token)) break;
+      if (
+        ["petrol", "diesel", "cng", "electric", "hybrid", "manual", "automatic", "amt", "cvt", "dct"].includes(
+          lowerToken
+        )
+      ) {
+        break;
+      }
+      if (/\d/.test(token)) break;
+      if (TELEGRAM_KNOWN_MAKES.includes(lowerToken)) break;
+      picked.push(token);
+      const nextToken = (tokens[picked.length] ?? "").toLowerCase();
+      if (picked.length >= 2 || (picked.length === 1 && !COMMON_PRIVATE_SURNAMES.has(nextToken))) {
+        break;
+      }
+    }
+    sellerName = normalizeSellerName(picked.join(" "));
+  }
+
+  if (!sellerType) {
+    sellerType = normalizeSellerType(normalized);
+  }
+
+  return {
+    seller_type: sellerType,
+    seller_name: sellerName,
+  };
 };
 
 const parseKm = (value: string) => {
@@ -352,6 +473,8 @@ const buildQuickPreview = (
 ) => {
   const lines = ["I found this:", ""];
   const previewFields: Array<[string, string | null]> = [
+    ["Seller type", toText(data.seller_type)],
+    ["Seller name", toText(data.seller_name)],
     ["Make", toText(data.make)],
     ["Model", toText(data.model)],
     ["Variant", toText(data.variant)],
@@ -369,7 +492,7 @@ const buildQuickPreview = (
     if (value) lines.push(`${label}: ${value}`);
   }
 
-  lines.push(`Photos: ${photoCount}/8`);
+  lines.push(`Photos: ${photoCount} attached`);
 
   if (missingFields.length > 0) {
     lines.push("", "Missing:");
@@ -383,7 +506,7 @@ const buildQuickPreview = (
   lines.push(
     "",
     "Use the buttons below or type:",
-    "confirm",
+    "correct",
     "edit field value",
     "cancel"
   );
@@ -393,7 +516,11 @@ const buildQuickPreview = (
 
 const buildQuickEditButtons = () => [
   [
+    { text: "Seller type", callback_data: "quick_edit_seller_type" },
+    { text: "Seller name", callback_data: "quick_edit_seller_name" },
     { text: "Price", callback_data: "quick_edit_price" },
+  ],
+  [
     { text: "City", callback_data: "quick_edit_location" },
     { text: "KM", callback_data: "quick_edit_km" },
   ],
@@ -423,12 +550,22 @@ const getQuickMissingFields = (
     if (typeof value === "number") return !Number.isFinite(value);
     return !(typeof value === "string" && value.trim());
   });
-  if (photoCount < 1) missing.push("photos");
+  if (toText(data.seller_type) === "Private Seller") {
+    const phone = data.phone;
+    if (!(typeof phone === "string" && phone.trim())) {
+      missing.push("phone");
+    }
+  }
+  if (photoCount < 3) missing.push("photos");
   return missing;
 };
 
 const parseFieldValue = (field: string, rawValue: string) => {
   switch (field) {
+    case "seller_type":
+      return normalizeSellerType(rawValue);
+    case "seller_name":
+      return normalizeSellerName(rawValue);
     case "make":
     case "model":
     case "variant":
@@ -472,6 +609,12 @@ const normalizeAiParse = (raw: AiQuickParse | null): Partial<AiQuickParse> | nul
 
   const normalized: Partial<AiQuickParse> = {};
 
+  if (raw.seller_type) {
+    normalized.seller_type = normalizeSellerType(String(raw.seller_type));
+  }
+  if (raw.seller_name) {
+    normalized.seller_name = normalizeSellerName(String(raw.seller_name));
+  }
   if (raw.make) normalized.make = titleCase(String(raw.make));
   if (raw.model) normalized.model = titleCase(String(raw.model));
   if (raw.variant) normalized.variant = titleCase(String(raw.variant));
@@ -531,7 +674,7 @@ const parseListingWithAi = async (
           {
             role: "system",
             content:
-              "Extract used car listing details from one user message. Return only valid JSON with keys: make, model, variant, year, transmission, fuel, km, price, location, color, phone, condition. Use null for anything missing. Convert price and km to plain numbers in INR and KM.",
+              "Extract used car listing details from one user message. Return only valid JSON with keys: seller_type, seller_name, make, model, variant, year, transmission, fuel, km, price, location, color, phone, condition. seller_type should be Dealer or Private Seller when clear. Use null for anything missing. Convert price and km to plain numbers in INR and KM.",
           },
           {
             role: "user",
@@ -568,6 +711,9 @@ const applyEditCommand = (
   const rawField = match[1].trim().toLowerCase();
   const rawValue = match[2].trim();
   const fieldMap: Record<string, string> = {
+    seller: "seller_name",
+    "seller type": "seller_type",
+    "seller name": "seller_name",
     make: "make",
     model: "model",
     variant: "variant",
@@ -610,6 +756,14 @@ const mergeQuickParsedData = async (
 ) => {
   const parsed = parseListingText(text);
   const nextData = { ...existingData };
+  const sellerDetails = detectSellerDetails(text);
+
+  if (sellerDetails.seller_type) {
+    nextData.seller_type = sellerDetails.seller_type;
+  }
+  if (sellerDetails.seller_name) {
+    nextData.seller_name = sellerDetails.seller_name;
+  }
 
   for (const field of [
     "make",
@@ -754,14 +908,14 @@ export async function POST(req: Request) {
       user_id: userId,
       chat_id: chatId,
       username,
-      step: "make",
+      step: "seller_type",
       data: {},
       photo_file_ids: [] as string[],
     };
     await sb
       .from("telegram_sessions")
       .upsert(payload, { onConflict: "user_id" });
-    await sendTelegramMessage(chatId, nextPrompt("make"));
+    await sendTelegramMessage(chatId, nextPrompt("seller_type"));
     await broadcast(`${displayName} started a new listing.`);
     return NextResponse.json({ ok: true });
   }
@@ -774,7 +928,7 @@ export async function POST(req: Request) {
         username,
         step: "quick_preview",
         data: {},
-        photo_file_ids: [...photoIds].slice(0, 8),
+        photo_file_ids: [...photoIds],
       };
       await sb.from("telegram_sessions").upsert(payload, { onConflict: "user_id" });
       const { data: freshSession } = await sb
@@ -836,8 +990,8 @@ export async function POST(req: Request) {
   };
 
   const finalizeListing = async (photoFileIds: string[]) => {
-    if (photoFileIds.length < 1) {
-      await sendTelegramMessage(chatId, "Please send at least 1 photo.");
+    if (photoFileIds.length < 3) {
+      await sendTelegramMessage(chatId, "Please send at least 3 photos.");
       return;
     }
 
@@ -848,10 +1002,13 @@ export async function POST(req: Request) {
       .replace(/\s+/g, "-");
 
     const { urls: photoUrls, errors: photoErrors } = TELEGRAM_BOT_TOKEN
-      ? await uploadTelegramPhotos(photoFileIds.slice(0, 8), folder)
+      ? await uploadTelegramPhotos(photoFileIds, folder)
       : { urls: [], errors: [] };
 
+    const sellerType = toText(data.seller_type);
+    const sellerName = toText(data.seller_name);
     const details = [
+      sellerType ? `Seller type: ${sellerType}` : null,
       data.condition ? `Condition: ${data.condition}` : null,
       data.color ? `Color: ${data.color}` : null,
       data.location ? `Location: ${data.location}` : null,
@@ -859,13 +1016,16 @@ export async function POST(req: Request) {
       .filter(Boolean)
       .join("\n");
 
-    const description = buildPrivateSellerDescription(
-      {
-        name: username ? `@${username}` : `Telegram ${userId}`,
-        phone: typeof data.phone === "string" ? data.phone : null,
-      },
-      details
-    );
+    const description =
+      sellerType === "Private Seller"
+        ? buildPrivateSellerDescription(
+            {
+              name: sellerName ?? (username ? `@${username}` : `Telegram ${userId}`),
+              phone: typeof data.phone === "string" ? data.phone : null,
+            },
+            details
+          )
+        : details || null;
     const originalPrice =
       typeof data.price === "number" && Number.isFinite(data.price)
         ? data.price
@@ -942,8 +1102,8 @@ export async function POST(req: Request) {
       chatId,
       buildQuickPreview(nextData, nextPhotos.length, missing),
       [
-        [
-          { text: "Confirm", callback_data: "quick_confirm" },
+      [
+          { text: "Correct", callback_data: "quick_confirm" },
           { text: "Edit", callback_data: "quick_edit" },
           { text: "Cancel", callback_data: "quick_cancel" },
         ],
@@ -1011,9 +1171,9 @@ export async function POST(req: Request) {
 
   if (session.step === "quick_preview") {
     const mergedPhotos =
-      photoIds.size > 0 ? [...existingPhotos, ...photoIds].slice(0, 8) : existingPhotos;
+      photoIds.size > 0 ? [...existingPhotos, ...photoIds] : existingPhotos;
 
-    if (command === "confirm" || command === "quick_confirm") {
+    if (command === "confirm" || command === "correct" || command === "quick_confirm") {
       const missingText = getQuickMissingFields(data, mergedPhotos.length).filter(
         (field) => field !== "photos"
       );
@@ -1029,7 +1189,7 @@ export async function POST(req: Request) {
         );
         return NextResponse.json({ ok: true });
       }
-      if (mergedPhotos.length < 1) {
+      if (mergedPhotos.length < 3) {
         await updateSession("photos", data, mergedPhotos);
         await sendTelegramMessage(chatId, nextPrompt("photos"));
         return NextResponse.json({ ok: true });
@@ -1062,7 +1222,7 @@ export async function POST(req: Request) {
 
   if (session.step === "quick_missing") {
     const mergedPhotos =
-      photoIds.size > 0 ? [...existingPhotos, ...photoIds].slice(0, 8) : existingPhotos;
+      photoIds.size > 0 ? [...existingPhotos, ...photoIds] : existingPhotos;
     const queuedFields = Array.isArray(data.quick_missing_fields)
       ? data.quick_missing_fields.map((item) => String(item))
       : [];
@@ -1078,7 +1238,7 @@ export async function POST(req: Request) {
         (field) => field !== "photos"
       );
       if (nextMissing.length === 0) {
-        if (mergedPhotos.length < 1) {
+        if (mergedPhotos.length < 3) {
           await updateSession("photos", edited.data ?? data, mergedPhotos);
           await sendTelegramMessage(chatId, nextPrompt("photos"));
           return NextResponse.json({ ok: true });
@@ -1099,7 +1259,7 @@ export async function POST(req: Request) {
     }
 
     if (remainingFields.length === 0) {
-      if (mergedPhotos.length < 1) {
+      if (mergedPhotos.length < 3) {
         await updateSession("photos", data, mergedPhotos);
         await sendTelegramMessage(chatId, nextPrompt("photos"));
         return NextResponse.json({ ok: true });
@@ -1144,7 +1304,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    if (mergedPhotos.length < 1) {
+    if (mergedPhotos.length < 3) {
       await updateSession("photos", nextData, mergedPhotos);
       await sendTelegramMessage(chatId, nextPrompt("photos"));
       return NextResponse.json({ ok: true });
@@ -1157,7 +1317,7 @@ export async function POST(req: Request) {
   if (session.step === "quick_edit_value") {
     const editField = typeof data.quick_edit_field === "string" ? data.quick_edit_field : null;
     const mergedPhotos =
-      photoIds.size > 0 ? [...existingPhotos, ...photoIds].slice(0, 8) : existingPhotos;
+      photoIds.size > 0 ? [...existingPhotos, ...photoIds] : existingPhotos;
 
     if (!editField) {
       await sendQuickPreview(data, mergedPhotos);
@@ -1197,20 +1357,16 @@ export async function POST(req: Request) {
     }
 
     if (photoIds.size > 0) {
-      const nextPhotos = [...existingPhotos, ...photoIds].slice(0, 8);
+      const nextPhotos = [...existingPhotos, ...photoIds];
       await updatePhotos(nextPhotos);
-      if (nextPhotos.length >= 8) {
-        await finalizeListing(nextPhotos);
-        return NextResponse.json({ ok: true });
-      }
       await sendTelegramMessage(
         chatId,
-        `Photo received (${nextPhotos.length}/8). Send more or type done.`
+        `Photo received (${nextPhotos.length}). Send more or type done when you have sent at least 3 photos.`
       );
       return NextResponse.json({ ok: true });
     }
 
-    await sendTelegramMessage(chatId, "Send photos (1-8) or type done.");
+    await sendTelegramMessage(chatId, "Send photos (minimum 3) or type done.");
     return NextResponse.json({ ok: true });
   }
 
@@ -1220,7 +1376,7 @@ export async function POST(req: Request) {
   }
 
   if (
-    ["make", "model", "variant"].includes(session.step) &&
+    ["seller_type", "seller_name", "make", "model", "variant"].includes(session.step) &&
     shouldUseQuickMode(trimmedText)
   ) {
     await enterQuickMode(trimmedText, existingPhotos);
@@ -1228,6 +1384,30 @@ export async function POST(req: Request) {
   }
 
   switch (session.step) {
+    case "seller_type": {
+      const sellerType = normalizeSellerType(trimmedText);
+      if (!sellerType) {
+        await sendTelegramMessage(chatId, nextPrompt("seller_type"));
+        return NextResponse.json({ ok: true });
+      }
+      const nextData = { ...data, seller_type: sellerType };
+      await updateSession("seller_name", nextData);
+      await sendTelegramMessage(chatId, nextPrompt("seller_name"));
+      await broadcast(`${displayName} seller type: ${sellerType}`);
+      break;
+    }
+    case "seller_name": {
+      const sellerName = normalizeSellerName(trimmedText);
+      if (!sellerName) {
+        await sendTelegramMessage(chatId, nextPrompt("seller_name"));
+        return NextResponse.json({ ok: true });
+      }
+      const nextData = { ...data, seller_name: sellerName };
+      await updateSession("make", nextData);
+      await sendTelegramMessage(chatId, nextPrompt("make"));
+      await broadcast(`${displayName} seller name captured`);
+      break;
+    }
     case "make": {
       const nextData = { ...data, make: titleCase(trimmedText) };
       await updateSession("model", nextData);
@@ -1274,7 +1454,7 @@ export async function POST(req: Request) {
       break;
     }
     case "km": {
-      const km = parseNumber(trimmedText);
+      const km = parseKm(trimmedText);
       if (!km) {
         await sendTelegramMessage(chatId, "Please send KM driven (e.g., 32000).");
         return NextResponse.json({ ok: true });
@@ -1311,8 +1491,9 @@ export async function POST(req: Request) {
     }
     case "location": {
       const nextData = { ...data, location: titleCase(trimmedText) };
-      await updateSession("phone", nextData);
-      await sendTelegramMessage(chatId, nextPrompt("phone"));
+      const nextStep = data.seller_type === "Private Seller" ? "phone" : "condition";
+      await updateSession(nextStep, nextData);
+      await sendTelegramMessage(chatId, nextPrompt(nextStep));
       await broadcast(`${displayName} location: ${nextData.location}`);
       break;
     }

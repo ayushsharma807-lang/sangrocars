@@ -140,6 +140,18 @@ const detectPrice = (text: string) => {
     return parseIndianMoney(currencyMatch[2]);
   }
 
+  const genericMoneyMatch = text.match(
+    /\b([0-9][0-9.,]*\s*(?:lakh|lac|cr|k|l))\b/i
+  );
+  if (genericMoneyMatch?.[1]) {
+    return parseIndianMoney(genericMoneyMatch[1]);
+  }
+
+  const plainAmountMatch = text.match(/\b([1-9]\d{4,7})\b/);
+  if (plainAmountMatch?.[1]) {
+    return parseIndianMoney(plainAmountMatch[1]);
+  }
+
   return null;
 };
 
