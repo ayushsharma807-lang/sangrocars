@@ -20,7 +20,7 @@ const errorText = {
 export default async function AdminNewListingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; error?: string; id?: string }>;
+  searchParams: Promise<{ status?: string; error?: string; id?: string; message?: string }>;
 }) {
   const auth = await requireAdmin();
   if (!auth.ok) {
@@ -36,6 +36,7 @@ export default async function AdminNewListingPage({
     .limit(2000);
   const dealers = (data ?? []) as DealerOption[];
   const errorKey = params.error as keyof typeof errorText | undefined;
+  const decodedMessage = params.message ? decodeURIComponent(params.message) : null;
 
   return (
     <main className="home">
@@ -71,8 +72,10 @@ export default async function AdminNewListingPage({
             )}
           </div>
         )}
-        {errorKey && (
-          <div className="admin-banner admin-banner--error">{errorText[errorKey]}</div>
+        {(errorKey || decodedMessage) && (
+          <div className="admin-banner admin-banner--error">
+            {decodedMessage || (errorKey ? errorText[errorKey] : null)}
+          </div>
         )}
 
         <AdminNewListingForm dealers={dealers} />

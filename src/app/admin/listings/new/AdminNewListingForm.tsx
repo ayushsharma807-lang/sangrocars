@@ -43,13 +43,13 @@ export default function AdminNewListingForm({
       : null;
   })();
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const submitForm = async () => {
+    if (!formRef.current) return;
     setSubmitError(null);
     setIsSubmitting(true);
 
     try {
-      const formData = new FormData(event.currentTarget);
+      const formData = new FormData(formRef.current);
       const response = await fetch("/api/admin/listings", {
         method: "POST",
         body: formData,
@@ -88,7 +88,8 @@ export default function AdminNewListingForm({
       setDealerId(String(formData.get("dealer_id") ?? "none") || "none");
       router.replace(payload.redirectTo, { scroll: false });
       router.refresh();
-    } catch {
+    } catch (error) {
+      console.error("Admin create listing request crashed", error);
       setSubmitError("Could not create listing. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -100,7 +101,11 @@ export default function AdminNewListingForm({
       ref={formRef}
       className="dealer-form admin-car-form"
       encType="multipart/form-data"
-      onSubmit={handleSubmit}
+      action="/api/admin/listings"
+      method="post"
+      onSubmit={(event) => {
+        event.preventDefault();
+      }}
     >
       <div className="dealer-form__grid">
         <label>
@@ -213,12 +218,20 @@ export default function AdminNewListingForm({
           <input name="location" placeholder="e.g., Jalandhar, Punjab" />
         </label>
         <label>
-          Seller name (if no dealer)
-          <input name="seller_name" placeholder="e.g., Rahul Sharma" />
+          Seller name {dealerId === "none" ? "*" : "(if no dealer)"}
+          <input
+            name="seller_name"
+            placeholder="e.g., Rahul Sharma"
+            required={dealerId === "none"}
+          />
         </label>
         <label>
-          Seller phone (if no dealer)
-          <input name="seller_phone" placeholder="e.g., 9876543210" />
+          Seller phone {dealerId === "none" ? "*" : "(if no dealer)"}
+          <input
+            name="seller_phone"
+            placeholder="e.g., 9876543210"
+            required={dealerId === "none"}
+          />
         </label>
         <label>
           Seller email (if no dealer)
@@ -288,7 +301,12 @@ export default function AdminNewListingForm({
       {submitError ? (
         <div className="admin-banner admin-banner--error">{submitError}</div>
       ) : null}
-      <button className="btn btn--solid" type="submit" disabled={isSubmitting}>
+      <button
+        className="btn btn--solid"
+        type="button"
+        disabled={isSubmitting}
+        onClick={submitForm}
+      >
         {isSubmitting ? "Creating..." : "Create listing"}
       </button>
     </form>
