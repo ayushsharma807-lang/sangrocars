@@ -52,6 +52,29 @@ type Dealer = {
 const publicDealerLabel = (code?: string | null) =>
   code ? `Dealer ID ${code}` : "Verified dealer";
 
+const buildHighlightLink = (
+  label: string,
+  listing: Pick<Listing, "fuel" | "location" | "type">
+) => {
+  if (label.toLowerCase().includes("powertrain") && listing.fuel) {
+    return `/listings?fuel=${encodeURIComponent(listing.fuel)}`;
+  }
+
+  if (label === "Verified documents") {
+    return "/contact#contact-sangrocars";
+  }
+
+  if (listing.type) {
+    return `/listings?type=${encodeURIComponent(listing.type)}`;
+  }
+
+  if (listing.location) {
+    return `/listings?city=${encodeURIComponent(listing.location)}`;
+  }
+
+  return "/listings";
+};
+
 export async function generateMetadata({
   params,
 }: {
@@ -421,18 +444,33 @@ export default async function ListingPage({
         />
         <div className="simple-detail__chips">
           {listing.type && (
-            <span className="simple-pill">{toTitle(listing.type)}</span>
+            <Link
+              className="simple-pill simple-pill--link"
+              href={`/listings?type=${encodeURIComponent(listing.type)}`}
+            >
+              {toTitle(listing.type)}
+            </Link>
           )}
           {listing.fuel && (
-            <span className="simple-pill">{toTitle(listing.fuel)}</span>
+            <Link
+              className="simple-pill simple-pill--link"
+              href={`/listings?fuel=${encodeURIComponent(listing.fuel)}`}
+            >
+              {toTitle(listing.fuel)}
+            </Link>
           )}
           {listing.transmission && (
-            <span className="simple-pill">{toTitle(listing.transmission)}</span>
+            <Link
+              className="simple-pill simple-pill--link"
+              href={`/listings?transmission=${encodeURIComponent(listing.transmission)}`}
+            >
+              {toTitle(listing.transmission)}
+            </Link>
           )}
           {listing.km && (
-            <span className="simple-pill">
+            <Link className="simple-pill simple-pill--link" href="/listings?sort=recent">
               {formatKm(listing.km)}
-            </span>
+            </Link>
           )}
         </div>
         <div className="simple-detail__layout">
@@ -553,9 +591,13 @@ export default async function ListingPage({
           {highlights.length > 0 && (
             <div className="spec-highlights">
               {highlights.map((item) => (
-                <span key={item} className="spec-highlight">
+                <Link
+                  key={item}
+                  className="spec-highlight spec-highlight--link"
+                  href={buildHighlightLink(item, listing)}
+                >
                   {item}
-                </span>
+                </Link>
               ))}
             </div>
           )}
@@ -578,7 +620,11 @@ export default async function ListingPage({
                 return (
                   <article className="listing listing--suggested" key={item.id}>
                     <div className="listing__media">
-                      {isFresh && <span className="listing__tag">Just Added</span>}
+                      {isFresh && (
+                        <Link className="listing__tag listing__tag--link" href="/listings?sort=recent">
+                          Just Added
+                        </Link>
+                      )}
                       {photo ? (
                         <img src={photo} alt={title} />
                       ) : (
@@ -636,7 +682,11 @@ export default async function ListingPage({
                 return (
                   <article className="listing listing--suggested" key={item.id}>
                     <div className="listing__media">
-                      {isFresh && <span className="listing__tag">Just Added</span>}
+                      {isFresh && (
+                        <Link className="listing__tag listing__tag--link" href="/listings?sort=recent">
+                          Just Added
+                        </Link>
+                      )}
                       {photo ? (
                         <img src={photo} alt={title} />
                       ) : (
