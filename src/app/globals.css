@@ -668,11 +668,12 @@ body {
 
 .gallery__main {
   position: relative;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--stroke);
+  border-radius: 16px;
+  border: 1px solid #e5e5e5;
   overflow: hidden;
-  background-color: #0f1117;
+  background-color: #ffffff;
   height: auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .gallery__main img,
@@ -689,20 +690,22 @@ body {
   height: 520px;
   object-fit: cover;
   display: block;
-  background: #0f1117;
+  background: #ffffff;
 }
 
 .gallery__nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  border: none;
-  background: rgba(12, 16, 24, 0.75);
-  color: var(--fg);
-  padding: 8px 12px;
+  border: 1px solid #e5e5e5;
+  background: rgba(255, 255, 255, 0.96);
+  color: #111111;
+  padding: 9px 14px;
   border-radius: 999px;
   font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .gallery__nav.prev {
@@ -719,25 +722,28 @@ body {
   right: 12px;
   padding: 6px 10px;
   border-radius: 999px;
-  background: rgba(12, 16, 24, 0.7);
+  background: rgba(255, 255, 255, 0.96);
   font-size: 12px;
-  color: var(--fg);
+  color: #111111;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .gallery__thumbs {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
 .gallery__thumb {
-  border: none;
-  background: transparent;
+  border: 1px solid #e5e5e5;
+  background: #ffffff;
   padding: 0;
   cursor: pointer;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .gallery__thumb img,
@@ -749,7 +755,9 @@ body {
 }
 
 .gallery__thumb.is-active {
-  border-color: var(--accent-2);
+  border-color: #111111;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
 }
 
 .detail__info {
@@ -5029,7 +5037,7 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
   top: 18px;
   align-self: start;
   display: grid;
-  gap: 14px;
+  gap: 18px;
 }
 
 .simple-detail__panel--stack {
@@ -5079,7 +5087,7 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
 
 .detail-sidebar__price {
   display: grid;
-  gap: 6px;
+  gap: 8px;
 }
 
 .detail-sidebar__amount {
@@ -5120,22 +5128,28 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
   gap: 8px;
   font-size: 13px;
   color: #111111;
+  padding: 14px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .detail-sidebar__cta {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .detail-sidebar__listed {
   display: grid;
   gap: 8px;
-  padding: 12px;
+  padding: 14px;
   border-radius: 12px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   font-size: 14px;
   color: #111111;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .detail-sidebar__listed span {
@@ -5157,6 +5171,7 @@ body:has(main.home .section.admin) .section.admin .lead-detail__card h3 {
   padding: 14px;
   font-size: 14px;
   color: #111111;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .detail-sidebar__assist p {
@@ -7826,6 +7841,7 @@ iframe {
 
 .listings {
   gap: 24px;
+  align-items: stretch;
 }
 
 .listing {
@@ -7836,6 +7852,13 @@ iframe {
   display: grid;
   min-height: 100%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.listing:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  border-color: #d4d4d8;
 }
 
 .listing__tag {
@@ -7860,11 +7883,22 @@ iframe {
   color: #666666;
 }
 
+.listing__meta--stacked {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e5e5;
+  background: #ffffff;
+}
+
 .listing__footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding-top: 6px;
+  border-top: 1px solid #f1f5f9;
 }
 
 .listing__footer strong {
@@ -7875,6 +7909,10 @@ iframe {
   background: #ffffff;
   color: #111111;
   border: 1px solid #d1d5db;
+  border-radius: 12px;
+  font-weight: 600;
+  padding: 10px 14px;
+  text-decoration: none;
 }
 
 .highlight-list {
