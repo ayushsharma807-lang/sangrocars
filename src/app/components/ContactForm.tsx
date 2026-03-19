@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { getPublicApiUrl } from "@/lib/publicApi";
 
 type Status =
   | { state: "idle" }
@@ -29,7 +30,8 @@ export default function ContactForm({ source = "contact_page" }: Props) {
         source,
         listing_title: "General SangroCars contact",
       };
-      const res = await fetch("/api/leads", {
+      const endpoint = getPublicApiUrl("/api/leads");
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -48,7 +50,11 @@ export default function ContactForm({ source = "contact_page" }: Props) {
       setStatus({ state: "success" });
       event.currentTarget.reset();
     } catch (error) {
-      console.error("Contact form submit crashed", error);
+      console.error("Contact form submit crashed", {
+        error,
+        endpoint: getPublicApiUrl("/api/leads"),
+        host: typeof window !== "undefined" ? window.location.host : null,
+      });
       setStatus({
         state: "error",
         message: "Network error. Please try again.",

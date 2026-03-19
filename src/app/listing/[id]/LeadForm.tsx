@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { getPublicApiUrl } from "@/lib/publicApi";
 
 type Props = {
   listingId: string;
@@ -80,7 +81,8 @@ export default function LeadForm({
     const source = String(payload.intent ?? "") || (wantsFinanceRequest ? "finance" : "website");
 
     try {
-      const res = await fetch("/api/leads", {
+      const endpoint = getPublicApiUrl("/api/leads");
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -97,13 +99,25 @@ export default function LeadForm({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        console.error("Lead form submit failed", {
+          status: res.status,
+          data,
+          endpoint,
+          listingId,
+        });
         setStatus({
           state: "error",
           message: data?.error ?? "Failed to submit. Try again.",
         });
         return;
       }
-    } catch {
+    } catch (error) {
+      console.error("Lead form submit crashed", {
+        error,
+        endpoint: getPublicApiUrl("/api/leads"),
+        host: typeof window !== "undefined" ? window.location.host : null,
+        listingId,
+      });
       setStatus({
         state: "error",
         message: "Network error. Please try again.",

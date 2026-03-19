@@ -30,12 +30,40 @@ const isMissingSchema = (message?: string | null) => {
   );
 };
 
+const ALLOWED_ORIGINS = new Set([
+  "https://sangrocars.in",
+  "https://www.sangrocars.in",
+  "http://localhost:3000",
+]);
+
+const corsHeaders = (origin?: string | null) => {
+  const headers = new Headers({
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    Vary: "Origin",
+  });
+
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    headers.set("Access-Control-Allow-Origin", origin);
+  }
+
+  return headers;
+};
+
+export async function OPTIONS(req: Request) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: corsHeaders(req.headers.get("origin")),
+  });
+}
+
 export async function POST(req: Request) {
+  const headers = corsHeaders(req.headers.get("origin"));
   const body = (await req.json().catch(() => null)) as LeadPayload | null;
   if (!body) {
     return NextResponse.json(
       { ok: false, error: "Invalid payload" },
-      { status: 400 }
+      { status: 400, headers }
     );
   }
 
@@ -52,7 +80,7 @@ export async function POST(req: Request) {
         error:
           "Supabase env vars missing. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
       },
-      { status: 500 }
+      { status: 500, headers }
     );
   }
 
@@ -61,7 +89,7 @@ export async function POST(req: Request) {
   if (!name || !phone) {
     return NextResponse.json(
       { ok: false, error: "Name and phone are required" },
-      { status: 400 }
+      { status: 400, headers }
     );
   }
 
@@ -85,7 +113,7 @@ export async function POST(req: Request) {
     console.error("Supabase insert threw", err);
     return NextResponse.json(
       { ok: false, error: "Supabase insert failed unexpectedly." },
-      { status: 500 }
+      { status: 500, headers }
     );
   }
 
@@ -98,7 +126,7 @@ export async function POST(req: Request) {
           error:
             "Leads table is missing in Supabase. Run /Users/ayushsharma/carhub/supabase/setup.sql once.",
         },
-        { status: 500 }
+        { status: 500, headers }
       );
     }
 
@@ -115,14 +143,14 @@ export async function POST(req: Request) {
       }
       return NextResponse.json(
         { ok: false, error: fallback.error.message },
-        { status: 500 }
+        { status: 500, headers }
       );
     }
     return NextResponse.json(
       { ok: false, error: error.message },
-      { status: 500 }
+      { status: 500, headers }
     );
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true }, { headers });
 }
