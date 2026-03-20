@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
-import { ensureListingPhotoBucket } from "@/lib/listingPhotoBucket";
-import { CAR_IMAGE_BUCKET } from "@/lib/carImageBucket";
+import {
+  ensureListingPhotoBucket,
+  LISTING_PHOTO_BUCKET,
+} from "@/lib/listingPhotoBucket";
 
 const sanitizeExt = (value?: string | null) => {
   if (!value) return "jpg";
@@ -37,7 +39,12 @@ export async function POST(req: Request) {
     const sb = supabaseServer();
     await ensureListingPhotoBucket(sb);
 
-    const uploads = [] as { path: string; token: string; publicUrl: string }[];
+    const uploads = [] as {
+      bucket: string;
+      path: string;
+      token: string;
+      publicUrl: string;
+    }[];
 
     for (let index = 0; index < files.length; index += 1) {
       const file = files[index] as { name?: string; type?: string };
@@ -45,7 +52,7 @@ export async function POST(req: Request) {
       const base = slugify(String(file.name ?? `car-${index + 1}`));
       const path = `${folder}/${Date.now()}-${index}-${base}.${ext}`;
       const { data, error } = await sb.storage
-        .from(CAR_IMAGE_BUCKET)
+        .from(LISTING_PHOTO_BUCKET)
         .createSignedUploadUrl(path);
 
       if (error || !data?.token) {
@@ -55,8 +62,11 @@ export async function POST(req: Request) {
         );
       }
 
-      const { data: publicData } = sb.storage.from(CAR_IMAGE_BUCKET).getPublicUrl(path);
+      const { data: publicData } = sb.storage
+        .from(LISTING_PHOTO_BUCKET)
+        .getPublicUrl(path);
       uploads.push({
+        bucket: LISTING_PHOTO_BUCKET,
         path,
         token: data.token,
         publicUrl: publicData.publicUrl,

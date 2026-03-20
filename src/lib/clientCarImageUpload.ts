@@ -1,8 +1,8 @@
-import { CAR_IMAGE_BUCKET } from "@/lib/carImageBucket";
 import { compressCarImage } from "@/lib/clientImageCompression";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
 type SignedUpload = {
+  bucket?: string;
   path: string;
   token: string;
   publicUrl: string;
@@ -44,15 +44,21 @@ export const uploadCarImagesFromClient = async (
   for (let index = 0; index < uploads.length; index += 1) {
     const signed = uploads[index];
     const file = compressed[index];
+    const bucket = signed.bucket;
+    if (!bucket) {
+      throw new Error("Could not determine upload bucket.");
+    }
     const { error } = await sb.storage
-      .from(CAR_IMAGE_BUCKET)
+      .from(bucket)
       .uploadToSignedUrl(signed.path, signed.token, file, {
         upsert: true,
         contentType: file.type || "image/jpeg",
       });
 
     if (error) {
-      throw new Error(error.message || `Could not upload ${file.name}`);
+      throw new Error(
+        error.message || `Could not upload ${file.name} to ${bucket}.`
+      );
     }
 
     publicUrls.push(signed.publicUrl);
