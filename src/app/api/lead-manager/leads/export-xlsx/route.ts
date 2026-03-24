@@ -20,6 +20,9 @@ export async function GET(req: Request) {
   const search = sanitize(url.searchParams.get("search"));
   const source = sanitize(url.searchParams.get("source"));
   const status = sanitize(url.searchParams.get("status"));
+  const assigned = sanitize(url.searchParams.get("assigned"));
+  const from = sanitize(url.searchParams.get("from"));
+  const to = sanitize(url.searchParams.get("to"));
 
   const sb = supabaseServer();
   let query = sb
@@ -40,6 +43,17 @@ export async function GET(req: Request) {
 
   if (status && LEAD_STATUSES.includes(status as never)) {
     query = query.eq("status", status);
+  }
+  if (assigned) {
+    query = query.eq("assigned_to", assigned);
+  }
+  if (from) {
+    query = query.gte("created_at", new Date(from).toISOString());
+  }
+  if (to) {
+    const end = new Date(to);
+    end.setHours(23, 59, 59, 999);
+    query = query.lte("created_at", end.toISOString());
   }
 
   const { data, error } = await query;

@@ -6,6 +6,8 @@ import {
   LEAD_STATUSES,
   formatLeadStatus,
 } from "@/lib/leadManagerTypes";
+import { LEAD_TEAM } from "@/lib/leadManagerTeam";
+import LeadQuickAssign from "./LeadQuickAssign";
 
 const formatDate = (value?: string | null) => {
   if (!value) return "—";
@@ -20,13 +22,24 @@ const formatDate = (value?: string | null) => {
 export default async function LeadListPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; source?: string; status?: string }>;
+  searchParams: Promise<{
+    search?: string;
+    source?: string;
+    status?: string;
+    assigned?: string;
+    from?: string;
+    to?: string;
+  }>;
 }) {
   await requireLeadManager();
   const params = await searchParams;
   const search = (params.search ?? "").trim();
   const source = (params.source ?? "").trim();
   const status = (params.status ?? "").trim();
+  const assigned = (params.assigned ?? "").trim();
+  const from = (params.from ?? "").trim();
+  const to = (params.to ?? "").trim();
+  const defaultAssignee = process.env.LEAD_MANAGER_DEFAULT_ASSIGNEE ?? "Ayush";
 
   const sb = supabaseServer();
   let query = sb
@@ -46,12 +59,26 @@ export default async function LeadListPage({
   if (status && LEAD_STATUSES.includes(status as never)) {
     query = query.eq("status", status);
   }
+  if (assigned && LEAD_TEAM.includes(assigned as never)) {
+    query = query.eq("assigned_to", assigned);
+  }
+  if (from) {
+    query = query.gte("created_at", new Date(from).toISOString());
+  }
+  if (to) {
+    const end = new Date(to);
+    end.setHours(23, 59, 59, 999);
+    query = query.lte("created_at", end.toISOString());
+  }
 
   const { data } = await query;
   const exportParams = new URLSearchParams();
   if (search) exportParams.set("search", search);
   if (source) exportParams.set("source", source);
   if (status) exportParams.set("status", status);
+  if (assigned) exportParams.set("assigned", assigned);
+  if (from) exportParams.set("from", from);
+  if (to) exportParams.set("to", to);
   const exportQuery = exportParams.toString();
   const exportSuffix = exportQuery ? `?${exportQuery}` : "";
 
@@ -84,7 +111,7 @@ export default async function LeadListPage({
         </div>
       </div>
 
-      <form className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-3">
+      <form className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-4">
         <label className="text-sm text-slate-600">
           Search
           <input
@@ -124,6 +151,39 @@ export default async function LeadListPage({
             ))}
           </select>
         </label>
+        <label className="text-sm text-slate-600">
+          Assigned to
+          <select
+            name="assigned"
+            defaultValue={assigned}
+            className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:border-slate-900 focus:outline-none"
+          >
+            <option value="">All</option>
+            {LEAD_TEAM.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-sm text-slate-600">
+          From
+          <input
+            type="date"
+            name="from"
+            defaultValue={from}
+            className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:border-slate-900 focus:outline-none"
+          />
+        </label>
+        <label className="text-sm text-slate-600">
+          To
+          <input
+            type="date"
+            name="to"
+            defaultValue={to}
+            className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:border-slate-900 focus:outline-none"
+          />
+        </label>
         <div className="sm:col-span-3 flex flex-wrap items-center gap-3">
           <button
             className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
@@ -149,6 +209,7 @@ export default async function LeadListPage({
                 <th className="py-2">Status</th>
                 <th className="py-2">Next follow-up</th>
                 <th className="py-2">Created</th>
+                <th className="py-2">Assigned</th>
                 <th className="py-2 text-right">Actions</th>
               </tr>
             </thead>
@@ -166,6 +227,13 @@ export default async function LeadListPage({
                   <td className="py-3">{formatLeadStatus(lead.status)}</td>
                   <td className="py-3">{formatDate(lead.next_follow_up_date)}</td>
                   <td className="py-3">{formatDate(lead.created_at)}</td>
+                  <td className="py-3">
+                    <LeadQuickAssign
+                      id={lead.id}
+                      currentAssigned={lead.assigned_to}
+                      defaultAssignee={defaultAssignee}
+                    />
+                  </td>
                   <td className="py-3">
                     <div className="flex justify-end gap-2">
                       <a
@@ -192,7 +260,7 @@ export default async function LeadListPage({
               ))}
               {(!data || data.length === 0) && (
                 <tr>
-                  <td className="py-6 text-sm text-slate-500" colSpan={8}>
+                  <td className="py-6 text-sm text-slate-500" colSpan={9}>
                     No leads found.
                   </td>
                 </tr>
