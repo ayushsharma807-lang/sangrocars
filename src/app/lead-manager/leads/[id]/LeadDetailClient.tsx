@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { LEAD_STATUSES, formatLeadStatus } from "@/lib/leadManagerTypes";
+import { LEAD_TEAM } from "@/lib/leadManagerTeam";
 
 export default function LeadDetailClient({
   id,
@@ -87,12 +88,18 @@ export default function LeadDetailClient({
         </label>
         <label className="text-sm text-slate-600 sm:col-span-2">
           Assign to
-          <input
+          <select
             className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:border-slate-900 focus:outline-none"
             value={assignedTo}
             onChange={(event) => setAssignedTo(event.target.value)}
-            placeholder="Team member name"
-          />
+          >
+            <option value="">Unassigned</option>
+            {LEAD_TEAM.map((member) => (
+              <option key={member} value={member}>
+                {member}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="text-sm text-slate-600 sm:col-span-2">
           Notes
