@@ -33,7 +33,9 @@ const toSupabasePhotoUrl = (value: string) => {
   }
 
   const bucket =
-    process.env.NEXT_PUBLIC_LISTING_PHOTO_BUCKET ?? "listing-photos";
+    process.env.NEXT_PUBLIC_LISTING_PHOTO_BUCKET ??
+    process.env.NEXT_PUBLIC_CAR_IMAGE_BUCKET ??
+    "car-images";
   const cleaned = value.replace(/^\/+/, "").replace(/^public\//, "");
   return joinUrl(base, `storage/v1/object/public/${bucket}/${cleaned}`);
 };
