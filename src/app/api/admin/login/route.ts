@@ -51,11 +51,22 @@ const sanitizeNextPath = (rawValue: string) => {
     "/admin/dealers",
     "/admin/listings",
     "/admin/listings/new",
+    "/admin-app",
+    "/admin-app/",
+    "/admin-app/listings",
+    "/admin-app/listings/new",
+    "/admin-app/leads",
   ]);
   if (allowedExact.has(pathname)) {
     return pathname === "/admin/" ? "/admin" : pathname;
   }
   if (pathname.startsWith("/admin/leads/")) {
+    return pathname;
+  }
+  if (pathname.startsWith("/admin-app/listings/")) {
+    return pathname;
+  }
+  if (pathname.startsWith("/admin-app/leads/")) {
     return pathname;
   }
   if (pathname.startsWith("/admin/exclusive-deals/")) {
