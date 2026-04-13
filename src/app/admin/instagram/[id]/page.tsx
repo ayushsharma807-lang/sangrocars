@@ -22,6 +22,10 @@ type ListingRow = {
   instagram_caption: string | null;
 };
 
+type ListingPhotoRow = {
+  photo_url: string | null;
+  created_at: string | null;
+};
 
 export default async function InstagramPostPage({
   params,
@@ -67,10 +71,19 @@ export default async function InstagramPostPage({
   }
 
   const listing = data as ListingRow;
+  const { data: photoRows } = await sb
+    .from("listing_photos")
+    .select("photo_url, created_at")
+    .eq("listing_id", listing.id)
+    .order("created_at", { ascending: true })
+    .limit(1);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sangrocars.in";
   const listingUrl = `${siteUrl}/listing/${listing.id}`;
   const photos = normalizePhotoUrls(listing.photo_urls);
-  const mainImage = getPrimaryPhoto(photos);
+  const fallbackPhoto = normalizePhotoUrls(
+    (photoRows as ListingPhotoRow[] | null)?.[0]?.photo_url ?? null
+  );
+  const mainImage = getPrimaryPhoto(photos) ?? fallbackPhoto[0] ?? null;
   const caption =
     listing.instagram_caption || buildInstagramCaption(listing, listingUrl);
 

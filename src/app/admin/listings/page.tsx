@@ -348,8 +348,17 @@ export default async function AdminListingsPage({
                 className="btn btn--outline"
                 type="submit"
                 formAction="/api/admin/instagram/bulk-ready"
+                name="action"
+                value="ready"
               >
                 Mark ready for Instagram
+              </button>
+              <button
+                className="btn btn--outline"
+                type="submit"
+                formAction="/api/admin/instagram/bulk-posted"
+              >
+                Mark as posted
               </button>
             </div>
           </div>
