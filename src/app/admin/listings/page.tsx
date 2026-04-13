@@ -462,6 +462,9 @@ export default async function AdminListingsPage({
                             <Link className="link" href={`/admin/listings/${listing.id}`}>
                               Edit
                             </Link>
+                            <Link className="link" href={`/admin/instagram/${listing.id}`}>
+                              Post to Instagram
+                            </Link>
                             {isPending && (
                               <form
                                 method="post"
