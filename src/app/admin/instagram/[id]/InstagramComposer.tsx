@@ -34,6 +34,7 @@ export default function InstagramComposer({
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   const copyCaption = async () => {
     try {
@@ -74,6 +75,49 @@ export default function InstagramComposer({
     }
   };
 
+  const downloadCropped = async () => {
+    if (!imageUrl) return;
+    setDownloading(true);
+    setMessage(null);
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(blob);
+      img.src = objectUrl;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      const canvas = document.createElement("canvas");
+      const targetWidth = 1080;
+      const targetHeight = 1350;
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas not supported.");
+      const scale = Math.max(
+        targetWidth / img.width,
+        targetHeight / img.height
+      );
+      const drawWidth = img.width * scale;
+      const drawHeight = img.height * scale;
+      const offsetX = (targetWidth - drawWidth) / 2;
+      const offsetY = (targetHeight - drawHeight) / 2;
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = "sangrocars-instagram.jpg";
+      link.click();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      setMessage("Image export failed. Try opening the image manually.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="admin-instagram">
       <div className="admin-instagram__grid">
@@ -108,6 +152,14 @@ export default function InstagramComposer({
               onClick={copyCaption}
             >
               {copied ? "Copied!" : "Copy caption"}
+            </button>
+            <button
+              type="button"
+              className="btn btn--outline"
+              onClick={downloadCropped}
+              disabled={downloading || !imageUrl}
+            >
+              {downloading ? "Preparing image..." : "Download 4:5 image"}
             </button>
             <a
               className="btn btn--outline"

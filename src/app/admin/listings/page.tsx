@@ -24,6 +24,7 @@ type ListingRow = {
   description: string | null;
   created_at: string | null;
   last_seen_at: string | null;
+  instagram_post_status: string | null;
 };
 
 type DealerLite = {
@@ -39,6 +40,7 @@ type SearchParams = {
   owner?: string | string[];
   sort?: string | string[];
   dealer_id?: string | string[];
+  ig?: string | string[];
   action?: string | string[];
   error?: string | string[];
 };
@@ -104,6 +106,7 @@ export default async function AdminListingsPage({
     owner: getParam(params.owner)?.trim() ?? "",
     sort: getParam(params.sort)?.trim() ?? "recent",
     dealerId: getParam(params.dealer_id)?.trim() ?? "",
+    ig: getParam(params.ig)?.trim() ?? "",
   };
   const action = getParam(params.action) ?? "";
   const errorText = getParam(params.error) ?? "";
@@ -112,7 +115,7 @@ export default async function AdminListingsPage({
   let query = sb
     .from("listings")
     .select(
-      "id, dealer_id, make, model, variant, year, price, location, status, type, description, created_at, last_seen_at"
+      "id, dealer_id, make, model, variant, year, price, location, status, type, description, created_at, last_seen_at, instagram_post_status"
     );
 
   if (filters.q) {
@@ -127,6 +130,10 @@ export default async function AdminListingsPage({
   if (filters.dealerId) query = query.eq("dealer_id", filters.dealerId);
   if (filters.owner === "dealer") query = query.not("dealer_id", "is", null);
   if (filters.owner === "private") query = query.is("dealer_id", null);
+  if (filters.ig === "ready") query = query.eq("instagram_post_status", "ready");
+  if (filters.ig === "posted")
+    query = query.eq("instagram_post_status", "posted");
+  if (filters.ig === "none") query = query.is("instagram_post_status", null);
 
   switch (filters.sort) {
     case "price_desc":
@@ -184,6 +191,7 @@ export default async function AdminListingsPage({
     owner: filters.owner || null,
     sort: filters.sort || null,
     dealer_id: filters.dealerId || null,
+    ig: filters.ig || null,
   });
   const pendingPath = buildQueryPath("/admin/listings", {
     q: filters.q || null,
@@ -192,6 +200,7 @@ export default async function AdminListingsPage({
     owner: filters.owner || null,
     sort: filters.sort || null,
     dealer_id: filters.dealerId || null,
+    ig: filters.ig || null,
   });
   const bulkFormId = "bulk-approve-form";
 
@@ -282,6 +291,15 @@ export default async function AdminListingsPage({
             </select>
           </label>
           <label>
+            Instagram
+            <select name="ig" defaultValue={filters.ig}>
+              <option value="">All</option>
+              <option value="ready">Ready to post</option>
+              <option value="posted">Posted</option>
+              <option value="none">Not prepared</option>
+            </select>
+          </label>
+          <label>
             Sort
             <select name="sort" defaultValue={filters.sort}>
               <option value="recent">Newest first</option>
@@ -297,12 +315,7 @@ export default async function AdminListingsPage({
           </Link>
         </form>
 
-        <form
-          id={bulkFormId}
-          className="admin-bulk-form"
-          method="post"
-          action="/api/admin/listings/bulk-approve"
-        >
+        <form id={bulkFormId} className="admin-bulk-form" method="post">
           <input type="hidden" name="return" value={returnPath} />
           <div className="admin-bulk-actions">
             <div>
@@ -326,9 +339,17 @@ export default async function AdminListingsPage({
               <button
                 className="btn btn--solid"
                 type="submit"
+                formAction="/api/admin/listings/bulk-approve"
                 disabled={pendingVisibleCount === 0}
               >
                 Approve selected
+              </button>
+              <button
+                className="btn btn--outline"
+                type="submit"
+                formAction="/api/admin/instagram/bulk-ready"
+              >
+                Mark ready for Instagram
               </button>
             </div>
           </div>
@@ -337,11 +358,7 @@ export default async function AdminListingsPage({
               <thead>
                 <tr>
                   <th>
-                    <BulkSelectAll
-                      formId={bulkFormId}
-                      name="ids"
-                      disabled={pendingVisibleCount === 0}
-                    />
+                    <BulkSelectAll formId={bulkFormId} name="ids" />
                   </th>
                   <th>Car</th>
                   <th>Owner</th>
@@ -465,6 +482,9 @@ export default async function AdminListingsPage({
                             <Link className="link" href={`/admin/instagram/${listing.id}`}>
                               Post to Instagram
                             </Link>
+                            <span className="notification-meta">
+                              IG: {listing.instagram_post_status ?? "not set"}
+                            </span>
                             {isPending && (
                               <form
                                 method="post"

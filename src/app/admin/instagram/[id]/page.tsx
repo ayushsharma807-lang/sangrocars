@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/adminAuth";
 import { supabaseServer } from "@/lib/supabase";
 import { getPrimaryPhoto, normalizePhotoUrls } from "@/lib/photoUrls";
-import { formatPriceCompact, formatKm, titleCase } from "@/lib/listingDisplay";
+import { buildInstagramCaption } from "@/lib/instagramCaption";
 import InstagramComposer from "./InstagramComposer";
 
 type ListingRow = {
@@ -22,34 +22,6 @@ type ListingRow = {
   instagram_caption: string | null;
 };
 
-const buildCaption = (listing: ListingRow, listingUrl: string) => {
-  const title = [
-    listing.year ?? undefined,
-    titleCase(listing.make),
-    titleCase(listing.model),
-    titleCase(listing.variant),
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const lines = [
-    title || "SangroCars Listing",
-    listing.year ? `Year: ${listing.year}` : null,
-    listing.km ? `KM: ${formatKm(listing.km)}` : null,
-    listing.fuel ? `Fuel: ${titleCase(listing.fuel)}` : null,
-    listing.transmission
-      ? `Transmission: ${titleCase(listing.transmission)}`
-      : null,
-    listing.price
-      ? `Price: ${formatPriceCompact(listing.price)}`
-      : "Price: On request",
-    "Finance available",
-    `View more: ${listingUrl}`,
-    "DM now or contact SangroCars",
-  ].filter(Boolean);
-
-  return lines.join("\n");
-};
 
 export default async function InstagramPostPage({
   params,
@@ -99,7 +71,8 @@ export default async function InstagramPostPage({
   const listingUrl = `${siteUrl}/listing/${listing.id}`;
   const photos = normalizePhotoUrls(listing.photo_urls);
   const mainImage = getPrimaryPhoto(photos);
-  const caption = listing.instagram_caption || buildCaption(listing, listingUrl);
+  const caption =
+    listing.instagram_caption || buildInstagramCaption(listing, listingUrl);
 
   return (
     <main className="home admin">
