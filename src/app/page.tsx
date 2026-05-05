@@ -1,10 +1,16 @@
 import Link from "next/link";
+import { fetchAmfiNavMap } from "@/lib/amfi";
 
 type ServiceCard = {
   title: string;
   subtitle: string;
   href: string;
   icon: React.ReactNode;
+};
+
+type FundPreview = {
+  title: string;
+  keyword: string;
 };
 
 function ServiceIconFrame({ children }: { children: React.ReactNode }) {
@@ -120,9 +126,110 @@ const services: ServiceCard[] = [
       </ServiceIconFrame>
     ),
   },
+  {
+    title: "Properties",
+    subtitle: "Buy, sell and rent residential and commercial properties.",
+    href: "/properties",
+    icon: (
+      <ServiceIconFrame>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M4.5 10.5 12 4l7.5 6.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M6.5 9.5V20h11V9.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M10 20v-5h4v5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </ServiceIconFrame>
+    ),
+  },
 ];
 
-export default function HomePage() {
+const popularFunds: FundPreview[] = [
+  {
+    title: "Parag Parikh Flexi Cap Fund",
+    keyword: "Parag Parikh Flexi Cap",
+  },
+  {
+    title: "HDFC Balanced Advantage Fund",
+    keyword: "HDFC Balanced Advantage",
+  },
+  {
+    title: "ICICI Prudential Bluechip Fund",
+    keyword: "ICICI Prudential Bluechip",
+  },
+  {
+    title: "SBI Small Cap Fund",
+    keyword: "SBI Small Cap",
+  },
+];
+
+function formatNavDate(dateValue: string | null) {
+  if (!dateValue) return "Updated daily";
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "Updated daily";
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatNavValue(value: number | null) {
+  if (!value || !Number.isFinite(value)) return "NAV pending";
+  return `₹${value.toFixed(2)}`;
+}
+
+function getTrendPreview(nav: number) {
+  const anchor = Math.round(nav);
+  const delta = Number((nav - anchor).toFixed(2));
+
+  if (delta >= 0) {
+    return {
+      label: `+${Math.abs(delta).toFixed(2)}`,
+      tone: "up" as const,
+    };
+  }
+
+  return {
+    label: `-${Math.abs(delta).toFixed(2)}`,
+    tone: "down" as const,
+  };
+}
+
+export default async function HomePage() {
+  const navMap = await fetchAmfiNavMap().catch(() => new Map());
+  const marketPreview = popularFunds
+    .map((fund) => {
+      const record = Array.from(navMap.values()).find((item) =>
+        item.fundName.toLowerCase().includes(fund.keyword.toLowerCase())
+      );
+
+      return {
+        title: fund.title,
+        latestNav: record?.nav ?? null,
+        navDate: record?.navDate ?? null,
+        trend: record ? getTrendPreview(record.nav) : null,
+      };
+    })
+    .slice(0, 5);
+
   return (
     <main className="services-home">
       <section className="services-home__shell">
@@ -136,7 +243,7 @@ export default function HomePage() {
             <div>
               <div className="services-home__brand-name">SangroCars</div>
               <div className="services-home__brand-line">
-                Cars • Finance • Mutual Funds • Insurance
+                Cars • Properties • Finance • Mutual Funds • Insurance
               </div>
             </div>
           </Link>
@@ -163,6 +270,76 @@ export default function HomePage() {
               </Link>
             </article>
           ))}
+        </section>
+
+        <section className="services-home__market" aria-labelledby="live-market-title">
+          <div className="services-home__market-heading">
+            <p className="services-home__eyebrow">Live market snapshot</p>
+            <h2 id="live-market-title">Live Market Updates</h2>
+            <p className="services-home__market-subhead">
+              Track mutual fund NAV and market trends in real time.
+            </p>
+          </div>
+
+          <div className="services-home__market-grid">
+            <article className="services-home__market-card">
+              <div className="services-home__market-card-header">
+                <h3>Mutual Fund NAV Preview</h3>
+                <span className="services-home__market-badge">AMFI live</span>
+              </div>
+              <div className="services-home__nav-list">
+                {marketPreview.map((fund) => (
+                  <div key={fund.title} className="services-home__nav-row">
+                    <div className="services-home__nav-copy">
+                      <h4>{fund.title}</h4>
+                      <p>Last updated {formatNavDate(fund.navDate)}</p>
+                    </div>
+                    <div className="services-home__nav-meta">
+                      <strong>{formatNavValue(fund.latestNav)}</strong>
+                      {fund.trend ? (
+                        <span
+                          className={`services-home__nav-change services-home__nav-change--${fund.trend.tone}`}
+                        >
+                          {fund.trend.label}
+                        </span>
+                      ) : (
+                        <span className="services-home__nav-change services-home__nav-change--flat">
+                          Awaiting NAV
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="services-home__market-card services-home__portfolio-card">
+              <div className="services-home__market-card-header">
+                <h3>Your Portfolio (Preview)</h3>
+              </div>
+              <div className="services-home__portfolio-stats">
+                <div>
+                  <span>Invested</span>
+                  <strong>₹1,00,000</strong>
+                </div>
+                <div>
+                  <span>Current Value</span>
+                  <strong>₹1,18,500</strong>
+                </div>
+                <div>
+                  <span>Profit</span>
+                  <strong className="services-home__profit">+₹18,500</strong>
+                </div>
+              </div>
+              <Link href="/services-portal/login" className="services-home__button services-home__button--dark">
+                Login to track your investments
+              </Link>
+            </article>
+          </div>
+
+          <p className="services-home__trust-line">
+            Data powered by AMFI. Updated daily.
+          </p>
         </section>
       </section>
     </main>
