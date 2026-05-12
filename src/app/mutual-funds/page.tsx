@@ -84,6 +84,11 @@ const stats = [
   { label: "Goal templates", value: "18" },
 ];
 
+const animatedCounter = {
+  hidden: { opacity: 0, scale: 0.92 },
+  visible: { opacity: 1, scale: 1 },
+};
+
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0 },
@@ -156,9 +161,9 @@ export default function MutualFundsPage() {
               <a href="#mutual-funds-top" className="transition hover:text-emerald-600">Mutual Funds</a>
               <a href="#sip-calculator" className="transition hover:text-emerald-600">SIP Calculator</a>
               <a href="#explore-funds" className="transition hover:text-emerald-600">Explore Funds</a>
-              <Link href="/services-portal/login" className="transition hover:text-emerald-600">Login</Link>
+              <Link href="/mutual-funds/onboarding" className="transition hover:text-emerald-600">Login</Link>
               <Link
-                href="/services-portal/register"
+                href="/mutual-funds/onboarding"
                 className="rounded-full bg-gradient-to-r from-emerald-600 to-green-500 px-4 py-2 text-white shadow-[0_10px_30px_rgba(34,197,94,0.22)] transition hover:scale-[1.01]"
               >
                 Sign up
@@ -167,13 +172,13 @@ export default function MutualFundsPage() {
 
             <div className="flex items-center gap-2 lg:hidden">
               <Link
-                href="/services-portal/login"
+                href="/mutual-funds/onboarding"
                 className="rounded-full border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700"
               >
                 Login
               </Link>
               <Link
-                href="/services-portal/register"
+                href="/mutual-funds/onboarding"
                 className="rounded-full bg-gradient-to-r from-emerald-600 to-green-500 px-4 py-2 text-sm font-semibold text-white"
               >
                 Sign up
@@ -202,7 +207,7 @@ export default function MutualFundsPage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
-                  href="/services-portal/register"
+                  href="/mutual-funds/onboarding"
                   className="rounded-full bg-gradient-to-r from-emerald-600 to-green-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(34,197,94,0.25)] transition hover:-translate-y-0.5"
                 >
                   Get Started
@@ -220,7 +225,7 @@ export default function MutualFundsPage() {
                     key={stat.label}
                     initial="hidden"
                     animate="visible"
-                    variants={fadeUp}
+                    variants={animatedCounter}
                     transition={{ duration: 0.45, delay: index * 0.06 }}
                     className="rounded-[26px] border border-slate-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.05)]"
                   >
