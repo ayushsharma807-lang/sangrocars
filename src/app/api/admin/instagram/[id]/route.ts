@@ -13,7 +13,7 @@ export async function PATCH(
 
   const { id } = await params;
   const payload = (await req.json().catch(() => null)) as
-    | { status?: string; caption?: string }
+    | { status?: string; caption?: string; scheduledFor?: string }
     | null;
 
   if (!payload?.status) {
@@ -27,6 +27,11 @@ export async function PATCH(
 
   if (payload.status === "posted") {
     updatePayload.instagram_posted_at = new Date().toISOString();
+  }
+  if (payload.status === "scheduled" && payload.scheduledFor) {
+    updatePayload.instagram_scheduled_for = new Date(
+      payload.scheduledFor
+    ).toISOString();
   }
 
   const sb = supabaseServer();

@@ -35,6 +35,7 @@ export default function InstagramComposer({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [schedule, setSchedule] = useState("");
 
   const copyCaption = async () => {
     try {
@@ -70,6 +71,37 @@ export default function InstagramComposer({
       setMessage(
         error instanceof Error ? error.message : "Could not update Instagram status."
       );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveSchedule = async () => {
+    if (!schedule) {
+      setMessage("Pick a schedule time first.");
+      return;
+    }
+    setSaving(true);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/admin/instagram/${listingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "scheduled",
+          caption,
+          scheduledFor: schedule,
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.ok) {
+        setMessage(payload?.error || "Could not save schedule.");
+        setSaving(false);
+        return;
+      }
+      setMessage("Saved schedule placeholder.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not save schedule.");
     } finally {
       setSaving(false);
     }
@@ -184,6 +216,24 @@ export default function InstagramComposer({
               disabled={saving}
             >
               Mark as posted
+            </button>
+          </div>
+          <div className="admin-instagram__schedule">
+            <label>
+              Schedule placeholder
+              <input
+                type="datetime-local"
+                value={schedule}
+                onChange={(event) => setSchedule(event.target.value)}
+              />
+            </label>
+            <button
+              type="button"
+              className="btn btn--outline"
+              onClick={saveSchedule}
+              disabled={saving}
+            >
+              Save schedule
             </button>
           </div>
           {message ? <p className="admin-banner">{message}</p> : null}

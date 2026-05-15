@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientEnhancements from "@/app/components/ClientEnhancements";
+import PWAInstallBanner from "@/app/components/PWAInstallBanner";
 import PWARegister from "@/app/components/PWARegister";
 
 const geistSans = Geist({
@@ -31,7 +32,6 @@ export const metadata: Metadata = {
     "Buy and sell used cars across India. Discover verified listings, connect with dealers, and post your car in minutes.",
   applicationName: "SangroCars",
   manifest: "/manifest.webmanifest",
-  themeColor: "#0b0b0f",
   icons: {
     icon: "/icons/sangrocars-512.png",
     apple: "/icons/sangrocars-192.png",
@@ -62,6 +62,10 @@ export const metadata: Metadata = {
       "Buy and sell used cars across India with verified listings and dealer support.",
     images: ["/images/hero-parking.jpg"],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0b0b0f",
 };
 
 export default function RootLayout({
@@ -96,6 +100,7 @@ export default function RootLayout({
           </Script>
         ) : null}
         <PWARegister />
+        <PWAInstallBanner />
         <ClientEnhancements />
       </body>
     </html>

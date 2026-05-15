@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import ServiceLeadForm from "@/app/components/ServiceLeadForm";
 import type { MutualFundSearchResult, MutualFundSnapshot } from "./types";
 
@@ -169,8 +169,12 @@ export default function MutualFundsClient({ initialFunds }: Props) {
   const [watchlistFunds, setWatchlistFunds] = useState(initialFunds);
   const [refreshState, setRefreshState] = useState<"idle" | "refreshing" | "failed">("idle");
   const [lastCheckedAt, setLastCheckedAt] = useState(new Date().toISOString());
+  const [lastRefreshLatencyMs, setLastRefreshLatencyMs] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchState, setSearchState] = useState<SearchState>({ state: "idle" });
+  const [isRefreshingUi, startTransition] = useTransition();
+  const refreshDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refreshInFlight = useRef<Promise<void> | null>(null);
 
   const calculator = useMemo(() => {
     const monthly = Number.parseFloat(monthlyInvestment || "0");
@@ -212,27 +216,60 @@ export default function MutualFundsClient({ initialFunds }: Props) {
     }));
   }, [portfolioRows, portfolioSummary.currentValue]);
 
-  const refreshWatchlist = async () => {
+  const watchlistViewFunds = useMemo(
+    () =>
+      watchlistFunds.map((fund) => ({
+        ...fund,
+        sparklineSvg: sparklinePath(fund.sparkline),
+      })),
+    [watchlistFunds],
+  );
+
+  const refreshWatchlist = useCallback(async () => {
+    if (!trackedCodes.length) return;
+    if (refreshInFlight.current) return refreshInFlight.current;
+
     setRefreshState("refreshing");
-    try {
-      const refreshed = await Promise.all(
-        trackedCodes.map(async (schemeCode) => {
-          const response = await fetch(`/api/mutual-funds/latest?scheme_code=${schemeCode}`);
-          if (!response.ok) {
-            throw new Error(`Failed to refresh ${schemeCode}`);
-          }
-          const data = await response.json();
-          return data.fund as MutualFundSnapshot;
-        }),
-      );
-      setWatchlistFunds(refreshed);
-      setLastCheckedAt(new Date().toISOString());
-      setRefreshState("idle");
-    } catch (error) {
-      console.error("Watchlist refresh failed", error);
-      setRefreshState("failed");
+    const refreshStartedAt = performance.now();
+
+    const refreshTask = (async () => {
+      try {
+        const response = await fetch(
+          `/api/mutual-funds/latest-batch?scheme_codes=${encodeURIComponent(trackedCodes.join(","))}`,
+          { cache: "no-store" },
+        );
+        if (!response.ok) {
+          throw new Error(`Refresh failed with status ${response.status}`);
+        }
+
+        const data = (await response.json()) as { funds: MutualFundSnapshot[]; refreshedAt: string };
+        startTransition(() => {
+          setWatchlistFunds(data.funds);
+          setLastCheckedAt(data.refreshedAt || new Date().toISOString());
+          setLastRefreshLatencyMs(Math.round(performance.now() - refreshStartedAt));
+          setRefreshState("idle");
+        });
+      } catch (error) {
+        console.error("Watchlist refresh failed", error);
+        setLastRefreshLatencyMs(Math.round(performance.now() - refreshStartedAt));
+        setRefreshState("failed");
+      } finally {
+        refreshInFlight.current = null;
+      }
+    })();
+
+    refreshInFlight.current = refreshTask;
+    return refreshTask;
+  }, [trackedCodes]);
+
+  const handleRefreshClick = useCallback(() => {
+    if (refreshDebounceTimer.current) {
+      clearTimeout(refreshDebounceTimer.current);
     }
-  };
+    refreshDebounceTimer.current = setTimeout(() => {
+      void refreshWatchlist();
+    }, 300);
+  }, [refreshWatchlist]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -240,7 +277,16 @@ export default function MutualFundsClient({ initialFunds }: Props) {
     }, 60_000);
 
     return () => window.clearInterval(timer);
-  }, [trackedCodes]);
+  }, [refreshWatchlist]);
+
+  useEffect(
+    () => () => {
+      if (refreshDebounceTimer.current) {
+        clearTimeout(refreshDebounceTimer.current);
+      }
+    },
+    [],
+  );
 
   const handleTrackFund = (fund: MutualFundSnapshot) => {
     setTrackedCodes((current) => (current.includes(fund.schemeCode) ? current : [...current, fund.schemeCode]));
@@ -265,15 +311,18 @@ export default function MutualFundsClient({ initialFunds }: Props) {
       if (!searchResponse.ok) throw new Error("Search failed");
       const searchPayload = (await searchResponse.json()) as { funds: MutualFundSearchResult[] };
       const topResults = searchPayload.funds.slice(0, 5);
+      const schemeCodes = topResults.map((result) => result.schemeCode).filter(Boolean);
+      if (!schemeCodes.length) {
+        setSearchState({ state: "done", funds: [], searchedAt: new Date().toISOString() });
+        return;
+      }
 
-      const funds = await Promise.all(
-        topResults.map(async (result) => {
-          const latestResponse = await fetch(`/api/mutual-funds/latest?scheme_code=${result.schemeCode}`);
-          if (!latestResponse.ok) throw new Error(`Latest fetch failed for ${result.schemeCode}`);
-          const latestPayload = await latestResponse.json();
-          return latestPayload.fund as MutualFundSnapshot;
-        }),
+      const latestResponse = await fetch(
+        `/api/mutual-funds/latest-batch?scheme_codes=${encodeURIComponent(schemeCodes.join(","))}`,
       );
+      if (!latestResponse.ok) throw new Error("Latest NAV batch fetch failed");
+      const latestPayload = (await latestResponse.json()) as { funds: MutualFundSnapshot[] };
+      const funds = latestPayload.funds ?? [];
 
       setSearchState({ state: "done", funds, searchedAt: new Date().toISOString() });
     } catch (error) {
@@ -439,13 +488,18 @@ export default function MutualFundsClient({ initialFunds }: Props) {
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                onClick={() => void refreshWatchlist()}
+                onClick={handleRefreshClick}
                 className="rounded-full border border-emerald-200 px-5 py-3 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={refreshState === "refreshing"}
+                disabled={refreshState === "refreshing" || isRefreshingUi}
               >
-                {refreshState === "refreshing" ? "Loading NAV..." : "Refresh watchlist"}
+                {refreshState === "refreshing" || isRefreshingUi ? "Refreshing..." : "Refresh watchlist"}
               </button>
               <span className="text-sm text-slate-500">Checked {formatDateTime(lastCheckedAt)}</span>
+              {process.env.NODE_ENV !== "production" && lastRefreshLatencyMs !== null ? (
+                <span className="rounded-full border border-dashed border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  Dev latency: {lastRefreshLatencyMs}ms
+                </span>
+              ) : null}
             </div>
           </div>
 
@@ -536,7 +590,21 @@ export default function MutualFundsClient({ initialFunds }: Props) {
 
           {activeTab === "watchlist" && (
             <div id="explore-funds" className="mt-8 grid gap-5 xl:grid-cols-2">
-              {watchlistFunds.map((fund) => (
+              {refreshState === "refreshing" &&
+                Array.from({ length: Math.max(2, Math.min(watchlistFunds.length, 4)) }).map((_, index) => (
+                  <div key={`watchlist-skeleton-${index}`} className="animate-pulse rounded-[30px] border border-slate-200 bg-white p-6">
+                    <div className="h-5 w-24 rounded-full bg-slate-100" />
+                    <div className="mt-4 h-7 w-4/5 rounded-xl bg-slate-100" />
+                    <div className="mt-3 h-4 w-2/5 rounded-xl bg-slate-100" />
+                    <div className="mt-6 grid gap-3 sm:grid-cols-4">
+                      {Array.from({ length: 4 }).map((__, cardIndex) => (
+                        <div key={`watchlist-skeleton-stat-${cardIndex}`} className="h-16 rounded-2xl bg-slate-100" />
+                      ))}
+                    </div>
+                    <div className="mt-6 h-28 rounded-[28px] bg-slate-100" />
+                  </div>
+                ))}
+              {watchlistViewFunds.map((fund) => (
                 <motion.article
                   key={fund.schemeCode}
                   initial="hidden"
@@ -597,11 +665,11 @@ export default function MutualFundsClient({ initialFunds }: Props) {
                       {fund.sparkline.length ? (
                         <>
                           <path
-                            d={`${sparklinePath(fund.sparkline)} L100,42 L0,42 Z`}
+                            d={`${fund.sparklineSvg} L100,42 L0,42 Z`}
                             fill="rgba(74, 222, 128, 0.12)"
                           />
                           <path
-                            d={sparklinePath(fund.sparkline)}
+                            d={fund.sparklineSvg}
                             fill="none"
                             stroke={`url(#spark-${fund.schemeCode})`}
                             strokeWidth="3"

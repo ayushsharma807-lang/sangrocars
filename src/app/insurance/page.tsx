@@ -1,731 +1,343 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
-import ServiceLeadForm from "@/app/components/ServiceLeadForm";
-import ServicePlatformShell from "@/app/components/ServicePlatformShell";
 
 type VehicleType = "Car" | "Bike" | "Commercial Vehicle";
 type FuelType = "Petrol" | "Diesel" | "CNG" | "Electric";
 type PolicyType = "Third Party" | "Comprehensive" | "Own Damage";
-type WorkflowStep = "vehicle" | "policy" | "idv" | "premium" | "support";
+type PolicyStatus = "Active" | "Expired" | "New vehicle";
+type ClaimStatus = "Yes" | "No";
 
 type InsuranceForm = {
-  vehicleType: VehicleType;
-  makeModel: string;
-  registrationYear: string;
-  fuelType: FuelType;
+  fullName: string;
+  phone: string;
   city: string;
-  vehicleValue: string;
+  vehicleType: VehicleType;
+  registrationNumber: string;
+  make: string;
+  model: string;
+  year: string;
+  fuelType: FuelType;
+  previousPolicyStatus: PolicyStatus;
+  claimLastYear: ClaimStatus;
   policyType: PolicyType;
-  addons: string[];
+  idvEstimate: string;
 };
 
-type PlanCard = {
-  name: string;
-  insurer: string;
-  claimRate: string;
-  turnaround: string;
-  recommendedFor: string;
-  multiplier: number;
-};
-
-const steps: { key: WorkflowStep; label: string; detail: string }[] = [
-  { key: "vehicle", label: "Vehicle Details", detail: "Make, year and city setup" },
-  { key: "policy", label: "Policy Type", detail: "Third party, OD or comprehensive" },
-  { key: "idv", label: "IDV Estimate", detail: "Depreciation and vehicle value" },
-  { key: "premium", label: "Premium Range", detail: "Base premium plus add-ons" },
-  { key: "support", label: "Claim / Renewal Support", detail: "Human help when you need it" },
+const productCards = [
+  { title: "Car Insurance", type: "Car" as VehicleType, icon: "🚗", priority: true, copy: "Comprehensive and third-party quotes for private cars." },
+  { title: "Bike Insurance", type: "Bike" as VehicleType, icon: "🏍️", priority: true, copy: "Fast renewal and new policy support for two-wheelers." },
+  { title: "Commercial Vehicle Insurance", type: "Commercial Vehicle" as VehicleType, icon: "🚚", priority: true, copy: "Policy support for pickups, trucks and commercial fleets." },
+  { title: "Health Insurance", icon: "🩺", priority: false, copy: "Family and individual medical cover guidance." },
+  { title: "Term Life Insurance", icon: "🛡️", priority: false, copy: "Protection planning for long-term family security." },
+  { title: "Family Health Insurance", icon: "👨‍👩‍👧", priority: false, copy: "One policy planning for the whole family." },
+  { title: "Travel Insurance", icon: "✈️", priority: false, copy: "Travel medical and baggage cover assistance." },
+  { title: "Home Insurance", icon: "🏠", priority: false, copy: "Home and contents protection support." },
 ];
 
-const addOnOptions = [
-  { id: "zero-dep", label: "Zero Dep", impact: 0.0045, note: "Best for premium cars and newer vehicles" },
-  { id: "engine-protect", label: "Engine Protect", impact: 0.0028, note: "Useful during monsoon and flood zones" },
-  { id: "return-to-invoice", label: "Return to Invoice", impact: 0.0032, note: "Recommended for cars under 3 years old" },
-  { id: "roadside-assistance", label: "Roadside Assistance", impact: 0.0014, note: "Good for highway or city commute use" },
+const faq = [
+  ["Is this the final insurance price?", "No. This is an estimated premium range. Final price depends on insurer rules, IDV, NCB, inspection and coverage."],
+  ["Can SangroCars help with expired policy renewal?", "Yes. Share your vehicle details and our advisor will guide you through renewal and inspection requirements."],
+  ["What documents are needed?", "RC, previous policy, Aadhaar/PAN and claim history are usually needed."],
+  ["Can I compare multiple insurers?", "Yes. SangroCars can help compare available insurer options manually for now."],
 ];
 
-const planCards: PlanCard[] = [
-  {
-    name: "Basic",
-    insurer: "Claim Lite",
-    claimRate: "92.1%",
-    turnaround: "2-3 business days",
-    recommendedFor: "Mandatory cover and budget-first users",
-    multiplier: 0.93,
-  },
-  {
-    name: "Standard",
-    insurer: "Trusted Shield",
-    claimRate: "95.8%",
-    turnaround: "48-hour support",
-    recommendedFor: "Best balance for city commuters",
-    multiplier: 1,
-  },
-  {
-    name: "Premium",
-    insurer: "Elite Drive Protect",
-    claimRate: "97.4%",
-    turnaround: "Priority relationship manager",
-    recommendedFor: "High-value cars and zero-dep buyers",
-    multiplier: 1.12,
-  },
-];
+const inputClass = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-950 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-50";
 
-const defaultForm: InsuranceForm = {
-  vehicleType: "Car",
-  makeModel: "Hyundai Creta",
-  registrationYear: "2022",
-  fuelType: "Petrol",
-  city: "Jalandhar",
-  vehicleValue: "12.8 lakh",
-  policyType: "Comprehensive",
-  addons: ["Zero Dep", "Roadside Assistance"],
-};
-
-const documents = [
-  "RC copy",
-  "Previous policy",
-  "Aadhaar / PAN",
-  "Claim history (if any)",
-];
-
-const parseAmount = (value: string) => {
+const parseMoney = (value: string) => {
   const raw = value.trim().toLowerCase().replace(/,/g, "");
   if (!raw) return 0;
-  if (raw.includes("lakh") || raw.endsWith("l")) {
-    const numeric = Number.parseFloat(
-      raw.replace("lakh", "").replace("lac", "").replace(/l$/, "").trim(),
-    );
-    return Number.isFinite(numeric) ? numeric * 100000 : 0;
+  if (raw.includes("lakh") || raw.includes("lac") || raw.endsWith("l")) {
+    const amount = Number.parseFloat(raw.replace("lakh", "").replace("lac", "").replace(/l$/, ""));
+    return Number.isFinite(amount) ? amount * 100000 : 0;
   }
-  if (raw.includes("crore") || raw.endsWith("cr")) {
-    const numeric = Number.parseFloat(raw.replace("crore", "").replace(/cr$/, "").trim());
-    return Number.isFinite(numeric) ? numeric * 10000000 : 0;
-  }
-  const numeric = Number.parseFloat(raw.replace(/[^\d.]/g, ""));
-  return Number.isFinite(numeric) ? numeric : 0;
+  const amount = Number.parseFloat(raw.replace(/[^\d.]/g, ""));
+  return Number.isFinite(amount) ? amount : 0;
 };
 
 const formatMoney = (value: number) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(Number.isFinite(value) ? value : 0);
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
-function QuoteModal({
-  title,
-  description,
-  defaultMessage,
-  onClose,
-}: {
-  title: string;
-  description: string;
-  defaultMessage: string;
-  onClose: () => void;
-}) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-[28px] border border-slate-200 bg-white p-4 shadow-2xl sm:p-6">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-              SangroCars insurance desk
-            </p>
-            <h3 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
-              {title}
-            </h3>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-500"
-          >
-            Close
-          </button>
-        </div>
-        <ServiceLeadForm
-          serviceType="insurance"
-          title={title}
-          description={description}
-          submitLabel="Send request"
-          defaultMessage={defaultMessage}
-          messagePlaceholder="Tell SangroCars if this is a new policy, renewal, or claim help."
-        />
+    <label className="space-y-2">
+      <span className="text-sm font-bold text-slate-800">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function ProductCard({ product, onSelect }: { product: (typeof productCards)[number]; onSelect: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`group rounded-[28px] border bg-white p-5 text-left shadow-[0_16px_45px_rgba(15,23,42,0.05)] transition hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(15,23,42,0.10)] ${product.priority ? "border-sky-200 ring-4 ring-sky-50" : "border-slate-200"}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-slate-50 text-2xl">{product.icon}</span>
+        {product.priority ? <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">Priority</span> : null}
       </div>
+      <h3 className="mt-5 text-xl font-black text-slate-950">{product.title}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{product.copy}</p>
+      <span className="mt-5 inline-flex text-sm font-black text-sky-700 group-hover:underline">Get quote →</span>
+    </button>
+  );
+}
+
+function PremiumRangeCard({ min, max }: { min: number; max: number }) {
+  return (
+    <div className="rounded-[28px] border border-sky-200 bg-gradient-to-br from-sky-50 to-emerald-50 p-6">
+      <p className="text-sm font-black uppercase tracking-[0.22em] text-sky-700">Estimated premium range</p>
+      <p className="mt-4 text-4xl font-black tracking-tight text-slate-950">{formatMoney(min)} - {formatMoney(max)}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-600">Final premium depends on insurer, IDV, NCB, claims, vehicle age, and inspection.</p>
     </div>
   );
 }
 
 export default function InsurancePage() {
-  const [form, setForm] = useState<InsuranceForm>(defaultForm);
-  const [activeStep, setActiveStep] = useState<WorkflowStep>("vehicle");
-  const [selectedPlan, setSelectedPlan] = useState<string>("Standard");
-  const [activeModal, setActiveModal] = useState<null | {
-    title: string;
-    description: string;
-    defaultMessage: string;
-  }>(null);
+  const [form, setForm] = useState<InsuranceForm>({
+    fullName: "",
+    phone: "",
+    city: "Jalandhar",
+    vehicleType: "Car",
+    registrationNumber: "",
+    make: "",
+    model: "",
+    year: "2021",
+    fuelType: "Petrol",
+    previousPolicyStatus: "Active",
+    claimLastYear: "No",
+    policyType: "Comprehensive",
+    idvEstimate: "8 lakh",
+  });
+  const [quoteOpen, setQuoteOpen] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const result = useMemo(() => {
-    const vehicleValue = parseAmount(form.vehicleValue);
     const currentYear = new Date().getFullYear();
-    const age = form.registrationYear
-      ? Math.max(currentYear - Number.parseInt(form.registrationYear, 10), 0)
-      : 0;
+    const age = Math.max(currentYear - (Number.parseInt(form.year, 10) || currentYear), 0);
+    const idv = parseMoney(form.idvEstimate);
 
-    const depreciationRate = Math.min(age * 0.08, 0.55);
-    const estimatedIdv = vehicleValue ? vehicleValue * (1 - depreciationRate) : 0;
+    let min = 3000;
+    let max = 9000;
+    if (form.vehicleType === "Bike") [min, max] = [1200, 4000];
+    if (form.vehicleType === "Car" && form.policyType === "Third Party") [min, max] = [3000, 9000];
+    if (form.vehicleType === "Car" && form.policyType === "Comprehensive") [min, max] = [8000, 35000];
+    if (form.vehicleType === "Car" && form.policyType === "Own Damage") [min, max] = [5500, 22000];
+    if (form.vehicleType === "Commercial Vehicle") [min, max] = [15000, 80000];
 
-    const baseRate =
-      form.policyType === "Third Party"
-        ? 0.017
-        : form.policyType === "Own Damage"
-          ? 0.024
-          : 0.031;
+    const ageFactor = age > 8 ? 1.18 : age > 4 ? 1.1 : 1;
+    const fuelFactor = form.fuelType === "Electric" ? 1.15 : form.fuelType === "CNG" ? 1.08 : 1;
+    const claimFactor = form.claimLastYear === "Yes" ? 1.22 : 1;
+    const expiredFactor = form.previousPolicyStatus === "Expired" ? 1.12 : 1;
+    const idvFactor = idv > 2000000 ? 1.25 : idv > 1000000 ? 1.12 : 1;
 
-    const addOnImpact = form.addons.reduce((total, addon) => {
-      const found = addOnOptions.find((item) => item.label === addon);
-      return total + (found ? estimatedIdv * found.impact : 0);
-    }, 0);
+    min = Math.round(min * ageFactor * fuelFactor * claimFactor * expiredFactor * idvFactor);
+    max = Math.round(max * ageFactor * fuelFactor * claimFactor * expiredFactor * idvFactor);
+    return { min, max, age, idv };
+  }, [form]);
 
-    const lowPremium = estimatedIdv * baseRate + addOnImpact;
-    const highPremium = lowPremium * 1.22;
-    const selectedPlanMeta = planCards.find((plan) => plan.name === selectedPlan) ?? planCards[1];
-    const selectedPremium = lowPremium * selectedPlanMeta.multiplier;
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919041322997";
+  const whatsappText = encodeURIComponent(
+    `Hi SangroCars Insurance, I need a quote.\nName: ${form.fullName}\nPhone: ${form.phone}\nVehicle: ${form.vehicleType} ${form.make} ${form.model}\nPolicy: ${form.policyType}\nEstimated premium: ${formatMoney(result.min)} - ${formatMoney(result.max)}`,
+  );
 
-    return {
-      age,
-      estimatedIdv,
-      lowPremium,
-      highPremium,
-      addOnImpact,
-      selectedPremium,
-      premiumShare:
-        estimatedIdv > 0 ? Math.min((selectedPremium / estimatedIdv) * 100, 100) : 0,
-    };
-  }, [form, selectedPlan]);
+  const submitQuote = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setSubmitted(false);
+    if (!form.fullName.trim() || !form.phone.trim()) {
+      setError("Please enter your name and phone number.");
+      return;
+    }
 
-  const leadMessage = [
-    `Vehicle type: ${form.vehicleType}`,
-    form.makeModel ? `Make / model: ${form.makeModel}` : null,
-    form.registrationYear ? `Registration year: ${form.registrationYear}` : null,
-    `Fuel: ${form.fuelType}`,
-    form.city ? `City: ${form.city}` : null,
-    form.vehicleValue ? `Vehicle value: ${form.vehicleValue}` : null,
-    `Policy type: ${form.policyType}`,
-    form.addons.length ? `Add-ons: ${form.addons.join(", ")}` : null,
-    `Preferred plan: ${selectedPlan}`,
-  ]
-    .filter(Boolean)
-    .join("\n");
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/service-leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service_type: "insurance",
+          name: form.fullName.trim(),
+          full_name: form.fullName.trim(),
+          phone: form.phone.trim(),
+          city: form.city.trim(),
+          vehicle_type: form.vehicleType,
+          registration_number: form.registrationNumber.trim(),
+          make: form.make.trim(),
+          model: form.model.trim(),
+          year: form.year,
+          fuel_type: form.fuelType,
+          previous_policy_status: form.previousPolicyStatus,
+          claim_last_year: form.claimLastYear,
+          policy_type: form.policyType,
+          estimated_premium_min: result.min,
+          estimated_premium_max: result.max,
+          message: `Insurance quote request. Registration: ${form.registrationNumber || "not shared"}. IDV estimate: ${form.idvEstimate || "not shared"}. Estimated premium range: ${formatMoney(result.min)} - ${formatMoney(result.max)}.`,
+        }),
+      });
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) throw new Error(data?.error || "Could not save insurance lead.");
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not submit insurance quote request.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const selectProduct = (vehicleType?: VehicleType) => {
+    if (vehicleType) setForm((current) => ({ ...current, vehicleType }));
+    setQuoteOpen(true);
+    window.setTimeout(() => document.getElementById("quote-form")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
 
   return (
-    <>
-      <ServicePlatformShell
-        section="insurance"
-        title="Vehicle Insurance Estimate"
-        subtitle="Compare plan tiers, estimate IDV, understand premium ranges and move through a real quote-and-renewal workflow with SangroCars."
-        statusLabel="Quote engine live"
-        statusTone="accent"
-        quickStats={[
-          { label: "Estimated IDV", value: formatMoney(result.estimatedIdv) },
-          { label: "Premium range", value: `${formatMoney(result.lowPremium)} - ${formatMoney(result.highPremium)}` },
-          { label: "Selected plan", value: selectedPlan, tone: "success" },
-          { label: "Claim support", value: "24h callback", tone: "accent" },
-        ]}
-        actions={
-          <>
-            <button
-              type="button"
-              onClick={() =>
-                setActiveModal({
-                  title: "Get Final Quote",
-                  description:
-                    "Share your vehicle and policy details with SangroCars for final insurer matching and a premium quote.",
-                  defaultMessage: `Get Final Quote\n${leadMessage}`,
-                })
-              }
-              className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white"
-            >
-              Get Final Quote
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                setActiveModal({
-                  title: "Claim Assistance",
-                  description:
-                    "Get help with claim filing, survey coordination and insurer follow-up from SangroCars.",
-                  defaultMessage: `Claim Assistance\n${leadMessage}`,
-                })
-              }
-              className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900"
-            >
-              Claim Assistance
-            </button>
-          </>
-        }
-      >
-        <div className="space-y-6">
-          <section className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                  Insurance workflow
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-                  Quote, compare, renew
-                </h2>
+    <main className="min-h-screen bg-white text-slate-950">
+      <nav className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          <Link href="/" className="text-lg font-black tracking-tight">SangroCars Insurance</Link>
+          <div className="hidden items-center gap-6 text-sm font-semibold text-slate-600 md:flex">
+            <a href="#products" className="hover:text-slate-950">Products</a>
+            <a href="#quote-form" className="hover:text-slate-950">Quote</a>
+            <a href="#faq" className="hover:text-slate-950">FAQ</a>
+          </div>
+          <a href={`https://wa.me/${whatsappNumber}`} className="rounded-full border border-slate-200 px-4 py-2 text-sm font-bold hover:border-slate-950">Talk to Expert</a>
+        </div>
+      </nav>
+
+      <section className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-20">
+        <div>
+          <div className="mb-5 inline-flex rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-sky-700">Insurance marketplace support</div>
+          <h1 className="max-w-3xl text-5xl font-black tracking-[-0.05em] sm:text-6xl lg:text-7xl">Let’s find you the best insurance.</h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">Compare estimated insurance options and let SangroCars help you get the right policy.</p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <button onClick={() => selectProduct("Car")} className="rounded-2xl bg-slate-950 px-6 py-4 text-base font-black text-white shadow-xl shadow-slate-950/10 transition hover:-translate-y-0.5">Get Insurance Quote</button>
+            <a href={`https://wa.me/${whatsappNumber}`} className="rounded-2xl border border-slate-300 px-6 py-4 text-center text-base font-black hover:border-slate-950">Talk to Expert</a>
+          </div>
+        </div>
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_30px_100px_rgba(15,23,42,0.10)]">
+          <PremiumRangeCard min={result.min} max={result.max} />
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {[
+              ["Policy status", form.previousPolicyStatus],
+              ["Claim last year", form.claimLastYear],
+              ["Vehicle age", `${result.age} years`],
+              ["Policy type", form.policyType],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-2xl border border-slate-200 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">{label}</p>
+                <p className="mt-2 text-lg font-black">{value}</p>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {steps.map((step) => (
-                  <button
-                    key={step.key}
-                    type="button"
-                    onClick={() => setActiveStep(step.key)}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                      activeStep === step.key
-                        ? "bg-slate-950 text-white"
-                        : "border border-slate-200 bg-white text-slate-700"
-                    }`}
-                  >
-                    {step.label}
-                  </button>
-                ))}
-              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="products" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <p className="text-sm font-black uppercase tracking-[0.22em] text-emerald-700">Insurance products</p>
+          <h2 className="mt-3 text-4xl font-black tracking-tight">Choose the cover you need.</h2>
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {productCards.map((product) => (
+            <ProductCard key={product.title} product={product} onSelect={() => selectProduct("type" in product ? product.type : undefined)} />
+          ))}
+        </div>
+      </section>
+
+      <section id="quote-form" className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:px-8">
+        <form onSubmit={submitQuote} className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_16px_50px_rgba(15,23,42,0.06)] sm:p-6">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.22em] text-sky-700">Vehicle quote estimator</p>
+              <h2 className="mt-3 text-3xl font-black tracking-tight">Enter details for premium range.</h2>
             </div>
-            <div className="mt-5 grid gap-3 lg:grid-cols-5">
-              {steps.map((step, index) => (
-                <article
-                  key={step.key}
-                  className={`rounded-[24px] border p-4 ${
-                    activeStep === step.key
-                      ? "border-slate-950 bg-slate-950 text-white"
-                      : "border-slate-200 bg-slate-50 text-slate-700"
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${
-                        activeStep === step.key
-                          ? "bg-white/10 text-white"
-                          : "bg-white text-slate-950"
-                      }`}
-                    >
-                      {index + 1}
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold">{step.label}</p>
-                      <p
-                        className={`mt-1 text-xs leading-5 ${
-                          activeStep === step.key ? "text-slate-200" : "text-slate-500"
-                        }`}
-                      >
-                        {step.detail}
-                      </p>
-                    </div>
-                  </div>
-                </article>
+            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-black text-emerald-700">Estimate only</span>
+          </div>
+
+          {!quoteOpen ? (
+            <button type="button" onClick={() => selectProduct("Car")} className="mb-6 rounded-2xl bg-slate-950 px-5 py-3 font-black text-white">Open quote form</button>
+          ) : null}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Full name"><input className={inputClass} value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} required /></Field>
+            <Field label="Phone number"><input className={inputClass} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required /></Field>
+            <Field label="City"><input className={inputClass} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></Field>
+            <Field label="Vehicle type"><select className={inputClass} value={form.vehicleType} onChange={(e) => setForm({ ...form, vehicleType: e.target.value as VehicleType })}><option>Car</option><option>Bike</option><option>Commercial Vehicle</option></select></Field>
+            <Field label="Registration number"><input className={inputClass} value={form.registrationNumber} onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })} placeholder="PB08..." /></Field>
+            <Field label="Make"><input className={inputClass} value={form.make} onChange={(e) => setForm({ ...form, make: e.target.value })} placeholder="Toyota" /></Field>
+            <Field label="Model"><input className={inputClass} value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} placeholder="Innova" /></Field>
+            <Field label="Year"><input className={inputClass} value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} inputMode="numeric" /></Field>
+            <Field label="Fuel type"><select className={inputClass} value={form.fuelType} onChange={(e) => setForm({ ...form, fuelType: e.target.value as FuelType })}><option>Petrol</option><option>Diesel</option><option>CNG</option><option>Electric</option></select></Field>
+            <Field label="Previous policy status"><select className={inputClass} value={form.previousPolicyStatus} onChange={(e) => setForm({ ...form, previousPolicyStatus: e.target.value as PolicyStatus })}><option>Active</option><option>Expired</option><option>New vehicle</option></select></Field>
+            <Field label="Claim last year"><select className={inputClass} value={form.claimLastYear} onChange={(e) => setForm({ ...form, claimLastYear: e.target.value as ClaimStatus })}><option>No</option><option>Yes</option></select></Field>
+            <Field label="Policy type"><select className={inputClass} value={form.policyType} onChange={(e) => setForm({ ...form, policyType: e.target.value as PolicyType })}><option>Third Party</option><option>Comprehensive</option><option>Own Damage</option></select></Field>
+            <Field label="IDV estimate optional"><input className={inputClass} value={form.idvEstimate} onChange={(e) => setForm({ ...form, idvEstimate: e.target.value })} placeholder="8 lakh" /></Field>
+          </div>
+
+          {error ? <p className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</p> : null}
+          {submitted ? <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">Estimated premium range: {formatMoney(result.min)} - {formatMoney(result.max)}. SangroCars Insurance will contact you with final options.</p> : null}
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <button disabled={isSubmitting} className="rounded-2xl bg-slate-950 px-6 py-4 font-black text-white disabled:opacity-60" type="submit">{isSubmitting ? "Saving..." : "Request Best Quote"}</button>
+            <a href={`https://wa.me/${whatsappNumber}?text=${whatsappText}`} className="rounded-2xl border border-slate-300 px-6 py-4 text-center font-black hover:border-slate-950">WhatsApp Details</a>
+          </div>
+        </form>
+
+        <div className="space-y-5">
+          <PremiumRangeCard min={result.min} max={result.max} />
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.06)]">
+            <h3 className="text-2xl font-black">Compare plans</h3>
+            <div className="mt-5 grid gap-3">
+              {[
+                ["Basic", "Third-party focused, lowest premium"],
+                ["Standard", "Balanced comprehensive protection"],
+                ["Premium", "Higher IDV + add-on ready plan"],
+              ].map(([name, copy]) => (
+                <div key={name} className="rounded-2xl border border-slate-200 p-4">
+                  <p className="font-black">{name}</p>
+                  <p className="mt-1 text-sm text-slate-600">{copy}</p>
+                </div>
               ))}
             </div>
-          </section>
-
-          <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-            <article className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                    Step 1 &amp; 2
-                  </p>
-                  <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-                    Vehicle and policy setup
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveStep("premium")}
-                  className="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-900"
-                >
-                  Estimate Premium
-                </button>
-              </div>
-
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <label className="space-y-2 text-sm font-medium text-slate-700">
-                  <span>Vehicle type</span>
-                  <select
-                    value={form.vehicleType}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        vehicleType: event.target.value as VehicleType,
-                      }))
-                    }
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:border-slate-950"
-                  >
-                    <option>Car</option>
-                    <option>Bike</option>
-                    <option>Commercial Vehicle</option>
-                  </select>
-                </label>
-                <label className="space-y-2 text-sm font-medium text-slate-700">
-                  <span>Make / model</span>
-                  <input
-                    value={form.makeModel}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, makeModel: event.target.value }))
-                    }
-                    placeholder="e.g. Hyundai Creta"
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 placeholder:text-slate-400 outline-none focus:border-slate-950"
-                  />
-                </label>
-                <label className="space-y-2 text-sm font-medium text-slate-700">
-                  <span>Registration year</span>
-                  <input
-                    value={form.registrationYear}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        registrationYear: event.target.value,
-                      }))
-                    }
-                    placeholder="e.g. 2022"
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 placeholder:text-slate-400 outline-none focus:border-slate-950"
-                  />
-                </label>
-                <label className="space-y-2 text-sm font-medium text-slate-700">
-                  <span>Fuel type</span>
-                  <select
-                    value={form.fuelType}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        fuelType: event.target.value as FuelType,
-                      }))
-                    }
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:border-slate-950"
-                  >
-                    <option>Petrol</option>
-                    <option>Diesel</option>
-                    <option>CNG</option>
-                    <option>Electric</option>
-                  </select>
-                </label>
-                <label className="space-y-2 text-sm font-medium text-slate-700">
-                  <span>City</span>
-                  <input
-                    value={form.city}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, city: event.target.value }))
-                    }
-                    placeholder="e.g. Jalandhar"
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 placeholder:text-slate-400 outline-none focus:border-slate-950"
-                  />
-                </label>
-                <label className="space-y-2 text-sm font-medium text-slate-700">
-                  <span>Current IDV / vehicle value</span>
-                  <input
-                    value={form.vehicleValue}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, vehicleValue: event.target.value }))
-                    }
-                    placeholder="e.g. 12.8 lakh"
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 placeholder:text-slate-400 outline-none focus:border-slate-950"
-                  />
-                </label>
-                <label className="space-y-2 text-sm font-medium text-slate-700 md:col-span-2">
-                  <span>Policy type</span>
-                  <select
-                    value={form.policyType}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        policyType: event.target.value as PolicyType,
-                      }))
-                    }
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:border-slate-950"
-                  >
-                    <option>Third Party</option>
-                    <option>Comprehensive</option>
-                    <option>Own Damage</option>
-                  </select>
-                </label>
-              </div>
-
-              <div className="mt-6 rounded-[26px] border border-slate-200 bg-slate-50 p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                      Add-on builder
-                    </p>
-                    <h4 className="mt-2 text-lg font-semibold tracking-tight text-slate-950">
-                      Choose cover enhancements
-                    </h4>
-                  </div>
-                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-                    {form.addons.length} selected
-                  </span>
-                </div>
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  {addOnOptions.map((addon) => {
-                    const active = form.addons.includes(addon.label);
-                    return (
-                      <button
-                        key={addon.id}
-                        type="button"
-                        onClick={() =>
-                          setForm((current) => ({
-                            ...current,
-                            addons: active
-                              ? current.addons.filter((item) => item !== addon.label)
-                              : [...current.addons, addon.label],
-                          }))
-                        }
-                        className={`rounded-[24px] border p-4 text-left transition ${
-                          active
-                            ? "border-slate-950 bg-white shadow-sm"
-                            : "border-slate-200 bg-white hover:border-slate-300"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <strong className="text-sm font-semibold text-slate-950">
-                            {addon.label}
-                          </strong>
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                              active
-                                ? "bg-emerald-50 text-emerald-700"
-                                : "bg-slate-100 text-slate-600"
-                            }`}
-                          >
-                            {active ? "Added" : "Optional"}
-                          </span>
-                        </div>
-                        <p className="mt-2 text-sm leading-6 text-slate-600">{addon.note}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </article>
-
-            <aside className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                    Step 3 &amp; 4
-                  </p>
-                  <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-                    Quote snapshot
-                  </h3>
-                </div>
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  Live estimate
-                </span>
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-3xl bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Estimated IDV</p>
-                  <p className="mt-2 text-xl font-semibold text-slate-950">
-                    {formatMoney(result.estimatedIdv)}
-                  </p>
-                </div>
-                <div className="rounded-3xl bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Vehicle age</p>
-                  <p className="mt-2 text-xl font-semibold text-slate-950">{result.age} years</p>
-                </div>
-                <div className="rounded-3xl bg-slate-50 p-4 sm:col-span-2">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Premium range</p>
-                  <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-                    {formatMoney(result.lowPremium)} - {formatMoney(result.highPremium)}
-                  </p>
-                  <p className="mt-2 text-sm text-slate-600">
-                    Add-ons currently contribute {formatMoney(result.addOnImpact)} to the estimated
-                    premium.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-[26px] border border-slate-200 p-4">
-                <div className="mb-4 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-950">Premium share of IDV</p>
-                  <span className="text-xs text-slate-500">
-                    {result.premiumShare.toFixed(1)}%
-                  </span>
-                </div>
-                <div className="h-2 rounded-full bg-slate-100">
-                  <div
-                    className="h-2 rounded-full bg-slate-950 transition-all"
-                    style={{ width: `${Math.max(12, Math.min(result.premiumShare, 100))}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-[26px] border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                  Renewal countdown
-                </p>
-                <div className="mt-3 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-2xl font-semibold tracking-tight text-slate-950">18 days</p>
-                    <p className="mt-1 text-sm text-slate-600">
-                      Recommended to renew before inspection or IDV reset.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setActiveModal({
-                        title: "Renew Policy",
-                        description:
-                          "SangroCars will compare renewal options and help keep your coverage active.",
-                        defaultMessage: `Renew Policy\n${leadMessage}`,
-                      })
-                    }
-                    className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900"
-                  >
-                    Renew Policy
-                  </button>
-                </div>
-              </div>
-            </aside>
-          </section>
-
-          <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-            <article className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                    Compare plans
-                  </p>
-                  <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-                    Basic, Standard, Premium
-                  </h3>
-                </div>
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
-                  Step 4
-                </span>
-              </div>
-              <div className="mt-5 grid gap-4 xl:grid-cols-3">
-                {planCards.map((plan) => {
-                  const selected = selectedPlan === plan.name;
-                  return (
-                    <button
-                      key={plan.name}
-                      type="button"
-                      onClick={() => setSelectedPlan(plan.name)}
-                      className={`rounded-[26px] border p-4 text-left transition ${
-                        selected
-                          ? "border-slate-950 bg-slate-950 text-white shadow-sm"
-                          : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <strong className="text-lg font-semibold tracking-tight">{plan.name}</strong>
-                        <span
-                          className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
-                            selected
-                              ? "bg-white/10 text-white"
-                              : "bg-white text-slate-600"
-                          }`}
-                        >
-                          {plan.claimRate}
-                        </span>
-                      </div>
-                      <p className={`mt-2 text-sm ${selected ? "text-slate-200" : "text-slate-600"}`}>
-                        {plan.insurer}
-                      </p>
-                      <div className="mt-4 space-y-2 text-sm">
-                        <div className="flex items-center justify-between">
-                          <span>Estimated premium</span>
-                          <strong>{formatMoney(result.lowPremium * plan.multiplier)}</strong>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span>Claim support</span>
-                          <strong>{plan.turnaround}</strong>
-                        </div>
-                      </div>
-                      <p
-                        className={`mt-4 text-sm leading-6 ${
-                          selected ? "text-slate-100" : "text-slate-600"
-                        }`}
-                      >
-                        {plan.recommendedFor}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            </article>
-
-            <article className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                    Step 5
-                  </p>
-                  <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-                    Documents and service support
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveStep("support")}
-                  className="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-900"
-                >
-                  Review support
-                </button>
-              </div>
-              <div className="mt-5 space-y-3">
-                {documents.map((document) => (
-                  <div
-                    key={document}
-                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-                  >
-                    <span>{document}</span>
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500">
-                      Required
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-5 rounded-[26px] border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                  Policy status
-                </p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {[
-                    { label: "Plan compare", value: "Ready" },
-                    { label: "Renewal support", value: "Open" },
-                    { label: "Claim help", value: "Available" },
-                    { label: "Document check", value: "Pending your upload" },
-                  ].map((item) => (
-                    <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-3">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                        {item.label}
-                      </p>
-                      <p className="mt-2 text-sm font-semibold text-slate-950">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </article>
-          </section>
+          </div>
         </div>
-      </ServicePlatformShell>
+      </section>
 
-      {activeModal ? (
-        <QuoteModal
-          title={activeModal.title}
-          description={activeModal.description}
-          defaultMessage={activeModal.defaultMessage}
-          onClose={() => setActiveModal(null)}
-        />
-      ) : null}
-    </>
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid gap-5 lg:grid-cols-2">
+          <div className="rounded-[2rem] border border-slate-200 p-6 shadow-[0_16px_50px_rgba(15,23,42,0.06)]">
+            <h2 className="text-3xl font-black">Why choose SangroCars Insurance</h2>
+            <div className="mt-6 grid gap-3">
+              {['Human advisor support', 'Vehicle-first guidance', 'Renewal and claim help', 'Multiple insurer comparison'].map((item) => <div key={item} className="rounded-2xl border border-slate-200 p-4 font-bold">✓ {item}</div>)}
+            </div>
+          </div>
+          <div className="rounded-[2rem] border border-slate-200 p-6 shadow-[0_16px_50px_rgba(15,23,42,0.06)]">
+            <h2 className="text-3xl font-black">How it works</h2>
+            <ol className="mt-6 grid gap-3">
+              {['Enter vehicle details', 'Get estimated range', 'SangroCars advisor calls', 'Compare insurer options', 'Final policy issued'].map((item, index) => <li key={item} className="flex gap-3 rounded-2xl border border-slate-200 p-4"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-950 text-sm font-black text-white">{index + 1}</span><span className="font-bold">{item}</span></li>)}
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <h2 className="text-4xl font-black tracking-tight">Insurance FAQ</h2>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {faq.map(([question, answer]) => <div key={question} className="rounded-3xl border border-slate-200 p-5"><p className="font-black">{question}</p><p className="mt-2 text-sm leading-6 text-slate-600">{answer}</p></div>)}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
+        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900">
+          <strong>Disclaimer:</strong> SangroCars provides estimated insurance premium ranges only. Final premium, policy approval, IDV, NCB, inspection, and coverage are subject to insurer rules and verification.
+        </div>
+      </section>
+    </main>
   );
 }

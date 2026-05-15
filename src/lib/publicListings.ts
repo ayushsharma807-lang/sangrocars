@@ -1,5 +1,6 @@
 import { extractDealerCode } from "@/lib/dealerCode";
 import { hasSupabaseConfig, supabaseServerOptional } from "@/lib/supabase";
+import { PAGE_SIZE, type PublicListing } from "@/lib/publicListingsShared";
 
 export type ListingsSearchParams = {
   q?: string | string[];
@@ -21,28 +22,6 @@ export type ListingsSearchParams = {
   offset?: string | string[];
   limit?: string | string[];
 };
-
-export type PublicListing = {
-  id: string;
-  dealer_id: string | null;
-  make: string | null;
-  model: string | null;
-  variant: string | null;
-  year: number | null;
-  price: number | null;
-  km: number | null;
-  fuel: string | null;
-  transmission: string | null;
-  location: string | null;
-  description: string | null;
-  photo_urls: string[] | null;
-  stock_id: string | null;
-  created_at: string | null;
-  dealer_code?: string | null;
-  dealer_count?: number | null;
-};
-
-export const PAGE_SIZE = 9;
 
 export const getParam = (value?: string | string[]) =>
   Array.isArray(value) ? value[0] : value;

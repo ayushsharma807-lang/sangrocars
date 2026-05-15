@@ -3,8 +3,8 @@ import {
   attachDealerMeta,
   fetchPublicListingsPage,
   ListingsSearchParams,
-  PAGE_SIZE,
 } from "@/lib/publicListings";
+import { PAGE_SIZE } from "@/lib/publicListingsShared";
 
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;

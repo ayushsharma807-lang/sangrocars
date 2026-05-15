@@ -91,7 +91,10 @@ export default function MutualFundsOnboardingPage() {
             service_type: "mutual_funds",
             name: form.fullName.trim(),
             phone: form.phone.trim(),
+            email: form.email.trim(),
             city: "",
+            investment_goal: form.goal,
+            monthly_sip_amount: sipValue,
             message: `Mutual funds early access | Email: ${form.email.trim()} | Goal: ${form.goal} | Monthly SIP: ₹${sipValue.toLocaleString("en-IN")}`,
           }),
         });

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SortForm from "@/app/components/SortForm";
 import { getPrimaryPhoto } from "@/lib/photoUrls";
-import { PublicListing, PAGE_SIZE } from "@/lib/publicListings";
+import { PAGE_SIZE, type PublicListing } from "@/lib/publicListingsShared";
 import {
   formatCityTitle,
   formatKm,

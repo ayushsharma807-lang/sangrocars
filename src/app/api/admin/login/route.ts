@@ -51,6 +51,15 @@ const sanitizeNextPath = (rawValue: string) => {
     "/admin/dealers",
     "/admin/listings",
     "/admin/listings/new",
+    "/admin/finance",
+    "/admin/finance/leads",
+    "/admin/insurance",
+    "/admin/insurance/leads",
+    "/admin/wealth",
+    "/admin/wealth/leads",
+    "/admin/wealth/customers",
+    "/admin/wealth/investments",
+    "/admin/wealth/activity",
     "/admin-app",
     "/admin-app/",
     "/admin-app/listings",
@@ -76,6 +85,15 @@ const sanitizeNextPath = (rawValue: string) => {
     return pathname;
   }
   if (pathname.startsWith("/admin/listings/")) {
+    return pathname;
+  }
+  if (pathname.startsWith("/admin/finance/")) {
+    return pathname;
+  }
+  if (pathname.startsWith("/admin/insurance/")) {
+    return pathname;
+  }
+  if (pathname.startsWith("/admin/wealth/")) {
     return pathname;
   }
 

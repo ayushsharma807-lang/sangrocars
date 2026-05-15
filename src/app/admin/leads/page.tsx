@@ -2,8 +2,19 @@ import Link from "next/link";
 import BulkSelectAll from "./BulkSelectAll";
 import { supabaseServer } from "@/lib/supabase";
 import { getStaffOptions } from "@/lib/staff";
+import { updateServiceLeadStatus } from "./serviceLeadActions";
 
 type LeadRow = Record<string, unknown>;
+type ServiceLeadRow = {
+  id: string;
+  service_type: "finance" | "insurance" | "mutual_funds" | "properties" | "cars";
+  name: string;
+  phone: string;
+  city: string | null;
+  message: string | null;
+  status: "new" | "contacted" | "in_progress" | "completed" | "rejected";
+  created_at: string;
+};
 type LeadFilters = {
   q?: string;
   phone?: string;
@@ -23,6 +34,14 @@ const STATUS_OPTIONS = [
   "closed",
   "won",
   "lost",
+];
+
+const SERVICE_LEAD_STATUS_OPTIONS = [
+  "new",
+  "contacted",
+  "in_progress",
+  "completed",
+  "rejected",
 ];
 
 const SOURCE_FILTERS = [
@@ -236,6 +255,33 @@ const getDealerStats = async () => {
   return stats;
 };
 
+const getServiceLeads = async () => {
+  const sb = supabaseServer();
+  const { data, error } = await sb
+    .from("service_leads")
+    .select("id, service_type, name, phone, city, message, status, created_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  return {
+    data: ((data ?? []) as ServiceLeadRow[]),
+    error: error?.message ?? null,
+  };
+};
+
+const formatServiceType = (value: ServiceLeadRow["service_type"]) =>
+  value.replace("_", " ");
+
+const serviceLeadWhatsappHref = (lead: ServiceLeadRow) => {
+  const digits = String(lead.phone ?? "").replace(/\D/g, "");
+  const waPhone =
+    digits.length === 10 ? `91${digits}` : digits.startsWith("91") ? digits : digits;
+  const message = `Hi ${lead.name}, SangroCars is following up on your ${formatServiceType(
+    lead.service_type
+  )} request.`;
+  return `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`;
+};
+
 export default async function LeadsPage({
   searchParams,
 }: {
@@ -245,6 +291,7 @@ export default async function LeadsPage({
     status?: string | string[];
     source?: string | string[];
     bulkError?: string | string[];
+    serviceLeadError?: string | string[];
     imported?: string;
     skipped?: string;
     failed?: string;
@@ -263,6 +310,7 @@ export default async function LeadsPage({
     getLeadStats(),
     getDealerStats(),
   ]);
+  const { data: serviceLeads, error: serviceLeadsError } = await getServiceLeads();
   const staffOptions = await getStaffOptions();
   const staffMap = new Map(
     staffOptions.map((staff) => [staff.id, staff.name])
@@ -316,6 +364,7 @@ export default async function LeadsPage({
           failed: params.failed ?? "0",
         }
       : null;
+  const serviceLeadError = getParam(params.serviceLeadError);
 
   return (
     <main className="home">
@@ -430,12 +479,96 @@ export default async function LeadsPage({
             {importResult.skipped}, Failed: {importResult.failed}.
           </div>
         )}
+        {serviceLeadError === "invalid" && (
+          <div className="admin-banner admin-banner--error">
+            Could not update service lead status. Please try again.
+          </div>
+        )}
+        {serviceLeadError === "update_failed" && (
+          <div className="admin-banner admin-banner--error">
+            Service lead update failed on the server. Please retry.
+          </div>
+        )}
         {bulkError === "missing" && (
           <div className="admin-banner admin-banner--error">
             Select at least one lead and choose a status, assignee, or note
             before updating.
           </div>
         )}
+        <section className="service-leads-admin">
+          <div className="export-header">
+            <div>
+              <h3>Service leads</h3>
+              <p>Public finance, insurance, mutual fund, property and car enquiries.</p>
+            </div>
+          </div>
+          {serviceLeadsError ? (
+            <div className="admin-banner admin-banner--error">
+              Failed to load service leads: {serviceLeadsError}
+            </div>
+          ) : serviceLeads.length === 0 ? (
+            <div className="empty">No service leads yet.</div>
+          ) : (
+            <div className="service-leads-admin__list">
+              {serviceLeads.map((lead) => (
+                <article key={lead.id} className="service-leads-admin__card">
+                  <div className="service-leads-admin__top">
+                    <div>
+                      <h4>{lead.name}</h4>
+                      <p>
+                        {lead.phone} {lead.city ? `• ${lead.city}` : ""} •{" "}
+                        {formatServiceType(lead.service_type)}
+                      </p>
+                    </div>
+                    <span className="status-badge">{lead.status.replace("_", " ")}</span>
+                  </div>
+                  <dl className="service-leads-admin__meta">
+                    <div>
+                      <dt>Service</dt>
+                      <dd>{formatServiceType(lead.service_type)}</dd>
+                    </div>
+                    <div>
+                      <dt>Created</dt>
+                      <dd>{formatDate(lead.created_at)}</dd>
+                    </div>
+                  </dl>
+                  <p className="service-leads-admin__message">
+                    {lead.message?.trim() || "No message provided."}
+                  </p>
+                  <div className="service-leads-admin__actions">
+                    <form action={updateServiceLeadStatus} className="service-leads-admin__status-form">
+                      <input type="hidden" name="id" value={lead.id} />
+                      <select name="status" defaultValue={lead.status}>
+                        {SERVICE_LEAD_STATUS_OPTIONS.map((option) => (
+                          <option key={option} value={option}>
+                            {option.replace("_", " ")}
+                          </option>
+                        ))}
+                      </select>
+                      <button className="btn btn--outline" type="submit">
+                        Update status
+                      </button>
+                    </form>
+                    <a
+                      className="btn btn--outline"
+                      href={`tel:${String(lead.phone ?? "").replace(/\D/g, "")}`}
+                    >
+                      Call
+                    </a>
+                    <a
+                      className="btn btn--solid"
+                      href={serviceLeadWhatsappHref(lead)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      WhatsApp
+                    </a>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
         <form className="admin-filter" method="get">
           <label>
             Search

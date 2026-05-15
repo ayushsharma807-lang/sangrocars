@@ -12,6 +12,7 @@ export async function POST(req: Request) {
   const form = await req.formData();
   const ids = form.getAll("ids").map((id) => String(id));
   const returnPath = String(form.get("return") ?? "/admin/listings");
+  const action = String(form.get("action") ?? "ready");
 
   if (ids.length === 0) {
     return NextResponse.redirect(new URL(returnPath, req.url));
@@ -28,13 +29,18 @@ export async function POST(req: Request) {
   for (const listing of data ?? []) {
     const listingUrl = `${siteUrl}/listing/${listing.id}`;
     const caption = buildInstagramCaption(listing, listingUrl);
-    await sb
-      .from("listings")
-      .update({
-        instagram_post_status: "ready",
-        instagram_caption: caption,
-      })
-      .eq("id", listing.id);
+    const updatePayload: Record<string, unknown> = {
+      instagram_caption: caption,
+    };
+
+    if (action === "posted") {
+      updatePayload.instagram_post_status = "posted";
+      updatePayload.instagram_posted_at = new Date().toISOString();
+    } else {
+      updatePayload.instagram_post_status = "ready";
+    }
+
+    await sb.from("listings").update(updatePayload).eq("id", listing.id);
   }
 
   return NextResponse.redirect(new URL(returnPath, req.url));

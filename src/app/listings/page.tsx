@@ -18,9 +18,9 @@ import {
   fetchPublicListingsPage,
   getParam,
   ListingsSearchParams as SearchParams,
-  PAGE_SIZE,
   parseNumber,
 } from "@/lib/publicListings";
+import { PAGE_SIZE } from "@/lib/publicListingsShared";
 
 const buildWhatsAppLink = () => {
   const raw = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
