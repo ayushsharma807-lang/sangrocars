@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '@/lib/supabase-client';
+import { hasSupabaseBrowserConfig, supabaseBrowser } from '@/lib/supabase-browser';
 
 export default function AddListingPage() {
   const [form, setForm] = useState({
@@ -42,12 +42,19 @@ export default function AddListingPage() {
     setLoading(true);
     setMessage('');
 
+    if (!hasSupabaseBrowserConfig()) {
+      setMessage('Supabase is not configured for this deployment.');
+      setLoading(false);
+      return;
+    }
+
     if (!form.make.trim() || !form.model.trim()) {
       setMessage('Make and model are required.');
       setLoading(false);
       return;
     }
 
+    const supabase = supabaseBrowser();
     const { data, error } = await supabase
       .from('car_listings')
       .insert({

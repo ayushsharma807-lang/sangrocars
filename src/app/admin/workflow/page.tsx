@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase-client';
+import { hasSupabaseBrowserConfig, supabaseBrowser } from '@/lib/supabase-browser';
 
 type CarListing = {
   id: string;
@@ -17,10 +17,19 @@ export default function WorkflowPage() {
   const [cars, setCars] = useState<CarListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
   async function fetchCars() {
     setLoading(true);
+    setErrorMessage('');
 
+    if (!hasSupabaseBrowserConfig()) {
+      setErrorMessage('Supabase is not configured for this deployment.');
+      setLoading(false);
+      return;
+    }
+
+    const supabase = supabaseBrowser();
     const { data, error } = await supabase
       .from('car_listings')
       .select('id, make, model, variant, year, status')
@@ -52,6 +61,8 @@ export default function WorkflowPage() {
           photo_url: photoMap[car.id] || null,
         }))
       );
+    } else if (error) {
+      setErrorMessage(error.message);
     }
 
     setLoading(false);
@@ -59,7 +70,15 @@ export default function WorkflowPage() {
 
   async function updateStatus(id: string, status: 'draft' | 'ready' | 'sold') {
     setUpdatingId(id);
+    setErrorMessage('');
 
+    if (!hasSupabaseBrowserConfig()) {
+      setErrorMessage('Supabase is not configured for this deployment.');
+      setUpdatingId(null);
+      return;
+    }
+
+    const supabase = supabaseBrowser();
     const { error } = await supabase
       .from('car_listings')
       .update({ status })
@@ -69,6 +88,8 @@ export default function WorkflowPage() {
       setCars((prev) =>
         prev.map((car) => (car.id === id ? { ...car, status } : car))
       );
+    } else {
+      setErrorMessage(error.message);
     }
 
     setUpdatingId(null);
@@ -85,6 +106,12 @@ export default function WorkflowPage() {
         <p className="mt-1 text-sm text-gray-600">
           Simple internal listing workflow
         </p>
+
+        {errorMessage ? (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errorMessage}
+          </div>
+        ) : null}
 
         {loading ? (
           <p className="mt-6 text-sm text-gray-600">Loading...</p>
