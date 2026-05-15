@@ -125,6 +125,21 @@ const trendTone = (value: number | null) => {
   return "bg-rose-50 text-rose-600";
 };
 
+const latestFundSnapshot = (funds: MutualFundSnapshot[]) => {
+  const loadedFunds = funds.filter((fund) => fund.latestNav !== null);
+  const latestNavDate = funds
+    .map((fund) => fund.navDate)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+
+  return {
+    loadedCount: loadedFunds.length,
+    totalCount: funds.length,
+    latestNavDate: latestNavDate ?? null,
+  };
+};
+
 const getPortfolioRows = (funds: MutualFundSnapshot[]) => {
   const fundMap = new Map(funds.map((fund) => [fund.schemeCode, fund]));
 
@@ -206,6 +221,8 @@ export default function MutualFundsClient({ initialFunds }: Props) {
     if (!dates.length) return null;
     return dates.sort().at(-1) ?? null;
   }, [watchlistFunds]);
+
+  const liveNavSnapshot = useMemo(() => latestFundSnapshot(watchlistFunds), [watchlistFunds]);
 
   const allocation = useMemo(() => {
     const total = portfolioSummary.currentValue || 1;
@@ -500,6 +517,32 @@ export default function MutualFundsClient({ initialFunds }: Props) {
                   Dev latency: {lastRefreshLatencyMs}ms
                 </span>
               ) : null}
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-3 md:grid-cols-4">
+            <div className="rounded-3xl border border-emerald-200 bg-emerald-50/70 p-4">
+              <div className="flex items-center gap-2">
+                <span className={`h-2.5 w-2.5 rounded-full ${refreshState === "refreshing" ? "animate-pulse bg-emerald-500" : "bg-emerald-500"}`} />
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">NAV sync</p>
+              </div>
+              <p className="mt-2 text-lg font-semibold text-slate-950">
+                {refreshState === "refreshing" ? "Syncing latest NAV..." : "Daily NAV active"}
+              </p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Data source</p>
+              <p className="mt-2 text-lg font-semibold text-slate-950">MFAPI / AMFI</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Funds loaded</p>
+              <p className="mt-2 text-lg font-semibold text-slate-950">
+                {liveNavSnapshot.loadedCount}/{liveNavSnapshot.totalCount}
+              </p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Last NAV date</p>
+              <p className="mt-2 text-lg font-semibold text-slate-950">{formatNavDate(liveNavSnapshot.latestNavDate)}</p>
             </div>
           </div>
 

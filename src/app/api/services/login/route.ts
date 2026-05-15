@@ -22,19 +22,26 @@ export async function POST(req: Request) {
   const identifier = String(form.get("identifier") ?? "").trim();
   const password = String(form.get("password") ?? "");
   const role = String(form.get("role") ?? "customer") === "admin" ? "admin" : "customer";
-  const fallbackPath = role === "admin" ? "/services-admin" : "/services-portal";
-  const nextPath = sanitizeNextPath(String(form.get("next") ?? fallbackPath), fallbackPath);
+  const rawNext = String(form.get("next") ?? "");
+  const isWealthFlow = rawNext.startsWith("/wealth");
+  const fallbackPath = role === "admin" ? "/services-admin" : isWealthFlow ? "/wealth/dashboard" : "/services-portal";
+  const loginPath = role === "admin" ? "/services-admin/login" : isWealthFlow ? "/wealth/login" : "/services-portal/login";
+  const nextPath = sanitizeNextPath(rawNext || fallbackPath, fallbackPath);
+  const errorRedirect = (error: string) =>
+    NextResponse.redirect(
+      new URL(`${loginPath}?error=${error}&next=${encodeURIComponent(nextPath)}`, req.url)
+    );
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnon) {
-    return NextResponse.redirect(new URL(`${fallbackPath}/login?error=config`, req.url));
+    return errorRedirect("config");
   }
 
   const email = await resolveLoginEmail(identifier);
   if (!email || !password) {
-    return NextResponse.redirect(new URL(`${fallbackPath}/login?error=invalid`, req.url));
+    return errorRedirect("invalid");
   }
 
   const authResponse = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
@@ -50,7 +57,7 @@ export async function POST(req: Request) {
   }).catch(() => null);
 
   if (!authResponse?.ok) {
-    return NextResponse.redirect(new URL(`${fallbackPath}/login?error=invalid`, req.url));
+    return errorRedirect("invalid");
   }
 
   const payload = (await authResponse.json()) as {
@@ -61,12 +68,12 @@ export async function POST(req: Request) {
   };
 
   if (!payload.access_token || !payload.refresh_token || !payload.user?.id) {
-    return NextResponse.redirect(new URL(`${fallbackPath}/login?error=invalid`, req.url));
+    return errorRedirect("invalid");
   }
 
   const profile = await fetchPortalProfile(payload.user.id);
   if (!profile || profile.role !== role) {
-    return NextResponse.redirect(new URL(`${fallbackPath}/login?error=role`, req.url));
+    return errorRedirect("role");
   }
 
   const response = NextResponse.redirect(new URL(nextPath, req.url));
