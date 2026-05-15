@@ -25,12 +25,12 @@ export const metadata: Metadata = {
     }
   })(),
   title: {
-    default: "SangroCars | Buy Used Cars in India",
-    template: "%s | SangroCars",
+    default: "Sangro | Buy Used Cars in India",
+    template: "%s | Sangro",
   },
   description:
     "Buy and sell used cars across India. Discover verified listings, connect with dealers, and post your car in minutes.",
-  applicationName: "SangroCars",
+  applicationName: "Sangro",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/icons/sangrocars-512.png",
@@ -41,23 +41,23 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    title: "SangroCars | Buy Used Cars in India",
+    title: "Sangro | Buy Used Cars in India",
     description:
       "Buy and sell used cars across India with verified listings and dealer support.",
     url: "/",
-    siteName: "SangroCars",
+    siteName: "Sangro",
     images: [
       {
         url: "/images/hero-parking.jpg",
         width: 1200,
         height: 630,
-        alt: "SangroCars",
+        alt: "Sangro",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SangroCars | Buy Used Cars in India",
+    title: "Sangro | Buy Used Cars in India",
     description:
       "Buy and sell used cars across India with verified listings and dealer support.",
     images: ["/images/hero-parking.jpg"],

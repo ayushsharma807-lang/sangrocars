@@ -51,9 +51,9 @@ export default async function WealthDashboardPage() {
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/wealth/dashboard" className="flex items-center gap-3">
-            <img src="/images/sangrocars-logo.png" alt="SangroCars" className="h-11 w-11 rounded-2xl border border-slate-200 object-contain p-1" />
+            <img src="/images/sangrocars-logo.png" alt="Sangro" className="h-11 w-11 rounded-2xl border border-slate-200 object-contain p-1" />
             <div>
-              <p className="font-semibold">SangroCars Wealth</p>
+              <p className="font-semibold">Sangro Wealth</p>
               <p className="text-xs text-slate-500">Customer dashboard</p>
             </div>
           </Link>
@@ -140,7 +140,7 @@ export default async function WealthDashboardPage() {
               ))}
               {investments.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-500">
-                  No investments linked yet. Contact SangroCars Wealth to add your first entry.
+                  No investments linked yet. Contact Sangro Wealth to add your first entry.
                 </div>
               )}
             </div>
@@ -159,7 +159,7 @@ export default async function WealthDashboardPage() {
               <h2 className="text-xl font-semibold">Support</h2>
               <p className="mt-2 text-sm text-slate-600">For invest, withdraw, SIP start/stop or document help, contact us.</p>
               <div className="mt-4 grid gap-2">
-                <a href="tel:9041322997" className="rounded-full bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white">Call SangroCars</a>
+                <a href="tel:9041322997" className="rounded-full bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white">Call Sangro</a>
                 <a href="https://wa.me/919041322997" className="rounded-full border border-slate-300 px-4 py-3 text-center text-sm font-semibold">WhatsApp</a>
               </div>
             </div>

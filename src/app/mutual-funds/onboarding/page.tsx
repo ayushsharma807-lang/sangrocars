@@ -22,14 +22,14 @@ const goals: GoalOption[] = [
 ];
 
 const stepMeta = [
-  { title: "Phone number", caption: "We’ll use this to connect you with SangroCars Wealth." },
+  { title: "Phone number", caption: "We’ll use this to connect you with Sangro Wealth." },
   { title: "Basic details", caption: "Tell us who should get onboarding updates." },
   { title: "Investment goal", caption: "Choose the reason you’re planning to start a SIP." },
   { title: "Monthly SIP", caption: "A quick estimate helps us shape the right fund shortlist." },
 ];
 
 const whatsappLink = `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919041322997"}?text=${encodeURIComponent(
-  "Hi SangroCars Wealth, I want mutual fund early access."
+  "Hi Sangro Wealth, I want mutual fund early access."
 )}`;
 
 const fade = {
@@ -132,11 +132,11 @@ export default function MutualFundsOnboardingPage() {
           <Link href="/mutual-funds" className="flex items-center gap-3">
             <img
               src="/images/sangrocars-logo.png"
-              alt="SangroCars"
+              alt="Sangro"
               className="h-11 w-11 rounded-2xl border border-emerald-100 object-contain p-1"
             />
             <div>
-              <div className="text-lg font-semibold tracking-tight">SangroCars Wealth</div>
+              <div className="text-lg font-semibold tracking-tight">Sangro Wealth</div>
               <div className="text-xs uppercase tracking-[0.22em] text-slate-500">Early access onboarding</div>
             </div>
           </Link>
@@ -162,7 +162,7 @@ export default function MutualFundsOnboardingPage() {
             </span>
             <div>
               <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-                Your SangroCars Wealth onboarding starts here.
+                Your Sangro Wealth onboarding starts here.
               </h1>
               <p className="mt-4 text-base leading-7 text-slate-600">
                 We’re opening mutual fund access in a guided way. Share your goal and SIP intent,
@@ -243,7 +243,7 @@ export default function MutualFundsOnboardingPage() {
                   </motion.div>
                   <h2 className="mt-8 text-3xl font-semibold tracking-tight">Early Access Enabled</h2>
                   <p className="mt-4 max-w-md text-base leading-7 text-slate-600">
-                    Mutual fund investing with SangroCars Wealth is coming soon. We’ve saved your
+                    Mutual fund investing with Sangro Wealth is coming soon. We’ve saved your
                     onboarding details and will reach out with the next steps.
                   </p>
                   <div className="mt-8 flex flex-wrap justify-center gap-3">

@@ -38,9 +38,9 @@ const productCards = [
 
 const faq = [
   ["Is this the final insurance price?", "No. This is an estimated premium range. Final price depends on insurer rules, IDV, NCB, inspection and coverage."],
-  ["Can SangroCars help with expired policy renewal?", "Yes. Share your vehicle details and our advisor will guide you through renewal and inspection requirements."],
+  ["Can Sangro Insurance help with expired policy renewal?", "Yes. Share your vehicle details and our advisor will guide you through renewal and inspection requirements."],
   ["What documents are needed?", "RC, previous policy, Aadhaar/PAN and claim history are usually needed."],
-  ["Can I compare multiple insurers?", "Yes. SangroCars can help compare available insurer options manually for now."],
+  ["Can I compare multiple insurers?", "Yes. Sangro Insurance can help compare available insurer options manually for now."],
 ];
 
 const inputClass = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-950 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-50";
@@ -143,7 +143,7 @@ export default function InsurancePage() {
 
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919041322997";
   const whatsappText = encodeURIComponent(
-    `Hi SangroCars Insurance, I need a quote.\nName: ${form.fullName}\nPhone: ${form.phone}\nVehicle: ${form.vehicleType} ${form.make} ${form.model}\nPolicy: ${form.policyType}\nEstimated premium: ${formatMoney(result.min)} - ${formatMoney(result.max)}`,
+    `Hi Sangro Insurance, I need a quote.\nName: ${form.fullName}\nPhone: ${form.phone}\nVehicle: ${form.vehicleType} ${form.make} ${form.model}\nPolicy: ${form.policyType}\nEstimated premium: ${formatMoney(result.min)} - ${formatMoney(result.max)}`,
   );
 
   const submitQuote = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -200,7 +200,7 @@ export default function InsurancePage() {
     <main className="min-h-screen bg-white text-slate-950">
       <nav className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <Link href="/" className="text-lg font-black tracking-tight">SangroCars Insurance</Link>
+          <Link href="/" className="text-lg font-black tracking-tight">Sangro Insurance</Link>
           <div className="hidden items-center gap-6 text-sm font-semibold text-slate-600 md:flex">
             <a href="#products" className="hover:text-slate-950">Products</a>
             <a href="#quote-form" className="hover:text-slate-950">Quote</a>
@@ -214,7 +214,7 @@ export default function InsurancePage() {
         <div>
           <div className="mb-5 inline-flex rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-sky-700">Insurance marketplace support</div>
           <h1 className="max-w-3xl text-5xl font-black tracking-[-0.05em] sm:text-6xl lg:text-7xl">Let’s find you the best insurance.</h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">Compare estimated insurance options and let SangroCars help you get the right policy.</p>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">Compare estimated insurance options and let Sangro Insurance help you get the right policy.</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button onClick={() => selectProduct("Car")} className="rounded-2xl bg-slate-950 px-6 py-4 text-base font-black text-white shadow-xl shadow-slate-950/10 transition hover:-translate-y-0.5">Get Insurance Quote</button>
             <a href={`https://wa.me/${whatsappNumber}`} className="rounded-2xl border border-slate-300 px-6 py-4 text-center text-base font-black hover:border-slate-950">Talk to Expert</a>
@@ -281,7 +281,7 @@ export default function InsurancePage() {
           </div>
 
           {error ? <p className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</p> : null}
-          {submitted ? <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">Estimated premium range: {formatMoney(result.min)} - {formatMoney(result.max)}. SangroCars Insurance will contact you with final options.</p> : null}
+          {submitted ? <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">Estimated premium range: {formatMoney(result.min)} - {formatMoney(result.max)}. Sangro Insurance will contact you with final options.</p> : null}
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <button disabled={isSubmitting} className="rounded-2xl bg-slate-950 px-6 py-4 font-black text-white disabled:opacity-60" type="submit">{isSubmitting ? "Saving..." : "Request Best Quote"}</button>
@@ -312,7 +312,7 @@ export default function InsurancePage() {
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-5 lg:grid-cols-2">
           <div className="rounded-[2rem] border border-slate-200 p-6 shadow-[0_16px_50px_rgba(15,23,42,0.06)]">
-            <h2 className="text-3xl font-black">Why choose SangroCars Insurance</h2>
+            <h2 className="text-3xl font-black">Why choose Sangro Insurance</h2>
             <div className="mt-6 grid gap-3">
               {['Human advisor support', 'Vehicle-first guidance', 'Renewal and claim help', 'Multiple insurer comparison'].map((item) => <div key={item} className="rounded-2xl border border-slate-200 p-4 font-bold">✓ {item}</div>)}
             </div>
@@ -320,7 +320,7 @@ export default function InsurancePage() {
           <div className="rounded-[2rem] border border-slate-200 p-6 shadow-[0_16px_50px_rgba(15,23,42,0.06)]">
             <h2 className="text-3xl font-black">How it works</h2>
             <ol className="mt-6 grid gap-3">
-              {['Enter vehicle details', 'Get estimated range', 'SangroCars advisor calls', 'Compare insurer options', 'Final policy issued'].map((item, index) => <li key={item} className="flex gap-3 rounded-2xl border border-slate-200 p-4"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-950 text-sm font-black text-white">{index + 1}</span><span className="font-bold">{item}</span></li>)}
+              {['Enter vehicle details', 'Get estimated range', 'Sangro Insurance advisor calls', 'Compare insurer options', 'Final policy issued'].map((item, index) => <li key={item} className="flex gap-3 rounded-2xl border border-slate-200 p-4"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-950 text-sm font-black text-white">{index + 1}</span><span className="font-bold">{item}</span></li>)}
             </ol>
           </div>
         </div>
@@ -335,7 +335,7 @@ export default function InsurancePage() {
 
       <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
         <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900">
-          <strong>Disclaimer:</strong> SangroCars provides estimated insurance premium ranges only. Final premium, policy approval, IDV, NCB, inspection, and coverage are subject to insurer rules and verification.
+          <strong>Disclaimer:</strong> Sangro Insurance provides estimated insurance premium ranges only. Final premium, policy approval, IDV, NCB, inspection, and coverage are subject to insurer rules and verification.
         </div>
       </section>
     </main>

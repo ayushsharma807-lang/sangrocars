@@ -518,7 +518,7 @@ export default function SellCarForm() {
             </label>
           </div>
           <div className="sell-hint">
-            Your phone number is only shared with interested buyers. SangroCars does not charge listing fees.
+            Your phone number is only shared with interested buyers. Sangro does not charge listing fees.
           </div>
           <div className="sell-hint">
             Based on similar listings in {location || "your city"}: Expected views per week: {expectedViews}

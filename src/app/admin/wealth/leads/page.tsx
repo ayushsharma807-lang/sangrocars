@@ -8,7 +8,7 @@ const statuses = ["new", "contacted", "interested", "invested", "not_interested"
 
 const whatsappUrl = (phone?: string | null, name?: string | null) =>
   `https://wa.me/91${String(phone ?? "").replace(/\D/g, "").slice(-10)}?text=${encodeURIComponent(
-    `Hi ${name ?? ""}, this is SangroCars Wealth about your mutual fund enquiry.`
+    `Hi ${name ?? ""}, this is Sangro Wealth about your mutual fund enquiry.`
   )}`;
 
 export default async function WealthLeadsPage({

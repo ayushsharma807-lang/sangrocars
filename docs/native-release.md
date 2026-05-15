@@ -1,10 +1,10 @@
-# SangroCars Native Release Guide
+# Sangro Native Release Guide
 
 This project ships a native app shell for the live site at `https://sangrocars.in`.
 
 Current native identity:
 
-- App name: `SangroCars`
+- App name: `Sangro`
 - Bundle ID / package ID: `in.sangrocars.app`
 - Native wrapper config: `capacitor.config.ts`
 - Android project: `android/`
@@ -120,7 +120,7 @@ Release bundle flow:
 
 Prepare these before submission:
 
-- App name: `SangroCars`
+- App name: `Sangro`
 - Subtitle / short description
 - Full description
 - Keywords
@@ -140,7 +140,7 @@ Suggested short description:
 
 Suggested full description:
 
-`SangroCars helps buyers discover used cars and helps sellers post listings quickly. Browse verified listings, connect with dealers, compare options, and explore cars across India in one place.`
+`Sangro helps buyers discover used cars and helps sellers post listings quickly. Browse verified listings, connect with dealers, compare options, and explore cars across India in one place.`
 
 ## 6. Release checklist
 

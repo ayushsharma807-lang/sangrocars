@@ -44,7 +44,7 @@ const cibilMidRate: Record<CibilRange, number> = {
 
 const processSteps = [
   "Submit details",
-  "SangroCars verifies documents",
+  "Sangro Finance verifies documents",
   "We match bank/NBFC options",
   "Bank processes final approval",
   "Loan disbursed",
@@ -208,7 +208,7 @@ export default function FinancePage() {
   }, [preApproval]);
 
   const whatsappText = encodeURIComponent(
-    `Hi SangroCars Finance, my pre-approval estimate is ready.\nName: ${preApproval.fullName}\nPhone: ${preApproval.phone}\nCity: ${preApproval.city}\nLoan type: ${preApproval.loanType}\nDesired loan: ${formatMoney(preApprovalResult.desiredLoan)}\nEligibility estimate: ${formatMoney(preApprovalResult.estimatedEligibleAmount)}\nApproval chance: ${preApprovalResult.approvalChance}`,
+    `Hi Sangro Finance, my pre-approval estimate is ready.\nName: ${preApproval.fullName}\nPhone: ${preApproval.phone}\nCity: ${preApproval.city}\nLoan type: ${preApproval.loanType}\nDesired loan: ${formatMoney(preApprovalResult.desiredLoan)}\nEligibility estimate: ${formatMoney(preApprovalResult.estimatedEligibleAmount)}\nApproval chance: ${preApprovalResult.approvalChance}`,
   );
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919041322997";
 
@@ -262,7 +262,7 @@ export default function FinancePage() {
       <nav className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" className="text-lg font-black tracking-tight text-slate-950">
-            SangroCars Finance
+            Sangro Finance
           </Link>
           <div className="hidden items-center gap-6 text-sm font-semibold text-slate-600 md:flex">
             <a href="#emi" className="hover:text-slate-950">EMI Calculator</a>
@@ -453,7 +453,7 @@ export default function FinancePage() {
           {submitError ? <p className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{submitError}</p> : null}
           {submitted ? (
             <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-              Your pre-approval estimate is ready. SangroCars Finance will call you and help process this through our banking partners.
+              Your pre-approval estimate is ready. Sangro Finance will call you and help process this through our banking partners.
             </div>
           ) : null}
 
@@ -510,7 +510,7 @@ export default function FinancePage() {
 
       <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
         <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900">
-          <strong>Disclaimer:</strong> SangroCars does not guarantee loan approval. Final approval, interest rate, and disbursal are subject to bank/NBFC checks, documents, credit score, and policies.
+          <strong>Disclaimer:</strong> Sangro Finance does not guarantee loan approval. Final approval, interest rate, and disbursal are subject to bank/NBFC checks, documents, credit score, and policies.
         </div>
       </section>
     </main>

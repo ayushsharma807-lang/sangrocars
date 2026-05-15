@@ -16,7 +16,7 @@ export default async function AdminAppLoginPage({
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-10">
       <div className="mb-6">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-          SangroCars Admin
+          Sangro Admin
         </p>
         <h1 className="mt-2 text-3xl font-semibold text-slate-900">Sign in</h1>
         <p className="mt-2 text-sm text-slate-600">

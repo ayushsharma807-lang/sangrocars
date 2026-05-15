@@ -134,7 +134,7 @@ export default function LeadForm({
   return (
     <form className="lead-form" id="lead-form" onSubmit={handleSubmit}>
       <div className="lead-form__header">
-        <h3>Contact SangroCars</h3>
+        <h3>Contact Sangro</h3>
         <p>We will negotiate the best deal and connect you with verified sellers.</p>
       </div>
       <div className="lead-form__row">
@@ -218,7 +218,7 @@ export default function LeadForm({
       </button>
       {status.state === "success" && (
         <p className="lead-form__success">
-          Thanks! SangroCars will reach out shortly.
+          Thanks! Sangro will reach out shortly.
         </p>
       )}
       {status.state === "error" && (

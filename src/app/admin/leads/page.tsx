@@ -276,7 +276,7 @@ const serviceLeadWhatsappHref = (lead: ServiceLeadRow) => {
   const digits = String(lead.phone ?? "").replace(/\D/g, "");
   const waPhone =
     digits.length === 10 ? `91${digits}` : digits.startsWith("91") ? digits : digits;
-  const message = `Hi ${lead.name}, SangroCars is following up on your ${formatServiceType(
+  const message = `Hi ${lead.name}, Sangro is following up on your ${formatServiceType(
     lead.service_type
   )} request.`;
   return `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`;

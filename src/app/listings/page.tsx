@@ -29,7 +29,7 @@ const buildWhatsAppLink = () => {
   if (!digits) return "";
   const message =
     process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE ??
-    "Hi, I'm interested in a car listing on SangroCars.";
+    "Hi, I'm interested in a car listing on Sangro Cars.";
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 };
 
@@ -46,7 +46,7 @@ const buildSupportWhatsApp = () => {
   const digits = getSupportPhone();
   if (!digits) return "";
   const message = process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE ??
-    "Hi, I'm interested in a car listing on SangroCars.";
+    "Hi, I'm interested in a car listing on Sangro Cars.";
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 };
 
@@ -392,8 +392,8 @@ export default async function Home({
         </label>
         <nav className="cw-nav">
           <div className="cw-nav__brand">
-            <img src="/images/sangrocars-logo.png" alt="SangroCars" />
-            <span>SangroCars</span>
+            <img src="/images/sangrocars-logo.png" alt="Sangro" />
+            <span>Sangro Cars</span>
           </div>
           <div className="cw-nav__links">
             <Link href="/sell">Sell Car</Link>
@@ -410,10 +410,10 @@ export default async function Home({
             <div className="cw-header__copy">
               <div className="cw-header__branding">
                 <div className="cw-header__logo">
-                  <img src="/images/sangrocars-logo.png" alt="SangroCars" />
+                  <img src="/images/sangrocars-logo.png" alt="Sangro" />
                 </div>
                 <div className="cw-header__brand-text">
-                  <span className="cw-header__brand-name">SangroCars</span>
+                  <span className="cw-header__brand-name">Sangro Cars</span>
                   <span className="cw-header__brand-tagline">
                     India's Trusted Used Car Marketplace
                   </span>
@@ -451,7 +451,7 @@ export default async function Home({
                   target="_blank"
                   rel="noreferrer"
                 >
-                  WhatsApp SangroCars
+                  WhatsApp Sangro Cars
                 </a>
               )}
             </div>
@@ -584,7 +584,7 @@ export default async function Home({
               ),
             },
             {
-              label: "SangroCars helps buyers get the best price",
+              label: "Sangro Cars helps buyers get the best price",
               value: "Direct negotiation",
               icon: (
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -845,7 +845,7 @@ export default async function Home({
         <footer className="cw-footer">
           <div className="cw-footer__grid">
             <div className="cw-footer__col">
-              <h3 className="cw-footer__title">SangroCars</h3>
+              <h3 className="cw-footer__title">Sangro Cars</h3>
               <p>
                 India&apos;s trusted used car marketplace. Discover verified cars,
                 compare prices, and connect directly with sellers.
@@ -885,7 +885,7 @@ export default async function Home({
               </a>
             </div>
             <div className="cw-footer__col">
-              <h3 className="cw-footer__title">Why SangroCars</h3>
+              <h3 className="cw-footer__title">Why Sangro</h3>
               <p>We keep the buying journey simple, trusted, and supported from first click to delivery.</p>
               <span className="cw-footer__link">✓ Verified dealers</span>
               <span className="cw-footer__link">✓ Secure paperwork support</span>
@@ -894,8 +894,8 @@ export default async function Home({
             </div>
           </div>
           <div className="cw-footer__bottom">
-            <span>SangroCars</span>
-            <span>© 2026 SangroCars</span>
+            <span>Sangro Cars</span>
+            <span>© 2026 Sangro</span>
           </div>
         </footer>
       </section>

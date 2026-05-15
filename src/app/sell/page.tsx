@@ -27,7 +27,7 @@ export default async function SellCarPage({
       <section className="simple-shell simple-auth sell-page__shell">
         <div className="simple-header sell-page__header">
           <div>
-            <h1>Sell your car with SangroCars</h1>
+            <h1>Sell your car with Sangro Cars</h1>
             <p>We connect you with serious buyers and help you close faster.</p>
             <div className="sell-page__benefits">
               <span>✔ We connect serious buyers</span>

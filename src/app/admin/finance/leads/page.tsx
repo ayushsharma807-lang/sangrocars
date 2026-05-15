@@ -18,7 +18,7 @@ const formatDate = (value?: string | null) => (value ? new Date(value).toLocaleS
 
 const whatsappUrl = (phone?: string | null, name?: string | null) => {
   const digits = String(phone ?? "").replace(/\D/g, "").slice(-10);
-  return `https://wa.me/91${digits}?text=${encodeURIComponent(`Hi ${name ?? ""}, this is SangroCars Finance about your loan pre-approval enquiry.`)}`;
+  return `https://wa.me/91${digits}?text=${encodeURIComponent(`Hi ${name ?? ""}, this is Sangro Finance about your loan pre-approval enquiry.`)}`;
 };
 
 type FinanceLead = {

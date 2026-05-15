@@ -41,7 +41,7 @@ export default async function DealerRegisterPage({
         )}
 
         <div className="dealer-register__benefits">
-          <h3>Why join SangroCars?</h3>
+          <h3>Why join Sangro?</h3>
           <ul>
             <li>Free listings with qualified buyer leads</li>
             <li>Finance support to improve closure rates</li>

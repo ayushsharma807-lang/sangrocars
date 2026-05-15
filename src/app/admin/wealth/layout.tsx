@@ -30,11 +30,11 @@ export default async function WealthAdminLayout({
             <Link href="/admin/wealth" className="flex items-center gap-3">
               <img
                 src="/images/sangrocars-logo.png"
-                alt="SangroCars"
+                alt="Sangro"
                 className="h-11 w-11 rounded-2xl border border-slate-200 object-contain p-1"
               />
               <div>
-                <div className="text-lg font-semibold">SangroCars Wealth Admin</div>
+                <div className="text-lg font-semibold">Sangro Wealth Admin</div>
                 <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
                   Mutual funds operations
                 </div>

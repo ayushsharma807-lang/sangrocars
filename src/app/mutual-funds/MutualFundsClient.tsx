@@ -51,12 +51,12 @@ const faqs = [
   {
     question: "Can I invest directly here today?",
     answer:
-      "Not yet. This SangroCars Wealth experience is currently for tracking, discovery, and service requests. Live investing flows can be layered in later.",
+      "Not yet. This Sangro Wealth experience is currently for tracking, discovery, and service requests. Live investing flows can be layered in later.",
   },
   {
     question: "What happens after I request a SIP or withdrawal?",
     answer:
-      "Your request goes to the SangroCars team for follow-up and coordination on the official platform. We keep the interface simple while the workflow stays compliant.",
+      "Your request goes to the Sangro Wealth team for follow-up and coordination on the official platform. We keep the interface simple while the workflow stays compliant.",
   },
 ];
 
@@ -363,11 +363,11 @@ export default function MutualFundsClient({ initialFunds }: Props) {
             <Link href="/" className="flex items-center gap-3">
               <img
                 src="/images/sangrocars-logo.png"
-                alt="SangroCars"
+                alt="Sangro"
                 className="h-11 w-11 rounded-2xl border border-emerald-100 object-contain p-1"
               />
               <div>
-                <div className="text-lg font-semibold tracking-tight text-slate-950">SangroCars Wealth</div>
+                <div className="text-lg font-semibold tracking-tight text-slate-950">Sangro Wealth</div>
                 <div className="text-xs uppercase tracking-[0.22em] text-slate-500">Mutual Funds</div>
               </div>
             </Link>
@@ -403,7 +403,7 @@ export default function MutualFundsClient({ initialFunds }: Props) {
                 Build wealth, SIP by SIP.
               </h1>
               <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
-                Explore real daily NAV data with SangroCars Wealth, monitor return windows that matter, and preview how a disciplined SIP strategy can grow over time.
+                Explore real daily NAV data with Sangro Wealth, monitor return windows that matter, and preview how a disciplined SIP strategy can grow over time.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -500,7 +500,7 @@ export default function MutualFundsClient({ initialFunds }: Props) {
             <SectionHeader
               eyebrow="Track live-style NAV"
               title="Watchlist powered by real daily NAV data"
-              copy="Search any scheme, refresh the tracked cards, and monitor 1 day, 1 month, 6 month, and 1 year return windows without leaving SangroCars Wealth."
+              copy="Search any scheme, refresh the tracked cards, and monitor 1 day, 1 month, 6 month, and 1 year return windows without leaving Sangro Wealth."
             />
             <div className="flex flex-wrap items-center gap-3">
               <button
@@ -831,7 +831,7 @@ export default function MutualFundsClient({ initialFunds }: Props) {
                 },
                 {
                   title: "Add SIP Request",
-                  copy: "Share the SIP amount you want to begin so the SangroCars team can coordinate the next step.",
+                  copy: "Share the SIP amount you want to begin so the Sangro Wealth team can coordinate the next step.",
                 },
                 {
                   title: "Withdrawal Request",
@@ -898,14 +898,14 @@ export default function MutualFundsClient({ initialFunds }: Props) {
         <SectionHeader
           eyebrow="Advisor workflow"
           title="Track, request, and talk to a real person when you’re ready"
-          copy="Use SangroCars Wealth for real NAV tracking today, and use the request flow whenever you want to start a SIP, request a withdrawal, or talk through a goal-based plan."
+          copy="Use Sangro Wealth for real NAV tracking today, and use the request flow whenever you want to start a SIP, request a withdrawal, or talk through a goal-based plan."
         />
         <div className="mt-8 grid gap-4 lg:grid-cols-4">
           {[
             { title: "Track Fund", copy: "Save a scheme into your watchlist and keep its NAV and return windows visible." },
             { title: "Start SIP", copy: "Raise a SIP support request with your target amount and timeline." },
             { title: "Compare", copy: "Stack multiple schemes side by side using live-style NAV snapshots." },
-            { title: "Talk to Advisor", copy: "Connect with SangroCars Wealth for practical assistance and next steps." },
+            { title: "Talk to Advisor", copy: "Connect with Sangro Wealth for practical assistance and next steps." },
           ].map((item) => (
             <div key={item.title} className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.05)]">
               <h3 className="text-lg font-semibold text-slate-950">{item.title}</h3>
@@ -943,7 +943,7 @@ export default function MutualFundsClient({ initialFunds }: Props) {
           <ServiceLeadForm
             id="contact-advisor"
             serviceType="mutual_funds"
-            title="Talk to a SangroCars Wealth advisor"
+            title="Talk to a Sangro Wealth advisor"
             description="Share your goal, SIP amount, or withdrawal need. We’ll follow up with the next practical step."
             submitLabel="Request callback"
             messagePlaceholder="Tell us which fund, SIP amount, or goal you want help with."
@@ -953,7 +953,7 @@ export default function MutualFundsClient({ initialFunds }: Props) {
 
       <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8 lg:pb-16">
         <div className="rounded-[28px] border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-500 sm:px-6">
-          Mutual fund NAV data is sourced from MFAPI / AMFI-linked daily updates. Transactions are not executed here. SangroCars Wealth currently supports tracking and service requests only.
+          Mutual fund NAV data is sourced from MFAPI / AMFI-linked daily updates. Transactions are not executed here. Sangro Wealth currently supports tracking and service requests only.
         </div>
       </section>
     </main>

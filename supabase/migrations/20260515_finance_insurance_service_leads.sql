@@ -1,4 +1,4 @@
--- Finance and insurance lead metadata for SangroCars service workflows.
+-- Finance and insurance lead metadata for Sangro service workflows.
 -- Public forms still insert leads through the server route; admins manage them from admin pages.
 
 alter table public.service_leads

@@ -84,7 +84,7 @@ export async function generateMetadata({
   if (!hasSupabaseConfig()) {
     return {
       title: "Used car listing",
-      description: "Browse this used car on SangroCars.",
+      description: "Browse this used car on Sangro Cars.",
       alternates: { canonical: `/listing/${params.id}` },
     };
   }
@@ -93,7 +93,7 @@ export async function generateMetadata({
   if (!sb) {
     return {
       title: "Used car listing",
-      description: "Browse this used car on SangroCars.",
+      description: "Browse this used car on Sangro Cars.",
       alternates: { canonical: `/listing/${params.id}` },
     };
   }
@@ -107,7 +107,7 @@ export async function generateMetadata({
   if (!data) {
     return {
       title: "Used car listing",
-      description: "Browse this used car on SangroCars.",
+      description: "Browse this used car on Sangro Cars.",
       alternates: { canonical: `/listing/${params.id}` },
     };
   }
@@ -125,12 +125,12 @@ export async function generateMetadata({
   const image = Array.isArray(data.photo_urls) ? data.photo_urls[0] : undefined;
 
   return {
-    title: `${title} | SangroCars`,
-    description: `View ${data.make ?? "used"} ${data.model ?? "car"} on SangroCars.`,
+    title: `${title} | Sangro Cars`,
+    description: `View ${data.make ?? "used"} ${data.model ?? "car"} on Sangro Cars.`,
     alternates: { canonical: `/listing/${params.id}` },
     openGraph: {
       title,
-      description: `View ${data.make ?? "used"} ${data.model ?? "car"} on SangroCars.`,
+      description: `View ${data.make ?? "used"} ${data.model ?? "car"} on Sangro Cars.`,
       url: `${siteUrl}/listing/${params.id}`,
       images: image ? [{ url: image }] : undefined,
     },
@@ -160,7 +160,7 @@ const buildSupportLinks = (
     "";
   const digits = normalizePhone(raw);
   const message = encodeURIComponent(
-    `Hi, I'm interested in listing ${listingId} (${listingTitle}) on SangroCars. ${listingUrl}`
+    `Hi, I'm interested in listing ${listingId} (${listingTitle}) on Sangro Cars. ${listingUrl}`
   );
   return {
     tel: digits ? `tel:+${digits}` : null,
@@ -415,7 +415,7 @@ export default async function ListingPage({
         <div className="listing-hero">
           <div className="listing-hero__brand">
             <div className="listing-hero__logo">
-              <img src="/images/sangrocars-logo.png" alt="SangroCars" />
+              <img src="/images/sangrocars-logo.png" alt="Sangro" />
             </div>
             <div>
               <h1>{titleParts.join(" ")}</h1>
@@ -506,17 +506,17 @@ export default async function ListingPage({
             </div>
             <div className="detail-sidebar__trust">
               <span>✓ Verified listing</span>
-              <span>✓ SangroCars assisted deal</span>
+              <span>✓ Sangro Cars assisted deal</span>
               <span>✓ Finance & insurance support</span>
             </div>
             <div className="detail-sidebar__cta">
               {supportLinks.tel ? (
                 <a className="simple-button" href={supportLinks.tel}>
-                  📞 Call SangroCars
+                  📞 Call Sangro Cars
                 </a>
               ) : (
                 <button className="simple-button" disabled>
-                  📞 Call SangroCars
+                  📞 Call Sangro Cars
                 </button>
               )}
               {supportLinks.whatsapp ? (
@@ -526,11 +526,11 @@ export default async function ListingPage({
                   target="_blank"
                   rel="noreferrer"
                 >
-                  💬 WhatsApp SangroCars
+                  💬 WhatsApp Sangro Cars
                 </a>
               ) : (
                 <button className="simple-button simple-button--secondary" disabled>
-                  💬 WhatsApp SangroCars
+                  💬 WhatsApp Sangro Cars
                 </button>
               )}
               <LeadModal
@@ -547,11 +547,11 @@ export default async function ListingPage({
               <p className="detail-sidebar__label">LISTED BY</p>
               <strong>{dealer?.id ? publicDealerName : "Private seller"}</strong>
               <span>📍 {dealerAddress}</span>
-              <span>✓ Verified by SangroCars</span>
+              <span>✓ Verified by Sangro Cars</span>
               <span>Usually responds within 10 minutes</span>
             </div>
             <div className="detail-sidebar__assist">
-              <p>Buy with SangroCars assistance</p>
+              <p>Buy with Sangro Cars assistance</p>
               <ul>
                 <li>Negotiation help to get the best price</li>
                 <li>Finance support from trusted partners</li>

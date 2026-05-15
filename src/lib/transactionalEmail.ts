@@ -23,12 +23,12 @@ export const sendSellerApprovalPendingEmail = async (payload: {
 
   const sellerName = payload.sellerName?.trim() || "there";
   const listingUrl = `${SITE_URL.replace(/\/$/, "")}/sell?status=submitted&id=${payload.listingId}`;
-  const subject = "SangroCars: your car is waiting for approval";
+  const subject = "Sangro: your car is waiting for approval";
 
   const lines = [
     `Hi ${sellerName},`,
     "",
-    "Your car has been submitted on SangroCars and is waiting for admin approval.",
+    "Your car has been submitted on Sangro and is waiting for admin approval.",
     "We will update you soon after review.",
     "",
     `Car: ${payload.listingTitle}`,
@@ -42,7 +42,7 @@ export const sendSellerApprovalPendingEmail = async (payload: {
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827">
       <p>Hi ${escapeHtml(sellerName)},</p>
-      <p>Your car has been submitted on <strong>SangroCars</strong> and is waiting for admin approval.</p>
+      <p>Your car has been submitted on <strong>Sangro</strong> and is waiting for admin approval.</p>
       <p>We will update you soon after review.</p>
       <div style="padding:16px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc">
         <p style="margin:0 0 8px"><strong>Car:</strong> ${escapeHtml(payload.listingTitle)}</p>

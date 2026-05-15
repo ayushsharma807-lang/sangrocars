@@ -9,7 +9,7 @@ const buildWhatsAppLink = () => {
   if (!digits) return "";
   const message =
     process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE ??
-    "Hi, I want to contact SangroCars.";
+    "Hi, I want to contact Sangro.";
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 };
 
@@ -35,8 +35,8 @@ export default function ContactSection({ id, compact = false, source = "contact_
   return (
     <section className={`cw-contact-section${compact ? " cw-contact-section--compact" : ""}`} id={id}>
       <div className="cw-contact-section__copy">
-        <span className="cw-contact-section__kicker">Contact SangroCars</span>
-        <h2>Contact SangroCars</h2>
+        <span className="cw-contact-section__kicker">Contact Sangro</span>
+        <h2>Contact Sangro</h2>
         <p>
           Have a question about buying or selling a car? Our team is here to help.
         </p>
@@ -51,12 +51,12 @@ export default function ContactSection({ id, compact = false, source = "contact_
         <div className="cw-contact-actions">
           {whatsappHref && (
             <a className="cw-header__btn cw-header__btn--whatsapp" href={whatsappHref} target="_blank" rel="noreferrer">
-              WhatsApp SangroCars
+              WhatsApp Sangro
             </a>
           )}
           {callHref && (
             <a className="cw-header__btn cw-header__btn--ghost" href={callHref}>
-              Call SangroCars
+              Call Sangro
             </a>
           )}
         </div>

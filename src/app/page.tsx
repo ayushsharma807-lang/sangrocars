@@ -49,7 +49,7 @@ const services: ServiceCard[] = [
   },
   {
     title: "Used Cars",
-    subtitle: "Buy and sell verified used cars with SangroCars.",
+    subtitle: "Buy and sell verified used cars with Sangro Cars.",
     href: "/listings",
     stat: "318 active listings",
     icon: (
@@ -108,9 +108,9 @@ export default async function HomePage() {
         <header className="sticky top-4 z-20 rounded-[28px] border border-slate-200 bg-white/90 px-5 py-4 shadow-[0_14px_40px_rgba(15,23,42,0.08)] backdrop-blur">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <Link href="/" className="flex items-center gap-4">
-              <img src="/images/sangrocars-logo.png" alt="SangroCars" className="h-12 w-12 rounded-2xl border border-slate-200 object-contain p-1" />
+              <img src="/images/sangrocars-logo.png" alt="Sangro" className="h-12 w-12 rounded-2xl border border-slate-200 object-contain p-1" />
               <div>
-                <div className="text-xl font-semibold tracking-tight">SangroCars</div>
+                <div className="text-xl font-semibold tracking-tight">Sangro</div>
                 <div className="text-xs uppercase tracking-[0.24em] text-slate-500">Cars • Properties • Finance • Mutual Funds • Insurance</div>
               </div>
             </Link>
@@ -127,7 +127,7 @@ export default async function HomePage() {
         <section className="grid gap-6 pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
           <div className="rounded-[32px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.08),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.08),_transparent_32%),white] p-8 shadow-[0_18px_60px_rgba(15,23,42,0.08)] sm:p-10">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Service dashboard</p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">SangroCars Services</h1>
+            <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">Sangro Services</h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
               One trusted place for cars, properties, finance, mutual funds and insurance — designed like a real operating dashboard, not a brochure.
             </p>

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const RAW_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
 const DEFAULT_MESSAGE =
   process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE ??
-  "Hi, I'm interested in a car listing on SangroCars.";
+  "Hi, I'm interested in a car listing on Sangro Cars.";
 
 const normalizeNumber = (value: string) => value.replace(/\D/g, "");
 

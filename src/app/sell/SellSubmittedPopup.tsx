@@ -24,7 +24,7 @@ export default function SellSubmittedPopup({ listingId }: { listingId?: string }
         <p>
           We received your listing. Please wait while our team reviews it. We will update you soon.
         </p>
-        <p>If you entered an email address, SangroCars has also sent you a confirmation email.</p>
+        <p>If you entered an email address, Sangro has also sent you a confirmation email.</p>
         {listingId ? (
           <p className="sell-success-modal__ref">Reference ID: {listingId}</p>
         ) : null}

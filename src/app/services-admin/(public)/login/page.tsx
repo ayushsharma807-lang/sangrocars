@@ -11,7 +11,7 @@ export default async function ServicesAdminLoginPage({
     <main className="min-h-screen bg-white px-5 py-10 text-slate-900">
       <div className="mx-auto flex min-h-[80vh] w-full max-w-md flex-col justify-center">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
-          SangroCars Services
+          Sangro Services
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
           Admin login

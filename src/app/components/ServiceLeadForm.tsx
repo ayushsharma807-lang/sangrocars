@@ -126,7 +126,7 @@ export default function ServiceLeadForm({
         </button>
         {status.state === "success" && (
           <p className="cw-contact-form__success">
-            Thanks — SangroCars will contact you shortly.
+            Thanks — Sangro will contact you shortly.
           </p>
         )}
         {status.state === "error" && (

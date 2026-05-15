@@ -22,7 +22,7 @@ export default async function ServicesPortalAppLayout({
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
-              SangroCars Services
+              Sangro Services
             </p>
             <h1 className="text-lg font-semibold text-slate-900">
               Welcome, {session.profile.name}

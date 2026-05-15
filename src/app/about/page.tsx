@@ -9,7 +9,7 @@ const buildSupportWhatsApp = () => {
   if (!digits) return "";
   const message =
     process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE ??
-    "Hi, I want to know more about SangroCars.";
+    "Hi, I want to know more about Sangro.";
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 };
 
@@ -21,8 +21,8 @@ export default function AboutPage() {
       <section className="simple-shell">
         <nav className="cw-nav">
           <div className="cw-nav__brand">
-            <img src="/images/sangrocars-logo.png" alt="SangroCars" />
-            <span>SangroCars</span>
+            <img src="/images/sangrocars-logo.png" alt="Sangro" />
+            <span>Sangro</span>
           </div>
           <div className="cw-nav__links">
             <Link href="/listings">Browse Cars</Link>
@@ -36,12 +36,12 @@ export default function AboutPage() {
 
         <section className="cw-about-hero">
           <div className="cw-about-hero__copy">
-            <span className="cw-about-kicker">About SangroCars</span>
-            <h1>About SangroCars</h1>
+            <span className="cw-about-kicker">About Sangro</span>
+            <h1>About Sangro</h1>
             <p>
-              SangroCars is a trusted used car marketplace based in Jalandhar, India.
-              Our mission is to make buying and selling used cars simple,
-              transparent, and safe.
+              Sangro is a trusted local services platform based in Jalandhar, India.
+              We help people with cars, properties, finance, insurance, and mutual
+              fund service workflows in one simple place.
             </p>
           </div>
         </section>
@@ -50,18 +50,18 @@ export default function AboutPage() {
           <article className="cw-about-card">
             <h2>What we do</h2>
             <ul>
-              <li>Connect buyers directly with verified dealers and owners</li>
-              <li>Provide transparent listings with real photos and details</li>
-              <li>Assist with paperwork, finance, and insurance</li>
+              <li>Run Sangro Cars for verified used car listings</li>
+              <li>Support Sangro Finance, Insurance, Wealth, and Properties requests</li>
+              <li>Assist with paperwork, finance, insurance, and local follow-up</li>
             </ul>
           </article>
 
           <article className="cw-about-card">
-            <h2>Why SangroCars</h2>
+            <h2>Why Sangro</h2>
             <ul>
-              <li>Verified listings</li>
-              <li>Direct negotiation with sellers</li>
-              <li>Local car marketplace focused on Punjab</li>
+              <li>One brand for multiple trusted local services</li>
+              <li>Human support for important buying and finance decisions</li>
+              <li>Focused on Punjab-first service and follow-up</li>
             </ul>
           </article>
 

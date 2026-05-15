@@ -115,7 +115,7 @@ function LeadModal({
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-              SangroCars properties desk
+              Sangro Properties desk
             </p>
             <h3 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
               {title}
@@ -196,8 +196,8 @@ export default function PropertiesPage() {
     <>
       <ServicePlatformShell
         section="properties"
-        title="Properties by SangroCars"
-        subtitle="Search local inventory, switch between buy-rent-commercial workflows, save properties and schedule site visits through SangroCars."
+        title="Sangro Properties"
+        subtitle="Search local inventory, switch between buy-rent-commercial workflows, save properties and schedule site visits through Sangro Properties."
         statusLabel="Matching live requests"
         statusTone="accent"
         quickStats={[
@@ -214,7 +214,7 @@ export default function PropertiesPage() {
                 setActiveModal({
                   title: "Find Property",
                   description:
-                    "Tell SangroCars your location, budget and requirement so the team can match properties and schedule visits.",
+                    "Tell Sangro Properties your location, budget and requirement so the team can match properties and schedule visits.",
                   defaultMessage: `Find Property\nRequirement type: ${activeTab}`,
                 })
               }
@@ -228,7 +228,7 @@ export default function PropertiesPage() {
                 setActiveModal({
                   title: "List Your Property",
                   description:
-                    "Share owner details and SangroCars will help list the property and handle buyer or tenant enquiries.",
+                    "Share owner details and Sangro Properties will help list the property and handle buyer or tenant enquiries.",
                   defaultMessage: "List Your Property",
                 })
               }
@@ -421,7 +421,7 @@ export default function PropertiesPage() {
                           setActiveModal({
                             title: "Schedule Site Visit",
                             description:
-                              "Send your preferred time and SangroCars will coordinate a property visit.",
+                              "Send your preferred time and Sangro Properties will coordinate a property visit.",
                             defaultMessage: `Schedule Site Visit\nProperty: ${property.title}\nLocation: ${property.location}`,
                           })
                         }
@@ -438,7 +438,7 @@ export default function PropertiesPage() {
                           setActiveModal({
                             title: "Contact Owner",
                             description:
-                              "SangroCars will help connect you with the property owner or dealer after qualification.",
+                              "Sangro Properties will help connect you with the property owner or dealer after qualification.",
                             defaultMessage: `Contact Owner\nProperty: ${property.title}\nLocation: ${property.location}`,
                           })
                         }
@@ -467,7 +467,7 @@ export default function PropertiesPage() {
                     Enquiry workflow
                   </p>
                   <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-                    How SangroCars closes property deals
+                    How Sangro Properties closes property deals
                   </h2>
                 </div>
               </div>
@@ -494,7 +494,7 @@ export default function PropertiesPage() {
                             ? "Receive a curated set of matching inventory."
                             : index === 2
                               ? "Book site visits with verified owners or dealers."
-                              : "Negotiate, document, and close with SangroCars support."}
+                              : "Negotiate, document, and close with Sangro Properties support."}
                       </p>
                     </div>
                   </div>
@@ -509,7 +509,7 @@ export default function PropertiesPage() {
                     Owner workflow
                   </p>
                   <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-                    List your property with SangroCars
+                    List your property with Sangro Properties
                   </h2>
                 </div>
                 <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
@@ -536,7 +536,7 @@ export default function PropertiesPage() {
                     setActiveModal({
                       title: "List Your Property",
                       description:
-                        "Send owner details to SangroCars and we will help publish, qualify and follow up on enquiries.",
+                        "Send owner details to Sangro Properties and we will help publish, qualify and follow up on enquiries.",
                       defaultMessage: "List Your Property",
                     })
                   }
@@ -550,7 +550,7 @@ export default function PropertiesPage() {
                     setActiveModal({
                       title: "Schedule Site Visit",
                       description:
-                        "Need help arranging a visit? SangroCars will coordinate with the owner or dealer.",
+                        "Need help arranging a visit? Sangro Properties will coordinate with the owner or dealer.",
                       defaultMessage: `Schedule Site Visit\nRequirement type: ${activeTab}`,
                     })
                   }

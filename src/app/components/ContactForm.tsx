@@ -28,7 +28,7 @@ export default function ContactForm({ source = "contact_page" }: Props) {
         email: "support@sangrocars.in",
         message: String(formData.get("message") ?? "").trim(),
         source,
-        listing_title: "General SangroCars contact",
+        listing_title: "General Sangro contact",
       };
       const endpoint = getPublicApiUrl("/api/leads");
       const res = await fetch(endpoint, {

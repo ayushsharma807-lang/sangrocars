@@ -23,7 +23,7 @@ export default function AdminAppLayout({
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-              SangroCars
+              Sangro
             </p>
             <h1 className="text-lg font-semibold text-slate-900">Admin</h1>
           </div>

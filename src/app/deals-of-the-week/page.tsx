@@ -349,7 +349,7 @@ export default async function DealsOfTheWeekPage() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "SangroCars",
+    name: "Sangro",
     url: siteUrl,
     potentialAction: {
       "@type": "SearchAction",
@@ -384,7 +384,7 @@ export default async function DealsOfTheWeekPage() {
               This week&apos;s featured cars. <span className="accent">Shot, checked, and pushed live.</span>
             </h1>
             <p>
-              This page is only for the weekly drop. SangroCars visits dealers,
+              This page is only for the weekly drop. Sangro visits dealers,
               shoots fresh videos, and highlights the standout inventory worth a
               serious buyer&apos;s attention.
             </p>

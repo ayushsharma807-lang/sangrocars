@@ -119,11 +119,11 @@ export default function ServicePlatformShell({
             <Link href="/" className="flex items-center gap-4 text-slate-950">
               <img
                 src="/images/sangrocars-logo.png"
-                alt="SangroCars"
+                alt="Sangro"
                 className="h-12 w-12 rounded-2xl border border-slate-200 object-contain p-1"
               />
               <div>
-                <div className="text-lg font-semibold tracking-tight">SangroCars</div>
+                <div className="text-lg font-semibold tracking-tight">Sangro</div>
                 <div className="text-xs uppercase tracking-[0.24em] text-slate-500">
                   Service Console
                 </div>
@@ -166,7 +166,7 @@ export default function ServicePlatformShell({
             <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                  SangroCars Services
+                  Sangro Services
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-3">
                   <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>

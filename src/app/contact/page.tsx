@@ -7,8 +7,8 @@ export default function ContactPage() {
       <section className="simple-shell">
         <nav className="cw-nav">
           <div className="cw-nav__brand">
-            <img src="/images/sangrocars-logo.png" alt="SangroCars" />
-            <span>SangroCars</span>
+            <img src="/images/sangrocars-logo.png" alt="Sangro" />
+            <span>Sangro</span>
           </div>
           <div className="cw-nav__links">
             <Link href="/listings">Browse Cars</Link>

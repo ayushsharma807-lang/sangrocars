@@ -11,9 +11,9 @@ export default async function WealthSignupPage({
     <main className="min-h-screen bg-white px-4 py-8 text-slate-950">
       <section className="mx-auto max-w-3xl">
         <Link href="/mutual-funds" className="inline-flex items-center gap-3">
-          <img src="/images/sangrocars-logo.png" alt="SangroCars" className="h-12 w-12 rounded-2xl border border-slate-200 object-contain p-1" />
+          <img src="/images/sangrocars-logo.png" alt="Sangro" className="h-12 w-12 rounded-2xl border border-slate-200 object-contain p-1" />
           <div>
-            <p className="text-lg font-semibold">SangroCars Wealth</p>
+            <p className="text-lg font-semibold">Sangro Wealth</p>
             <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Customer signup</p>
           </div>
         </Link>

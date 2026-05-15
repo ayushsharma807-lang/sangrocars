@@ -26,7 +26,7 @@ export const buildInstagramCaption = (
     .join(" ");
 
   const lines = [
-    title || "SangroCars Listing",
+    title || "Sangro Cars Listing",
     listing.year ? `Year: ${listing.year}` : null,
     listing.km ? `KM: ${formatKm(listing.km)}` : null,
     listing.fuel ? `Fuel: ${titleCase(listing.fuel)}` : null,
@@ -36,7 +36,7 @@ export const buildInstagramCaption = (
       : "Price: On request",
     "Finance available",
     `View more: ${listingUrl}`,
-    "DM now or contact SangroCars",
+    "DM now or contact Sangro",
   ].filter(Boolean);
 
   return lines.join("\n");

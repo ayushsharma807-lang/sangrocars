@@ -120,7 +120,7 @@ export default function PWAInstallBanner() {
   if (!shouldShow) return null;
 
   const title =
-    mode === "android" ? "Install SangroCars app" : "Add SangroCars to Home Screen";
+    mode === "android" ? "Install Sangro app" : "Add Sangro to Home Screen";
   const description =
     mode === "android"
       ? deferredPrompt

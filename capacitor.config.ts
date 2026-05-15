@@ -1,6 +1,6 @@
 const config = {
   appId: "in.sangrocars.app",
-  appName: "SangroCars",
+  appName: "Sangro",
   webDir: "app",
   server: {
     url: "https://sangrocars.in",

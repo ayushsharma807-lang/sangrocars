@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "SangroCars",
-    short_name: "SangroCars",
+    name: "Sangro",
+    short_name: "Sangro",
     description: "India's trusted used car marketplace.",
     start_url: "/listings",
     scope: "/",

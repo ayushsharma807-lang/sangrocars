@@ -23,7 +23,7 @@ const buildWhatsAppUrl = () => {
     "";
   const digits = raw.replace(/\D/g, "");
   if (!digits) return "";
-  return `https://wa.me/${digits}?text=${encodeURIComponent("Hi, I need support from SangroCars Services.")}`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent("Hi, I need support from Sangro Services.")}`;
 };
 
 type SearchParams = {
@@ -273,7 +273,7 @@ export default async function ServicesPortalDashboard({
           <h3 className="text-xl font-semibold text-slate-950">Service Requests</h3>
           {params.success ? (
             <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              Your request has been sent to the SangroCars team.
+              Your request has been sent to the Sangro team.
             </div>
           ) : null}
           {params.error ? (
@@ -324,7 +324,7 @@ export default async function ServicesPortalDashboard({
           <section id="support" className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <h3 className="text-xl font-semibold text-slate-950">Support</h3>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Reach the SangroCars team for finance, insurance, and mutual fund service requests.
+              Reach the Sangro team for finance, insurance, and mutual fund service requests.
             </p>
             <div className="mt-5 grid gap-3">
               {whatsappHref ? (

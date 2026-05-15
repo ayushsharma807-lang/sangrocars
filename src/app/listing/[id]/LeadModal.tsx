@@ -32,7 +32,7 @@ export default function LeadModal({
       </button>
       <SimpleModal
         open={open}
-        title="Contact SangroCars"
+        title="Contact Sangro"
         onClose={() => setOpen(false)}
       >
         <LeadForm
