@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">SangroCars Wealth</string>
-    <string name="title_activity_main">SangroCars Wealth</string>
+    <string name="app_name">SangroCars</string>
+    <string name="title_activity_main">SangroCars</string>
     <string name="package_name">in.sangrocars.app</string>
     <string name="custom_url_scheme">in.sangrocars.app</string>
 </resources>

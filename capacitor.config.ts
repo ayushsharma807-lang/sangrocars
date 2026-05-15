@@ -1,9 +1,9 @@
 const config = {
   appId: "in.sangrocars.app",
-  appName: "SangroCars Wealth",
+  appName: "SangroCars",
   webDir: "app",
   server: {
-    url: "https://sangrocars.in/wealth/login",
+    url: "https://sangrocars.in",
     cleartext: false,
     androidScheme: "https",
     allowNavigation: ["sangrocars.in", "*.sangrocars.in"],
