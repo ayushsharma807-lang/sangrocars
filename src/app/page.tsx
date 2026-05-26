@@ -12,7 +12,7 @@ type ServiceCard = {
 
 const services: ServiceCard[] = [
   {
-    title: "Mutual Funds",
+    title: "Sangro Wealth",
     subtitle: "Track NAV, SIPs and portfolio requests.",
     href: "/mutual-funds",
     stat: "126 funds tracked",
@@ -24,7 +24,7 @@ const services: ServiceCard[] = [
     ),
   },
   {
-    title: "Finance Services",
+    title: "Sangro Finance",
     subtitle: "Check car loan eligibility and EMI.",
     href: "/finance",
     stat: "42 live applications",
@@ -36,7 +36,7 @@ const services: ServiceCard[] = [
     ),
   },
   {
-    title: "Insurance",
+    title: "Sangro Insurance",
     subtitle: "Estimate premium and renew policy.",
     href: "/insurance",
     stat: "184 renewals this month",
@@ -48,7 +48,7 @@ const services: ServiceCard[] = [
     ),
   },
   {
-    title: "Used Cars",
+    title: "Sangro Cars",
     subtitle: "Buy and sell verified used cars with Sangro Cars.",
     href: "/listings",
     stat: "318 active listings",
@@ -62,7 +62,7 @@ const services: ServiceCard[] = [
     ),
   },
   {
-    title: "Properties",
+    title: "Sangro Properties",
     subtitle: "Buy, sell and rent local properties.",
     href: "/properties",
     stat: "96 site visits scheduled",
@@ -103,18 +103,18 @@ export default async function HomePage() {
   });
 
   return (
-    <main className="min-h-screen bg-white text-slate-950">
-      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <header className="sticky top-4 z-20 rounded-[28px] border border-slate-200 bg-white/90 px-5 py-4 shadow-[0_14px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+    <main className="min-h-screen bg-white pb-24 text-slate-950 md:pb-0">
+      <section className="mx-auto max-w-7xl px-4 py-4 sm:px-6 md:py-6 lg:px-8">
+        <header className="sticky top-0 z-20 -mx-4 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.06)] backdrop-blur sm:mx-0 sm:rounded-[28px] sm:border sm:px-5 sm:py-4 md:top-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <Link href="/" className="flex items-center gap-4">
-              <img src="/images/sangrocars-logo.png" alt="Sangro" className="h-12 w-12 rounded-2xl border border-slate-200 object-contain p-1" />
+              <img src="/images/sangrocars-logo.png" alt="Sangro" className="h-11 w-11 rounded-2xl border border-slate-200 object-contain p-1 sm:h-12 sm:w-12" />
               <div>
-                <div className="text-xl font-semibold tracking-tight">Sangro</div>
-                <div className="text-xs uppercase tracking-[0.24em] text-slate-500">Cars • Properties • Finance • Mutual Funds • Insurance</div>
+                <div className="text-lg font-semibold tracking-tight sm:text-xl">Sangro</div>
+                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 sm:text-xs sm:tracking-[0.24em]">Cars • Properties • Finance • Mutual Funds • Insurance</div>
               </div>
             </Link>
-            <nav className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-600">
+            <nav className="hidden flex-wrap items-center gap-2 text-sm font-medium text-slate-600 sm:flex">
               {services.map((service) => (
                 <Link key={service.href} href={service.href} className="rounded-full border border-slate-200 px-4 py-2 transition hover:border-slate-950 hover:text-slate-950">
                   {service.title}
@@ -124,8 +124,8 @@ export default async function HomePage() {
           </div>
         </header>
 
-        <section className="grid gap-6 pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-          <div className="rounded-[32px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.08),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.08),_transparent_32%),white] p-8 shadow-[0_18px_60px_rgba(15,23,42,0.08)] sm:p-10">
+        <section className="grid gap-5 pt-6 md:pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+          <div className="rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.08),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.08),_transparent_32%),white] p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)] sm:rounded-[32px] sm:p-10">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Service dashboard</p>
             <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">Sangro Services</h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
@@ -174,18 +174,18 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <section className="mt-8 grid gap-4 md:mt-10 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
           {services.map((service) => (
             <Link
               key={service.href}
               href={service.href}
-              className="group rounded-[30px] border border-slate-200 bg-white p-6 shadow-[0_12px_34px_rgba(15,23,42,0.05)] transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_20px_50px_rgba(15,23,42,0.08)]"
+              className="group rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.05)] transition active:scale-[0.99] md:rounded-[30px] md:p-6 md:hover:-translate-y-1 md:hover:border-slate-300 md:hover:shadow-[0_20px_50px_rgba(15,23,42,0.08)]"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">{service.icon}</div>
                 <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{service.stat}</span>
               </div>
-              <h3 className="mt-6 text-2xl font-semibold tracking-tight">{service.title}</h3>
+              <h3 className="mt-5 text-xl font-semibold tracking-tight md:mt-6 md:text-2xl">{service.title}</h3>
               <p className="mt-3 text-sm leading-6 text-slate-600">{service.subtitle}</p>
               <div className="mt-6 flex items-center justify-between text-sm font-semibold text-slate-950">
                 <span>View Service</span>

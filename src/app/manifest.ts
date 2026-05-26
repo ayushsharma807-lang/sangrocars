@@ -4,8 +4,9 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Sangro",
     short_name: "Sangro",
-    description: "India's trusted used car marketplace.",
-    start_url: "/listings",
+    description:
+      "Sangro services dashboard for cars, wealth, finance, insurance, and properties.",
+    start_url: "/",
     scope: "/",
     display: "standalone",
     theme_color: "#0b0b0f",
