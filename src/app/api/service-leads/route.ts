@@ -10,7 +10,9 @@ type ServiceLeadPayload = {
   city?: string;
   message?: string;
   investment_goal?: string;
+  investment_type?: string;
   monthly_sip_amount?: number | string;
+  one_time_amount?: number | string;
   monthly_income?: number | string;
   existing_emi?: number | string;
   employment_type?: string;
@@ -98,7 +100,9 @@ export async function POST(req: Request) {
   const city = String(body.city ?? "").trim() || null;
   const message = String(body.message ?? "").trim() || null;
   const investmentGoal = String(body.investment_goal ?? "").trim() || null;
-  const monthlySipAmount = Number.parseFloat(String(body.monthly_sip_amount ?? ""));
+  const investmentType = String(body.investment_type ?? "").trim() || null;
+  const monthlySipAmount = parseOptionalNumber(body.monthly_sip_amount);
+  const oneTimeAmount = parseOptionalNumber(body.one_time_amount);
   const financeFields =
     serviceType === "finance"
       ? {
@@ -153,12 +157,15 @@ export async function POST(req: Request) {
       .insert({
         service_type: serviceType,
         name,
+        full_name: fullName || null,
         phone,
         email,
         city,
         message,
         investment_goal: investmentGoal,
-        monthly_sip_amount: Number.isFinite(monthlySipAmount) ? monthlySipAmount : null,
+        investment_type: investmentType,
+        monthly_sip_amount: monthlySipAmount,
+        one_time_amount: oneTimeAmount,
         ...financeFields,
         ...insuranceFields,
         status: "new",
@@ -169,10 +176,22 @@ export async function POST(req: Request) {
     if (error) {
       console.error("Service lead insert failed", {
         error: error.message,
-        payload: { serviceType, name, phone, city, message, financeFields, insuranceFields },
+        payload: {
+          serviceType,
+          name,
+          phone,
+          city,
+          message,
+          investmentGoal,
+          investmentType,
+          monthlySipAmount,
+          oneTimeAmount,
+          financeFields,
+          insuranceFields,
+        },
       });
       return NextResponse.json(
-        { ok: false, error: error.message },
+        { ok: false, error: "Could not save lead." },
         { status: 500, headers }
       );
     }
@@ -182,7 +201,7 @@ export async function POST(req: Request) {
         lead_id: lead.id,
         activity_type: "lead_created",
         message: `New mutual fund lead: ${name}`,
-        metadata: { phone, email, investmentGoal, monthlySipAmount },
+        metadata: { phone, email, investmentGoal, investmentType, monthlySipAmount, oneTimeAmount },
       });
       if (logError) {
         console.error("Service lead activity log failed", logError);

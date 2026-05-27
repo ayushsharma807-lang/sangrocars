@@ -20,7 +20,7 @@ export default async function WealthLeadsPage({
   const sb = supabaseServer();
   const { data: leads, error } = await sb
     .from("service_leads")
-    .select("id,name,phone,email,city,message,investment_goal,monthly_sip_amount,status,notes,follow_up_date,created_at")
+    .select("id,name,phone,email,city,message,investment_goal,investment_type,monthly_sip_amount,one_time_amount,status,notes,follow_up_date,created_at")
     .eq("service_type", "mutual_funds")
     .order("created_at", { ascending: false });
 
@@ -65,9 +65,19 @@ export default async function WealthLeadsPage({
                     <dd className="font-semibold">{lead.investment_goal ?? "Not captured"}</dd>
                   </div>
                   <div className="rounded-2xl border border-slate-200 p-3">
+                    <dt className="text-slate-500">Investment type</dt>
+                    <dd className="font-semibold">{lead.investment_type ?? "Not captured"}</dd>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 p-3">
                     <dt className="text-slate-500">Monthly SIP</dt>
                     <dd className="font-semibold">
                       {lead.monthly_sip_amount ? formatInr(Number(lead.monthly_sip_amount)) : "Not captured"}
+                    </dd>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 p-3">
+                    <dt className="text-slate-500">One-time amount</dt>
+                    <dd className="font-semibold">
+                      {lead.one_time_amount ? formatInr(Number(lead.one_time_amount)) : "Not captured"}
                     </dd>
                   </div>
                   <div className="rounded-2xl border border-slate-200 p-3">

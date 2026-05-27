@@ -5,13 +5,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMemo, useState } from "react";
 
 type GoalOption = "Wealth Creation" | "Retirement" | "Child Education" | "Tax Saving";
+type InvestmentType = "Monthly SIP" | "One Time" | "Both";
 
 type FormState = {
   phone: string;
   fullName: string;
   email: string;
+  city: string;
   goal: GoalOption | "";
+  investmentType: InvestmentType | "";
   sipAmount: string;
+  oneTimeAmount: string;
 };
 
 const goals: GoalOption[] = [
@@ -24,8 +28,8 @@ const goals: GoalOption[] = [
 const stepMeta = [
   { title: "Phone number", caption: "We’ll use this to connect you with Sangro Wealth." },
   { title: "Basic details", caption: "Tell us who should get onboarding updates." },
-  { title: "Investment goal", caption: "Choose the reason you’re planning to start a SIP." },
-  { title: "Monthly SIP", caption: "A quick estimate helps us shape the right fund shortlist." },
+  { title: "Investment goal", caption: "Choose why you’re planning to invest." },
+  { title: "Investment plan", caption: "Tell us whether you prefer SIP, one-time, or both." },
 ];
 
 const whatsappLink = `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919041322997"}?text=${encodeURIComponent(
@@ -47,8 +51,11 @@ export default function MutualFundsOnboardingPage() {
     phone: "",
     fullName: "",
     email: "",
+    city: "",
     goal: "",
+    investmentType: "",
     sipAmount: "",
+    oneTimeAmount: "",
   });
 
   const progress = useMemo(() => ((step + (complete ? 1 : 0)) / stepMeta.length) * 100, [complete, step]);
@@ -76,41 +83,66 @@ export default function MutualFundsOnboardingPage() {
     }
 
     if (step === 3) {
-      const sipValue = Number.parseFloat(form.sipAmount || "0");
-      if (!Number.isFinite(sipValue) || sipValue <= 0) {
+      const needsSip = form.investmentType === "Monthly SIP" || form.investmentType === "Both";
+      const needsOneTime = form.investmentType === "One Time" || form.investmentType === "Both";
+      const sipValue = Number.parseFloat(form.sipAmount.replace(/,/g, "") || "0");
+      const oneTimeValue = Number.parseFloat(form.oneTimeAmount.replace(/,/g, "") || "0");
+
+      if (!form.investmentType) {
+        setError("Select your investment type.");
+        return;
+      }
+
+      if (needsSip && (!Number.isFinite(sipValue) || sipValue <= 0)) {
         setError("Enter a monthly SIP amount greater than zero.");
+        return;
+      }
+
+      if (needsOneTime && (!Number.isFinite(oneTimeValue) || oneTimeValue <= 0)) {
+        setError("Enter a one-time investment amount greater than zero.");
         return;
       }
 
       setSubmitting(true);
       try {
+        const monthlySipAmount = needsSip ? sipValue : null;
+        const oneTimeAmount = needsOneTime ? oneTimeValue : null;
         const response = await fetch("/api/service-leads", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             service_type: "mutual_funds",
             name: form.fullName.trim(),
+            full_name: form.fullName.trim(),
             phone: form.phone.trim(),
             email: form.email.trim(),
-            city: "",
+            city: form.city.trim(),
             investment_goal: form.goal,
-            monthly_sip_amount: sipValue,
-            message: `Mutual funds early access | Email: ${form.email.trim()} | Goal: ${form.goal} | Monthly SIP: ₹${sipValue.toLocaleString("en-IN")}`,
+            investment_type: form.investmentType,
+            monthly_sip_amount: monthlySipAmount,
+            one_time_amount: oneTimeAmount,
+            message: [
+              "Mutual funds early access",
+              `Email: ${form.email.trim()}`,
+              form.city.trim() ? `City: ${form.city.trim()}` : null,
+              `Goal: ${form.goal}`,
+              `Investment type: ${form.investmentType}`,
+              monthlySipAmount ? `Monthly SIP: ₹${monthlySipAmount.toLocaleString("en-IN")}` : null,
+              oneTimeAmount ? `One-time investment: ₹${oneTimeAmount.toLocaleString("en-IN")}` : null,
+            ]
+              .filter(Boolean)
+              .join(" | "),
           }),
         });
 
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
         if (!response.ok) {
-          throw new Error(payload?.error || "Could not save your early access request.");
+          throw new Error("Service lead request failed");
         }
 
         setComplete(true);
       } catch (submissionError) {
-        setError(
-          submissionError instanceof Error
-            ? submissionError.message
-            : "Could not save your early access request."
-        );
+        console.error("Wealth onboarding failed", submissionError);
+        setError("Something went wrong. Please try again or contact us on WhatsApp.");
       } finally {
         setSubmitting(false);
       }
@@ -243,8 +275,8 @@ export default function MutualFundsOnboardingPage() {
                   </motion.div>
                   <h2 className="mt-8 text-3xl font-semibold tracking-tight">Early Access Enabled</h2>
                   <p className="mt-4 max-w-md text-base leading-7 text-slate-600">
-                    Mutual fund investing with Sangro Wealth is coming soon. We’ve saved your
-                    onboarding details and will reach out with the next steps.
+                    Sangro Wealth will contact you soon. We’ve saved your onboarding details and
+                    will reach out with the next steps.
                   </p>
                   <div className="mt-8 flex flex-wrap justify-center gap-3">
                     <a
@@ -317,6 +349,15 @@ export default function MutualFundsOnboardingPage() {
                             className="w-full rounded-2xl border border-slate-200 px-4 py-4 text-base text-slate-950 outline-none transition focus:border-emerald-400"
                           />
                         </label>
+                        <label className="block">
+                          <span className="mb-2 block text-sm font-semibold text-slate-700">City</span>
+                          <input
+                            value={form.city}
+                            onChange={(event) => updateField("city", event.target.value)}
+                            placeholder="e.g. Jalandhar"
+                            className="w-full rounded-2xl border border-slate-200 px-4 py-4 text-base text-slate-950 outline-none transition focus:border-emerald-400"
+                          />
+                        </label>
                       </div>
                     ) : null}
 
@@ -355,16 +396,60 @@ export default function MutualFundsOnboardingPage() {
 
                     {step === 3 ? (
                       <div className="space-y-4">
-                        <label className="block">
-                          <span className="mb-2 block text-sm font-semibold text-slate-700">Monthly SIP amount</span>
-                          <input
-                            value={form.sipAmount}
-                            onChange={(event) => updateField("sipAmount", event.target.value)}
-                            placeholder="e.g. 5000"
-                            inputMode="numeric"
-                            className="w-full rounded-2xl border border-slate-200 px-4 py-4 text-base text-slate-950 outline-none transition focus:border-emerald-400"
-                          />
-                        </label>
+                        <div>
+                          <p className="mb-3 text-sm font-semibold text-slate-700">Investment type</p>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            {([
+                              ["Monthly SIP", "Invest every month"],
+                              ["One Time", "Invest one amount"],
+                              ["Both", "SIP + one-time"],
+                            ] as const).map(([type, caption]) => {
+                              const selected = form.investmentType === type;
+                              return (
+                                <button
+                                  key={type}
+                                  type="button"
+                                  onClick={() => updateField("investmentType", type)}
+                                  className={`rounded-[22px] border px-4 py-4 text-left transition ${
+                                    selected
+                                      ? "border-emerald-400 bg-emerald-50 shadow-[0_12px_28px_rgba(34,197,94,0.12)]"
+                                      : "border-slate-200 bg-white hover:border-emerald-300"
+                                  }`}
+                                >
+                                  <span className="block text-sm font-semibold text-slate-950">{type}</span>
+                                  <span className="mt-1 block text-xs text-slate-500">{caption}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {(form.investmentType === "Monthly SIP" || form.investmentType === "Both") ? (
+                          <label className="block">
+                            <span className="mb-2 block text-sm font-semibold text-slate-700">Monthly SIP amount</span>
+                            <input
+                              value={form.sipAmount}
+                              onChange={(event) => updateField("sipAmount", event.target.value)}
+                              placeholder="e.g. 5000"
+                              inputMode="numeric"
+                              className="w-full rounded-2xl border border-slate-200 px-4 py-4 text-base text-slate-950 outline-none transition focus:border-emerald-400"
+                            />
+                          </label>
+                        ) : null}
+
+                        {(form.investmentType === "One Time" || form.investmentType === "Both") ? (
+                          <label className="block">
+                            <span className="mb-2 block text-sm font-semibold text-slate-700">One-time investment amount</span>
+                            <input
+                              value={form.oneTimeAmount}
+                              onChange={(event) => updateField("oneTimeAmount", event.target.value)}
+                              placeholder="e.g. 50000"
+                              inputMode="numeric"
+                              className="w-full rounded-2xl border border-slate-200 px-4 py-4 text-base text-slate-950 outline-none transition focus:border-emerald-400"
+                            />
+                          </label>
+                        ) : null}
+
                         <div className="rounded-[24px] border border-emerald-100 bg-emerald-50 p-5">
                           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
                             Your setup preview
@@ -375,9 +460,19 @@ export default function MutualFundsOnboardingPage() {
                               <p className="mt-2 text-lg font-semibold text-slate-950">{form.goal || "Not selected"}</p>
                             </div>
                             <div className="rounded-2xl bg-white p-4">
-                              <p className="text-sm text-slate-500">Planned SIP</p>
+                              <p className="text-sm text-slate-500">Investment type</p>
+                              <p className="mt-2 text-lg font-semibold text-slate-950">{form.investmentType || "Not selected"}</p>
+                            </div>
+                            <div className="rounded-2xl bg-white p-4">
+                              <p className="text-sm text-slate-500">Monthly SIP</p>
                               <p className="mt-2 text-lg font-semibold text-slate-950">
                                 ₹{Number.parseFloat(form.sipAmount || "0").toLocaleString("en-IN")}
+                              </p>
+                            </div>
+                            <div className="rounded-2xl bg-white p-4">
+                              <p className="text-sm text-slate-500">One-time</p>
+                              <p className="mt-2 text-lg font-semibold text-slate-950">
+                                ₹{Number.parseFloat(form.oneTimeAmount || "0").toLocaleString("en-IN")}
                               </p>
                             </div>
                           </div>
