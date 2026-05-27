@@ -45,6 +45,14 @@ export default async function WealthDashboardPage() {
   const currentValue = investments.reduce((sum, item) => sum + item.currentValue, 0);
   const profitLoss = currentValue - totalInvested;
   const returnPercent = totalInvested > 0 ? (profitLoss / totalInvested) * 100 : 0;
+  const latestNavDate = investments
+    .map((item) => item.navDate)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+  const supportMessage = encodeURIComponent(
+    "Hi Sangro Wealth, please activate my portfolio dashboard."
+  );
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
@@ -72,7 +80,15 @@ export default async function WealthDashboardPage() {
           <h1 className="mt-3 text-4xl font-semibold tracking-tight">
             Welcome, {customer?.name ?? session.profile.name ?? "Investor"}
           </h1>
-          <p className="mt-2 text-slate-600">Tracking dashboard only. Transactions are handled manually through official platforms.</p>
+          <p className="mt-2 text-slate-600">
+            Tracking dashboard only. Transactions are handled manually through
+            official platforms.
+          </p>
+          <p className="mt-2 text-sm font-semibold text-emerald-700">
+            {latestNavDate
+              ? `Last NAV updated ${new Date(latestNavDate).toLocaleDateString("en-IN")}`
+              : "Latest NAV will appear after investments are added."}
+          </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -139,8 +155,23 @@ export default async function WealthDashboardPage() {
                 </div>
               ))}
               {investments.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-500">
-                  No investments linked yet. Contact Sangro Wealth to add your first entry.
+                <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50/70 p-8 text-center">
+                  <p className="text-2xl font-semibold text-slate-950">
+                    No investments added yet.
+                  </p>
+                  <p className="mx-auto mt-3 max-w-md text-slate-600">
+                    Contact Sangro Wealth to activate your portfolio. Once an
+                    admin adds your investments, this dashboard updates with
+                    latest NAV, units, value and returns.
+                  </p>
+                  <a
+                    href={`https://wa.me/919041322997?text=${supportMessage}`}
+                    className="mt-6 inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_35px_rgba(5,150,105,0.22)]"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    WhatsApp Sangro Wealth
+                  </a>
                 </div>
               )}
             </div>
@@ -165,6 +196,58 @@ export default async function WealthDashboardPage() {
             </div>
           </aside>
         </div>
+
+        <section className="mt-8 rounded-[28px] border border-slate-200 p-5 shadow-[0_12px_35px_rgba(15,23,42,0.05)]">
+          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+            <div>
+              <h2 className="text-xl font-semibold">Transaction history</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Admin-entered investment records linked to your portfolio.
+              </p>
+            </div>
+            <span className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
+              {investments.length} entries
+            </span>
+          </div>
+          <div className="mt-5 grid gap-3">
+            {investments.map((item) => (
+              <div
+                key={`history-${item.id}`}
+                className="grid gap-3 rounded-2xl border border-slate-200 p-4 sm:grid-cols-[1.5fr_0.8fr_0.8fr_0.8fr]"
+              >
+                <div>
+                  <p className="font-semibold">{item.fund_name}</p>
+                  <p className="text-sm text-slate-500">
+                    {item.investment_date} · {item.transaction_type === "sip" ? "SIP" : "Lump Sum"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                    Invested
+                  </p>
+                  <p className="font-semibold">{formatInr(item.amount_invested)}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                    Units
+                  </p>
+                  <p className="font-semibold">{formatNumber(item.units_bought, 4)}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                    Current value
+                  </p>
+                  <p className="font-semibold">{formatInr(item.currentValue)}</p>
+                </div>
+              </div>
+            ))}
+            {investments.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">
+                No transaction history yet.
+              </div>
+            )}
+          </div>
+        </section>
       </section>
     </main>
   );

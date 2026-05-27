@@ -649,7 +649,7 @@ export default function MutualFundsClient({ initialFunds }: Props) {
                 Explore Funds
               </a>
               <Link
-                href="/mutual-funds/onboarding"
+                href="/wealth/login"
                 className="transition hover:text-emerald-600"
               >
                 Login
@@ -664,7 +664,7 @@ export default function MutualFundsClient({ initialFunds }: Props) {
 
             <div className="flex items-center gap-2 lg:hidden">
               <Link
-                href="/mutual-funds/onboarding"
+                href="/wealth/login"
                 className="rounded-full border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700"
               >
                 Login
